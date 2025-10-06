@@ -14,6 +14,15 @@ type Track = {
 const formatTitle = (name: string) =>
   name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ");
 
+function convertGitHubToRaw(url: string) {
+  if (url.includes('github.com')) {
+    return url
+      .replace('github.com', 'raw.githubusercontent.com')
+      .replace('/blob/', '/');
+  }
+  return url;
+}
+
 const SpotifyPlayer: React.FC = () => {
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
@@ -92,12 +101,13 @@ const SpotifyPlayer: React.FC = () => {
       alert("Por favor, insira a URL da faixa.");
       return;
     }
+    const convertedUrl = convertGitHubToRaw(singleUrl);
     
     const fileName = singleUrl.split('/').pop() || 'unknown';
     const title = formatTitle(fileName);
     const newTrack: Track = {
       id: Date.now().toString(),
-      url: singleUrl,
+      url: convertedUrl,
       title: title,
       fileName: fileName,
     };
