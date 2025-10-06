@@ -9,7 +9,6 @@ type Track = {
   url: string;
   title: string;
   fileName: string;
-  data: string;
 };
 
 const formatTitle = (name: string) =>
@@ -17,7 +16,6 @@ const formatTitle = (name: string) =>
 
 const SpotifyPlayer: React.FC = () => {
   const [coverUrl, setCoverUrl] = React.useState<string | null>(null);
-  const [coverData, setCoverData] = React.useState<string | null>(null);
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
@@ -32,62 +30,6 @@ const SpotifyPlayer: React.FC = () => {
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
     [tracks, currentTrackId],
   );
-
-  // Carregar dados salvos no localStorage ao montar o componente
-  React.useEffect(() => {
-    const savedTracks = localStorage.getItem("tracks");
-    if (savedTracks) {
-      try {
-        const parsed = JSON.parse(savedTracks) as Omit<Track, "url">[];
-        const loadedTracks = parsed.map((t) => ({
-          ...t,
-          url: URL.createObjectURL(
-            new Blob([Uint8Array.from(atob(t.data.split(",")[1]), (c) =>
-              c.charCodeAt(0),
-            )], { type: "audio/*" }),
-          ),
-        }));
-        setTracks(loadedTracks);
-        createdUrlsRef.current.push(...loadedTracks.map((t) => t.url));
-      } catch (error) {
-        console.error("Erro ao carregar tracks salvos:", error);
-      }
-    }
-
-    const savedCoverData = localStorage.getItem("coverData");
-    if (savedCoverData) {
-      setCoverData(savedCoverData);
-      try {
-        const url = URL.createObjectURL(
-          new Blob([Uint8Array.from(atob(savedCoverData.split(",")[1]), (c) =>
-            c.charCodeAt(0),
-          )], { type: "image/*" }),
-        );
-        setCoverUrl(url);
-        createdUrlsRef.current.push(url);
-      } catch (error) {
-        console.error("Erro ao carregar capa salva:", error);
-      }
-    }
-  }, []);
-
-  // Salvar automaticamente no localStorage quando tracks ou coverData mudam
-  React.useEffect(() => {
-    localStorage.setItem(
-      "tracks",
-      JSON.stringify(
-        tracks.map((t) => ({ ...t, url: undefined })),
-      ),
-    );
-  }, [tracks]);
-
-  React.useEffect(() => {
-    if (coverData) {
-      localStorage.setItem("coverData", coverData);
-    } else {
-      localStorage.removeItem("coverData");
-    }
-  }, [coverData]);
 
   React.useEffect(() => {
     if (!tracks.length) {
@@ -141,45 +83,30 @@ const SpotifyPlayer: React.FC = () => {
     if (!file) {
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const data = reader.result as string;
-      setCoverData(data);
-      const url = URL.createObjectURL(file);
-      if (coverUrl) {
-        URL.revokeObjectURL(coverUrl);
-      }
-      createdUrlsRef.current.push(url);
-      setCoverUrl(url);
-    };
-    reader.readAsDataURL(file);
+    const url = URL.createObjectURL(file);
+    if (coverUrl) {
+      URL.revokeObjectURL(coverUrl);
+    }
+    createdUrlsRef.current.push(url);
+    setCoverUrl(url);
     event.target.value = "";
   };
 
-  const handleAudioUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files?.length) {
       return;
     }
-    const incomingPromises = Array.from(files).map((file, index) => {
-      return new Promise<Track>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const data = reader.result as string;
-          const url = URL.createObjectURL(file);
-          createdUrlsRef.current.push(url);
-          resolve({
-            id: `${file.name}-${file.size}-${Date.now()}-${index}`,
-            url,
-            title: formatTitle(file.name),
-            fileName: file.name,
-            data,
-          });
-        };
-        reader.readAsDataURL(file);
-      });
+    const incoming = Array.from(files).map((file, index) => {
+      const url = URL.createObjectURL(file);
+      createdUrlsRef.current.push(url);
+      return {
+        id: `${file.name}-${file.size}-${Date.now()}-${index}`,
+        url,
+        title: formatTitle(file.name),
+        fileName: file.name,
+      };
     });
-    const incoming = await Promise.all(incomingPromises);
     setTracks((prev) => [
       ...prev,
       ...incoming.filter(
