@@ -2,7 +2,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud, Plus } from "lucide-react";
+import { Music2, Pause, Play, UploadCloud, Plus, X } from "lucide-react";
 import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -120,6 +120,21 @@ const SpotifyPlayer: React.FC = () => {
     await loadTracks();
     setSingleUrl("");
     alert('Faixa adicionada com sucesso!');
+  };
+
+  const deleteTrack = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover esta faixa?')) return;
+    const { error } = await supabase.from('tracks').delete().eq('id', id);
+    if (error) {
+      console.error('Erro ao remover faixa:', error);
+      alert('Erro ao remover faixa.');
+      return;
+    }
+    await loadTracks();
+    if (currentTrackId === id) {
+      setCurrentTrackId(null);
+      setIsPlaying(false);
+    }
   };
 
   const handlePlayPause = () => {
@@ -243,7 +258,6 @@ const SpotifyPlayer: React.FC = () => {
               {tracks.map((track, index) => (
                 <li
                   key={track.id}
-                  onClick={() => handleSelectTrack(track.id)}
                   className={cn(
                     "flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm transition",
                     currentTrackId === track.id
@@ -251,17 +265,30 @@ const SpotifyPlayer: React.FC = () => {
                       : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  <div>
+                  <div className="flex-1" onClick={() => handleSelectTrack(track.id)}>
                     <p className="font-semibold">{track.title}</p>
                     <span className="text-xs text-white/50">
                       Faixa {index + 1}
                     </span>
                   </div>
-                  {currentTrackId === track.id && (
-                    <span className="rounded-full bg-[#1DB954] px-2 py-1 sm:px-3 sm:py-1 text-xs font-bold text-black">
-                      Tocando
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {currentTrackId === track.id && (
+                      <span className="rounded-full bg-[#1DB954] px-2 py-1 sm:px-3 sm:py-1 text-xs font-bold text-black">
+                        Tocando
+                      </span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTrack(track.id);
+                      }}
+                      className="h-6 w-6 p-0 text-white/50 hover:text-red-400 hover:bg-red-400/10"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </li>
               ))}
               {!tracks.length && (
