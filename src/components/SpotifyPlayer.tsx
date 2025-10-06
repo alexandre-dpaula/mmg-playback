@@ -16,13 +16,20 @@ type Track = {
 const formatTitle = (name: string) =>
   name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ");
 
+const convertUrl = (url: string) => {
+  if (url.includes('github.com') && url.includes('/blob/')) {
+    return url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+  }
+  return url;
+};
+
 const SpotifyPlayer: React.FC = () => {
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [singleUrl, setSingleUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -88,25 +95,17 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
-  const adicionarFaixa = async () => {
-    if (!selectedFile) {
-      alert("Por favor, selecione um arquivo de áudio.");
+  const adicionarFaixaUnica = async () => {
+    if (!singleUrl) {
+      alert("Por favor, insira a URL da faixa.");
       return;
     }
-    const fileName = `${Date.now()}-${selectedFile.name}`;
-    const { error: uploadError } = await supabase.storage.from('audio').upload(fileName, selectedFile);
-    if (uploadError) {
-      console.error('Erro ao fazer upload:', uploadError);
-      alert('Erro ao fazer upload do arquivo.');
-      return;
-    }
-    const { data: publicUrlData } = supabase.storage.from('audio').getPublicUrl(fileName);
-    const url = publicUrlData.publicUrl;
-    const title = formatTitle(selectedFile.name);
+    const convertedUrl = convertUrl(singleUrl);
+    const title = formatTitle(singleUrl);
     const newTrack = {
       title: title,
-      file_name: selectedFile.name,
-      url: url,
+      file_name: title,
+      url: convertedUrl,
     };
     const { error } = await supabase.from('tracks').insert(newTrack);
     if (error) {
@@ -115,7 +114,7 @@ const SpotifyPlayer: React.FC = () => {
       return;
     }
     await loadTracks();
-    setSelectedFile(null);
+    setSingleUrl("");
     alert('Faixa adicionada com sucesso!');
   };
 
@@ -161,7 +160,7 @@ const SpotifyPlayer: React.FC = () => {
   };
 
   const handleAudioError = () => {
-    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se o arquivo é válido.`);
+    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida e o arquivo é acessível.`);
     setIsPlaying(false);
   };
 
@@ -208,14 +207,15 @@ const SpotifyPlayer: React.FC = () => {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <input
-              type="file"
-              accept="audio/*"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              className="bg-white/10 text-white rounded-md px-3 py-2 w-full sm:w-auto"
+              type="text"
+              value={singleUrl}
+              onChange={(e) => setSingleUrl(e.target.value)}
+              placeholder="URL do áudio (ex: Github)"
+              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
             />
             <Button
               className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
-              onClick={adicionarFaixa}
+              onClick={adicionarFaixaUnica}
             >
               <Plus className="mr-2 h-4 w-4" />
               Adicionar faixa
