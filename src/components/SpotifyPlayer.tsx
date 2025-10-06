@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud } from "lucide-react";
+import Papa from "papaparse";
 
 type Track = {
   id: string;
@@ -14,15 +15,23 @@ type Track = {
 const formatTitle = (name: string) =>
   name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ");
 
+const convertDriveUrl = (url: string) => {
+  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (match) {
+    return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+  }
+  return url;
+};
+
 const SpotifyPlayer: React.FC = () => {
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [sheetUrl, setSheetUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
-  const audioInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
@@ -68,32 +77,37 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
-  const adicionarFaixas = () => {
-    audioInputRef.current?.click();
-  };
-
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files?.length) {
+  const adicionarFaixas = async () => {
+    if (!sheetUrl) {
+      alert("Por favor, insira a URL da planilha Google Sheets.");
       return;
     }
-    const incoming = Array.from(files).map((file, index) => {
-      const url = URL.createObjectURL(file);
-      createdUrlsRef.current.push(url);
-      return {
-        id: `${file.name}-${file.size}-${Date.now()}-${index}`,
-        url,
-        title: formatTitle(file.name),
-        fileName: file.name,
-      };
-    });
-    setTracks((prev) => [
-      ...prev,
-      ...incoming.filter(
-        (item) => !prev.some((track) => track.fileName === item.fileName),
-      ),
-    ]);
-    event.target.value = "";
+    const csvUrl = sheetUrl.replace("/edit", "/export?format=csv");
+    try {
+      const response = await fetch(csvUrl);
+      const csvText = await response.text();
+      Papa.parse(csvText, {
+        header: true,
+        complete: (results) => {
+          const newTracks: Track[] = results.data
+            .filter((row: any) => row["Nome da Faixa"] && row["Faixa"])
+            .map((row: any, index: number) => ({
+              id: `sheet-${Date.now()}-${index}`,
+              url: convertDriveUrl(row["Faixa"]),
+              title: row["Nome da Faixa"],
+              fileName: row["Nome da Faixa"],
+            }));
+          setTracks((prev) => [...prev, ...newTracks]);
+        },
+        error: (error) => {
+          console.error("Erro ao parsear CSV:", error);
+          alert("Erro ao carregar a planilha. Verifique a URL.");
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao buscar CSV:", error);
+      alert("Erro ao acessar a planilha. Verifique se ela é pública.");
+    }
   };
 
   const handlePlayPause = () => {
@@ -161,20 +175,18 @@ const SpotifyPlayer: React.FC = () => {
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <input
-              ref={audioInputRef}
-              id="audio-upload"
-              accept="audio/*"
-              type="file"
-              multiple
-              className="hidden"
-              onChange={handleAudioUpload}
+              type="text"
+              value={sheetUrl}
+              onChange={(e) => setSheetUrl(e.target.value)}
+              placeholder="URL da planilha Google Sheets"
+              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
             />
             <Button
               className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
               onClick={adicionarFaixas}
             >
               <UploadCloud className="mr-2 h-4 w-4" />
-              Adicionar faixas
+              Carregar faixas da planilha
             </Button>
             <Button
               onClick={handlePlayPause}
@@ -237,7 +249,7 @@ const SpotifyPlayer: React.FC = () => {
               ))}
               {!tracks.length && (
                 <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
-                  Adicione suas músicas para iniciar a playlist.
+                  Carregue faixas da planilha para iniciar a playlist.
                 </li>
               )}
             </ul>
