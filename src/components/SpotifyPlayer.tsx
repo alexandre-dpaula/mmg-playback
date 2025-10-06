@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { showSuccess, showError } from "@/utils/toast";
 
 type Track = {
   id: string;
@@ -22,7 +24,6 @@ const SpotifyPlayer: React.FC = () => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  const createdUrlsRef = React.useRef<string[]>([]);
   const coverInputRef = React.useRef<HTMLInputElement | null>(null);
   const audioInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -30,6 +31,44 @@ const SpotifyPlayer: React.FC = () => {
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
     [tracks, currentTrackId],
   );
+
+  // Carregar dados persistidos ao montar o componente
+  React.useEffect(() => {
+    const loadPersistedData = async () => {
+      try {
+        // Carregar capa
+        const { data: coverData, error: coverError } = await supabase
+          .from('covers')
+          .select('url')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (coverData && !coverError) {
+          setCoverUrl(coverData.url);
+        }
+
+        // Carregar faixas
+        const { data: tracksData, error: tracksError } = await supabase
+          .from('tracks')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (tracksData && !tracksError) {
+          setTracks(tracksData.map(track => ({
+            id: track.id,
+            url: track.url,
+            title: track.title,
+            fileName: track.file_name,
+          })));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados persistidos:', error);
+      }
+    };
+
+    loadPersistedData();
+  }, []);
 
   React.useEffect(() => {
     if (!tracks.length) {
@@ -39,13 +78,6 @@ const SpotifyPlayer: React.FC = () => {
       setCurrentTrackId(tracks[0].id);
     }
   }, [tracks, currentTrackId]);
-
-  React.useEffect(
-    () => () => {
-      createdUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    },
-    [],
-  );
 
   React.useEffect(() => {
     if (!audioRef.current || !currentTrack) {
@@ -78,41 +110,91 @@ const SpotifyPlayer: React.FC = () => {
     audioInputRef.current?.click();
   };
 
-  const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
-    const url = URL.createObjectURL(file);
-    if (coverUrl) {
-      URL.revokeObjectURL(coverUrl);
+
+    try {
+      const fileName = `cover-${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from('uploads')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: publicUrl } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(fileName);
+
+      // Salvar no banco
+      const { error: dbError } = await supabase
+        .from('covers')
+        .insert({ url: publicUrl.publicUrl });
+
+      if (dbError) throw dbError;
+
+      setCoverUrl(publicUrl.publicUrl);
+      showSuccess('Capa salva com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar capa:', error);
+      showError('Erro ao salvar capa.');
     }
-    createdUrlsRef.current.push(url);
-    setCoverUrl(url);
+
     event.target.value = "";
   };
 
-  const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAudioUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files?.length) {
       return;
     }
-    const incoming = Array.from(files).map((file, index) => {
-      const url = URL.createObjectURL(file);
-      createdUrlsRef.current.push(url);
-      return {
-        id: `${file.name}-${file.size}-${Date.now()}-${index}`,
-        url,
-        title: formatTitle(file.name),
-        fileName: file.name,
-      };
-    });
-    setTracks((prev) => [
-      ...prev,
-      ...incoming.filter(
-        (item) => !prev.some((track) => track.fileName === item.fileName),
-      ),
-    ]);
+
+    try {
+      const uploadedTracks: Track[] = [];
+
+      for (const file of Array.from(files)) {
+        const fileName = `track-${Date.now()}-${file.name}`;
+        const { data, error } = await supabase.storage
+          .from('uploads')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: publicUrl } = supabase.storage
+          .from('uploads')
+          .getPublicUrl(fileName);
+
+        const trackData = {
+          title: formatTitle(file.name),
+          file_name: file.name,
+          url: publicUrl.publicUrl,
+        };
+
+        const { data: dbData, error: dbError } = await supabase
+          .from('tracks')
+          .insert(trackData)
+          .select()
+          .single();
+
+        if (dbError) throw dbError;
+
+        uploadedTracks.push({
+          id: dbData.id,
+          url: dbData.url,
+          title: dbData.title,
+          fileName: dbData.file_name,
+        });
+      }
+
+      setTracks(prev => [...prev, ...uploadedTracks]);
+      showSuccess(`${uploadedTracks.length} faixa(s) salva(s) com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao salvar faixas:', error);
+      showError('Erro ao salvar faixas.');
+    }
+
     event.target.value = "";
   };
 
