@@ -31,6 +31,7 @@ const SpotifyPlayer: React.FC = () => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [singleUrl, setSingleUrl] = React.useState("");
+  const [playlistUrl, setPlaylistUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -117,6 +118,41 @@ const SpotifyPlayer: React.FC = () => {
     await loadTracks();
     setSingleUrl("");
     alert('Faixa adicionada com sucesso!');
+  };
+
+  const carregarPlaylist = async () => {
+    if (!playlistUrl) {
+      alert("Por favor, insira a URL da playlist (CSV).");
+      return;
+    }
+    Papa.parse(playlistUrl, {
+      download: true,
+      header: true,
+      complete: async (results) => {
+        const newTracks = results.data.map((row: any) => ({
+          title: row.title || formatTitle(row.url),
+          file_name: row.title || formatTitle(row.url),
+          url: convertDriveUrl(row.url),
+        })).filter((track: any) => track.url);
+        if (newTracks.length === 0) {
+          alert('Nenhuma faixa válida encontrada no CSV.');
+          return;
+        }
+        const { error } = await supabase.from('tracks').insert(newTracks);
+        if (error) {
+          console.error('Erro ao salvar faixas:', error);
+          alert('Erro ao salvar faixas no banco de dados.');
+          return;
+        }
+        await loadTracks();
+        setPlaylistUrl("");
+        alert(`${newTracks.length} faixas adicionadas com sucesso!`);
+      },
+      error: (error) => {
+        console.error('Erro ao analisar CSV:', error);
+        alert('Erro ao carregar o CSV. Verifique a URL.');
+      },
+    });
   };
 
   const handlePlayPause = () => {
@@ -220,6 +256,22 @@ const SpotifyPlayer: React.FC = () => {
             >
               <Plus className="mr-2 h-4 w-4" />
               Adicionar faixa
+            </Button>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            <input
+              type="text"
+              value={playlistUrl}
+              onChange={(e) => setPlaylistUrl(e.target.value)}
+              placeholder="URL do CSV da playlist"
+              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
+            />
+            <Button
+              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
+              onClick={carregarPlaylist}
+            >
+              <UploadCloud className="mr-2 h-4 w-4" />
+              Carregar playlist
             </Button>
           </div>
         </div>
