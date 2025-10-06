@@ -10,7 +10,7 @@ const Index = () => {
             ARRANJOS VOCAIS
           </p>
           <h1 className="text-4xl font-bold md:text-5xl">
-            Projeto especial — Festa dos Tabernáculos
+            MMG — Festa dos Tabernáculos
           </h1>
           <p className="max-w-2xl text-white/60">
             Crie, organize e ouça seus arranjos vocais com uma interface envolvente e inspirada no clima da celebração.
