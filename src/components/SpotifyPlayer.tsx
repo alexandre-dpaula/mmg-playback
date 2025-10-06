@@ -36,6 +36,12 @@ const convertGitHubToRaw = (url: string) => {
   return url;
 };
 
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 const SpotifyPlayer: React.FC = () => {
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
@@ -364,6 +370,10 @@ const SpotifyPlayer: React.FC = () => {
                   className="progress-thumb h-full bg-[#1DB954] rounded"
                   style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
                 ></div>
+              </div>
+              <div className="flex justify-between text-xs text-white/60 mt-1">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
               </div>
             </div>
           )}
