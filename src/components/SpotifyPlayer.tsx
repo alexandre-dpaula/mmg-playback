@@ -15,7 +15,6 @@ const formatTitle = (name: string) =>
   name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ");
 
 const SpotifyPlayer: React.FC = () => {
-  const [coverUrl, setCoverUrl] = React.useState<string | null>(null);
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
@@ -23,21 +22,12 @@ const SpotifyPlayer: React.FC = () => {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
-  const coverInputRef = React.useRef<HTMLInputElement | null>(null);
   const audioInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
     [tracks, currentTrackId],
   );
-
-  React.useEffect(() => {
-    // Load cover from localStorage on mount
-    const savedCover = localStorage.getItem('spotifyPlayerCover');
-    if (savedCover) {
-      setCoverUrl(savedCover);
-    }
-  }, []);
 
   React.useEffect(() => {
     if (!tracks.length) {
@@ -78,27 +68,8 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
-  const uploadCapa = () => {
-    coverInputRef.current?.click();
-  };
-
   const adicionarFaixas = () => {
     audioInputRef.current?.click();
-  };
-
-  const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setCoverUrl(result);
-      localStorage.setItem('spotifyPlayerCover', result);
-    };
-    reader.readAsDataURL(file);
-    event.target.value = "";
   };
 
   const handleAudioUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,17 +142,11 @@ const SpotifyPlayer: React.FC = () => {
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
         <div className="flex flex-1 flex-col gap-4 sm:gap-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-            {coverUrl ? (
-              <img
-                src={coverUrl}
-                alt="Capa do áudio"
-                className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
-              />
-            ) : (
-              <div className="flex h-32 w-32 sm:h-44 sm:w-44 items-center justify-center rounded-2xl bg-white/10 text-white/60 shadow-inner">
-                <Music2 className="h-8 w-8 sm:h-12 sm:w-12" />
-              </div>
-            )}
+            <img
+              src="https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg"
+              alt="Capa do áudio"
+              className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
+            />
             <div className="space-y-2 sm:space-y-3">
               <span className="text-xs uppercase tracking-[0.4em] text-white/60">
                 Playlist — Festa dos Tabernáculos
@@ -195,22 +160,6 @@ const SpotifyPlayer: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <input
-              ref={coverInputRef}
-              id="cover-upload"
-              accept="image/*"
-              type="file"
-              className="hidden"
-              onChange={handleCoverUpload}
-            />
-            <Button
-              variant="secondary"
-              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
-              onClick={uploadCapa}
-            >
-              <UploadCloud className="mr-2 h-4 w-4" />
-              Upload da capa
-            </Button>
             <input
               ref={audioInputRef}
               id="audio-upload"
