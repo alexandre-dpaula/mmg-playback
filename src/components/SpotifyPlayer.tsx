@@ -227,11 +227,8 @@ const SpotifyPlayer: React.FC = () => {
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-white/50">
-                Agora tocando
+                Agora tocando: {currentTrack?.title ?? "Nenhuma faixa selecionada"}
               </p>
-              <h3 className="text-base sm:text-lg font-semibold">
-                {currentTrack?.title ?? "Nenhuma faixa selecionada"}
-              </h3>
             </div>
             <span className="rounded-full bg-[#1DB954]/10 px-2 py-1 sm:px-3 sm:py-1 text-xs font-semibold text-[#1DB954] self-start sm:self-auto">
               {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
