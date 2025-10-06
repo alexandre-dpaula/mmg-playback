@@ -99,6 +99,44 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
+  const adicionarFaixaUnica = async () => {
+    if (!singleUrl) {
+      alert("Por favor, insira a URL da faixa.");
+      return;
+    }
+    const convertedUrl = convertGitHubToRaw(singleUrl);
+    
+    // Validate URL accessibility
+    try {
+      const response = await fetch(convertedUrl, { method: 'HEAD' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Erro ao validar URL:', error);
+      alert('Erro: A URL fornecida não é acessível ou não existe. Verifique se o arquivo existe e é público.');
+      return;
+    }
+    
+    const fileName = singleUrl.split('/').pop() || 'unknown';
+    const title = formatTitle(fileName);
+    
+    const { error } = await supabase.from('tracks').insert({
+      url: convertedUrl,
+      title: title,
+      file_name: fileName,
+    });
+    
+    if (error) {
+      console.error('Erro ao adicionar faixa:', error);
+      alert('Erro ao adicionar faixa.');
+      return;
+    }
+    
+    await loadTracks();
+    setSingleUrl("");
+  };
+
   const deleteTrack = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover esta faixa?')) return;
     const { error } = await supabase.from('tracks').delete().eq('id', id);
@@ -233,6 +271,13 @@ const SpotifyPlayer: React.FC = () => {
               placeholder="URL do áudio (ex: Github)"
               className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
             />
+            <Button
+              onClick={adicionarFaixaUnica}
+              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar faixa
+            </Button>
           </div>
         </div>
         <div className="w-full max-w-sm rounded-2xl bg-white/5 p-4 sm:p-6 backdrop-blur">
