@@ -1,27 +1,5 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
-
-type Track = {
-  id: string;
-  url: string;
-  title: string;
-  fileName: string;
-};
-
 const formatTitle = (name: string) =>
   name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ");
-
-function convertGitHubToRaw(url: string) {
-  if (url.includes('github.com')) {
-    return url
-      .replace('github.com', 'raw.githubusercontent.com')
-      .replace('/blob/', '/');
-  }
-  return url;
-}
 
 const SpotifyPlayer: React.FC = () => {
   const [tracks, setTracks] = React.useState<Track[]>([]);
@@ -101,13 +79,12 @@ const SpotifyPlayer: React.FC = () => {
       alert("Por favor, insira a URL da faixa.");
       return;
     }
-    const convertedUrl = convertGitHubToRaw(singleUrl);
     
     const fileName = singleUrl.split('/').pop() || 'unknown';
     const title = formatTitle(fileName);
     const newTrack: Track = {
       id: Date.now().toString(),
-      url: convertedUrl,
+      url: singleUrl,
       title: title,
       fileName: fileName,
     };
