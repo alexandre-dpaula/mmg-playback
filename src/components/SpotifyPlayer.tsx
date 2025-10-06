@@ -316,39 +316,6 @@ const SpotifyPlayer: React.FC = () => {
             Arranjos vocais com controle e reprodução para estudo do Ministério de Música.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={handlePrevious}
-                disabled={!tracks.length}
-                className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <SkipBack className="h-5 w-5" />
-              </Button>
-              <Button
-                onClick={handlePlayPause}
-                disabled={!tracks.length}
-                className="flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
-              >
-                {isPlaying ? (
-                  <>
-                    <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Pausar
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Reproduzir
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={handleNext}
-                disabled={!tracks.length}
-                className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <SkipForward className="h-5 w-5" />
-              </Button>
-            </div>
             {tracks.length > 0 && (
               <Button
                 onClick={clearPlaylist}
@@ -360,23 +327,6 @@ const SpotifyPlayer: React.FC = () => {
               </Button>
             )}
           </div>
-          {currentTrack && (
-            <div className="audio-player">
-              <div
-                className="progress-bar w-full h-2 bg-white/20 rounded cursor-pointer"
-                onClick={handleProgressClick}
-              >
-                <div
-                  className="progress-thumb h-full bg-[#1DB954] rounded"
-                  style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
-                ></div>
-              </div>
-              <div className="flex justify-between text-xs text-white/60 mt-1">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-              </div>
-            </div>
-          )}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <input
               type="text"
@@ -450,6 +400,58 @@ const SpotifyPlayer: React.FC = () => {
               )}
             </ul>
           </ScrollArea>
+        </div>
+      </div>
+      <div className="flex flex-col items-center gap-4 mt-6">
+        {currentTrack && (
+          <div className="audio-player w-full max-w-md">
+            <div
+              className="progress-bar w-full h-2 bg-white/20 rounded cursor-pointer"
+              onClick={handleProgressClick}
+            >
+              <div
+                className="progress-thumb h-full bg-[#1DB954] rounded"
+                style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-white/60 mt-1">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handlePrevious}
+            disabled={!tracks.length}
+            className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <SkipBack className="h-5 w-5" />
+          </Button>
+          <Button
+            onClick={handlePlayPause}
+            disabled={!tracks.length}
+            className="flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+          >
+            {isPlaying ? (
+              <>
+                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
+                Pausar
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+                Reproduzir
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleNext}
+            disabled={!tracks.length}
+            className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <SkipForward className="h-5 w-5" />
+          </Button>
         </div>
       </div>
       <audio
