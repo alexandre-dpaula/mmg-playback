@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
+import { showSuccess } from "@/utils/toast";
 
 type Track = {
   id: string;
@@ -133,6 +134,7 @@ const SpotifyPlayer: React.FC = () => {
     
     setTracks(prev => [...prev, newTrack]);
     setSingleUrl("");
+    showSuccess(`Faixa "${title}" adicionada à playlist!`);
   };
 
   const deleteTrack = (id: string) => {
