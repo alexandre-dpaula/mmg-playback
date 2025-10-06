@@ -23,6 +23,8 @@ const SpotifyPlayer: React.FC = () => {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
+  const coverInputRef = React.useRef<HTMLInputElement | null>(null);
+  const audioInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
@@ -70,6 +72,14 @@ const SpotifyPlayer: React.FC = () => {
       audioRef.current.pause();
     }
   }, [isPlaying, currentTrack]);
+
+  const uploadCapa = () => {
+    coverInputRef.current?.click();
+  };
+
+  const adicionarFaixas = () => {
+    audioInputRef.current?.click();
+  };
 
   const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -181,22 +191,23 @@ const SpotifyPlayer: React.FC = () => {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <input
+              ref={coverInputRef}
               id="cover-upload"
               accept="image/*"
               type="file"
               className="hidden"
               onChange={handleCoverUpload}
             />
-            <label htmlFor="cover-upload">
-              <Button
-                variant="secondary"
-                className="bg-white/10 text-white hover:bg-white/20"
-              >
-                <UploadCloud className="mr-2 h-4 w-4" />
-                Upload da capa
-              </Button>
-            </label>
+            <Button
+              variant="secondary"
+              className="bg-white/10 text-white hover:bg-white/20"
+              onClick={uploadCapa}
+            >
+              <UploadCloud className="mr-2 h-4 w-4" />
+              Upload da capa
+            </Button>
             <input
+              ref={audioInputRef}
               id="audio-upload"
               accept="audio/*"
               type="file"
@@ -204,12 +215,13 @@ const SpotifyPlayer: React.FC = () => {
               className="hidden"
               onChange={handleAudioUpload}
             />
-            <label htmlFor="audio-upload">
-              <Button className="bg-white/10 text-white hover:bg-white/20">
-                <UploadCloud className="mr-2 h-4 w-4" />
-                Adicionar faixas
-              </Button>
-            </label>
+            <Button
+              className="bg-white/10 text-white hover:bg-white/20"
+              onClick={adicionarFaixas}
+            >
+              <UploadCloud className="mr-2 h-4 w-4" />
+              Adicionar faixas
+            </Button>
             <Button
               onClick={handlePlayPause}
               disabled={!tracks.length}
