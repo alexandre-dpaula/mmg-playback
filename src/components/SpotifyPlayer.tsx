@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud } from "lucide-react";
 import Papa from "papaparse";
+import { supabase } from "@/integrations/supabase/client";
 
 type Track = {
   id: string;
@@ -37,6 +38,23 @@ const SpotifyPlayer: React.FC = () => {
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
     [tracks, currentTrackId],
   );
+
+  React.useEffect(() => {
+    const loadTracks = async () => {
+      const { data, error } = await supabase.from('tracks').select('*');
+      if (error) {
+        console.error('Erro ao carregar faixas:', error);
+        return;
+      }
+      setTracks(data.map(track => ({
+        id: track.id,
+        url: track.url,
+        title: track.title,
+        fileName: track.file_name,
+      })));
+    };
+    loadTracks();
+  }, []);
 
   React.useEffect(() => {
     if (!tracks.length) {
