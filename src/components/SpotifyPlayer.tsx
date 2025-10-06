@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
-import { showSuccess } from "@/utils/toast";
+import { showSuccess, showError } from "@/utils/toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type Track = {
   id: string;
@@ -36,6 +37,7 @@ const SpotifyPlayer: React.FC = () => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [singleUrl, setSingleUrl] = React.useState("");
+  const [loading, setLoading] = React.useState(true);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -45,26 +47,13 @@ const SpotifyPlayer: React.FC = () => {
   );
 
   React.useEffect(() => {
-    // Load tracks from localStorage on mount
-    const savedTracks = localStorage.getItem('tracks');
-    if (savedTracks) {
-      try {
-        setTracks(JSON.parse(savedTracks));
-      } catch (error) {
-        console.error('Erro ao carregar faixas do localStorage:', error);
-      }
-    }
+    loadTracks();
     // Load singleUrl from localStorage
     const savedUrl = localStorage.getItem('singleUrl');
     if (savedUrl) {
       setSingleUrl(savedUrl);
     }
   }, []);
-
-  React.useEffect(() => {
-    // Save tracks to localStorage whenever tracks change
-    localStorage.setItem('tracks', JSON.stringify(tracks));
-  }, [tracks]);
 
   React.useEffect(() => {
     // Save singleUrl to localStorage whenever it changes
@@ -116,6 +105,31 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
+  const loadTracks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tracks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedTracks = data.map(track => ({
+        id: track.id,
+        url: track.url,
+        title: track.title,
+        fileName: track.file_name,
+      }));
+
+      setTracks(formattedTracks);
+    } catch (error) {
+      console.error('Erro ao carregar faixas:', error);
+      showError('Erro ao carregar faixas do banco de dados');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const adicionarFaixaUnica = async () => {
     if (!singleUrl) {
       alert("Por favor, insira a URL da faixa.");
@@ -125,32 +139,78 @@ const SpotifyPlayer: React.FC = () => {
     
     const fileName = singleUrl.split('/').pop() || 'unknown';
     const title = formatTitle(fileName);
-    const newTrack: Track = {
-      id: Date.now().toString(),
-      url: convertedUrl,
-      title: title,
-      fileName: fileName,
-    };
-    
-    setTracks(prev => [...prev, newTrack]);
-    setSingleUrl("");
-    showSuccess(`Faixa "${title}" adicionada à playlist!`);
-  };
 
-  const deleteTrack = (id: string) => {
-    if (!confirm('Tem certeza que deseja remover esta faixa?')) return;
-    setTracks(prev => prev.filter(track => track.id !== id));
-    if (currentTrackId === id) {
-      setCurrentTrackId(null);
-      setIsPlaying(false);
+    try {
+      const { data, error } = await supabase
+        .from('tracks')
+        .insert({
+          title: title,
+          file_name: fileName,
+          url: convertedUrl,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const newTrack: Track = {
+        id: data.id,
+        url: data.url,
+        title: data.title,
+        fileName: data.file_name,
+      };
+
+      setTracks(prev => [newTrack, ...prev]);
+      setSingleUrl("");
+      showSuccess(`Faixa "${title}" adicionada à playlist!`);
+    } catch (error) {
+      console.error('Erro ao adicionar faixa:', error);
+      showError('Erro ao adicionar faixa ao banco de dados');
     }
   };
 
-  const clearPlaylist = () => {
+  const deleteTrack = async (id: string) => {
+    if (!confirm('Tem certeza que deseja remover esta faixa?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTracks(prev => prev.filter(track => track.id !== id));
+      if (currentTrackId === id) {
+        setCurrentTrackId(null);
+        setIsPlaying(false);
+      }
+      showSuccess('Faixa removida com sucesso!');
+    } catch (error) {
+      console.error('Erro ao remover faixa:', error);
+      showError('Erro ao remover faixa do banco de dados');
+    }
+  };
+
+  const clearPlaylist = async () => {
     if (!confirm('Tem certeza que deseja limpar toda a playlist? Todas as faixas serão removidas.')) return;
-    setTracks([]);
-    setCurrentTrackId(null);
-    setIsPlaying(false);
+
+    try {
+      const { error } = await supabase
+        .from('tracks')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+
+      if (error) throw error;
+
+      setTracks([]);
+      setCurrentTrackId(null);
+      setIsPlaying(false);
+      showSuccess('Playlist limpa com sucesso!');
+    } catch (error) {
+      console.error('Erro ao limpar playlist:', error);
+      showError('Erro ao limpar playlist do banco de dados');
+    }
   };
 
   const handlePlayPause = () => {
@@ -199,6 +259,16 @@ const SpotifyPlayer: React.FC = () => {
     alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida, o arquivo é acessível e é um arquivo de áudio suportado (ex: MP3). Se o repositório no Github for privado, torne-o público ou use um serviço de hospedagem alternativo como Dropbox, Google Drive ou um servidor próprio.`);
     setIsPlaying(false);
   };
+
+  if (loading) {
+    return (
+      <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
+        <div className="flex items-center justify-center h-64">
+          <p>Carregando faixas...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
