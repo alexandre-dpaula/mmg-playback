@@ -178,7 +178,7 @@ const SpotifyPlayer: React.FC = () => {
                 Playlist — Festa dos Tabernáculos
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                Celebre em harmonia!
+                Vamos Ensaiar!
               </h2>
               <p className="max-w-md text-sm text-white/60">
                 Arranjos vocais com controle e reprodução para estudo do Ministério de Música.
