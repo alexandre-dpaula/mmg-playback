@@ -46,6 +46,8 @@ const SpotifyPlayer: React.FC = () => {
 
         if (coverData && !coverError) {
           setCoverUrl(coverData.url);
+        } else if (coverError) {
+          console.error('Erro ao carregar capa:', coverError);
         }
 
         // Carregar faixas
@@ -61,9 +63,12 @@ const SpotifyPlayer: React.FC = () => {
             title: track.title,
             fileName: track.file_name,
           })));
+        } else if (tracksError) {
+          console.error('Erro ao carregar faixas:', tracksError);
         }
       } catch (error) {
         console.error('Erro ao carregar dados persistidos:', error);
+        showError('Erro ao carregar dados salvos.');
       }
     };
 
@@ -118,28 +123,37 @@ const SpotifyPlayer: React.FC = () => {
 
     try {
       const fileName = `cover-${Date.now()}-${file.name}`;
+      console.log('Tentando upload da capa:', fileName);
       const { data, error } = await supabase.storage
         .from('uploads')
         .upload(fileName, file);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro no upload da capa:', error);
+        throw error;
+      }
 
       const { data: publicUrl } = supabase.storage
         .from('uploads')
         .getPublicUrl(fileName);
+
+      console.log('URL pública da capa:', publicUrl.publicUrl);
 
       // Salvar no banco
       const { error: dbError } = await supabase
         .from('covers')
         .insert({ url: publicUrl.publicUrl });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Erro ao salvar capa no banco:', dbError);
+        throw dbError;
+      }
 
       setCoverUrl(publicUrl.publicUrl);
       showSuccess('Capa salva com sucesso!');
     } catch (error) {
       console.error('Erro ao salvar capa:', error);
-      showError('Erro ao salvar capa.');
+      showError('Erro ao salvar capa. Verifique o console para detalhes.');
     }
 
     event.target.value = "";
@@ -156,15 +170,21 @@ const SpotifyPlayer: React.FC = () => {
 
       for (const file of Array.from(files)) {
         const fileName = `track-${Date.now()}-${file.name}`;
+        console.log('Tentando upload da faixa:', fileName);
         const { data, error } = await supabase.storage
           .from('uploads')
           .upload(fileName, file);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro no upload da faixa:', error);
+          throw error;
+        }
 
         const { data: publicUrl } = supabase.storage
           .from('uploads')
           .getPublicUrl(fileName);
+
+        console.log('URL pública da faixa:', publicUrl.publicUrl);
 
         const trackData = {
           title: formatTitle(file.name),
@@ -178,7 +198,10 @@ const SpotifyPlayer: React.FC = () => {
           .select()
           .single();
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error('Erro ao salvar faixa no banco:', dbError);
+          throw dbError;
+        }
 
         uploadedTracks.push({
           id: dbData.id,
@@ -192,7 +215,7 @@ const SpotifyPlayer: React.FC = () => {
       showSuccess(`${uploadedTracks.length} faixa(s) salva(s) com sucesso!`);
     } catch (error) {
       console.error('Erro ao salvar faixas:', error);
-      showError('Erro ao salvar faixas.');
+      showError('Erro ao salvar faixas. Verifique o console para detalhes.');
     }
 
     event.target.value = "";
