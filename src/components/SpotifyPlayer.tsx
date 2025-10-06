@@ -30,7 +30,6 @@ const SpotifyPlayer: React.FC = () => {
     null,
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [singleTitle, setSingleTitle] = React.useState("");
   const [singleUrl, setSingleUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
@@ -98,14 +97,16 @@ const SpotifyPlayer: React.FC = () => {
   }, [isPlaying, currentTrack]);
 
   const adicionarFaixaUnica = async () => {
-    if (!singleTitle || !singleUrl) {
-      alert("Por favor, insira o título e a URL da faixa.");
+    if (!singleUrl) {
+      alert("Por favor, insira a URL da faixa.");
       return;
     }
+    const convertedUrl = convertDriveUrl(singleUrl);
+    const title = formatTitle(singleUrl);
     const newTrack = {
-      title: singleTitle,
-      file_name: singleTitle,
-      url: convertDriveUrl(singleUrl),
+      title: title,
+      file_name: title,
+      url: convertedUrl,
     };
     const { error } = await supabase.from('tracks').insert(newTrack);
     if (error) {
@@ -114,7 +115,6 @@ const SpotifyPlayer: React.FC = () => {
       return;
     }
     await loadTracks();
-    setSingleTitle("");
     setSingleUrl("");
     alert('Faixa adicionada com sucesso!');
   };
@@ -207,13 +207,6 @@ const SpotifyPlayer: React.FC = () => {
             </Button>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <input
-              type="text"
-              value={singleTitle}
-              onChange={(e) => setSingleTitle(e.target.value)}
-              placeholder="Título da faixa"
-              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
-            />
             <input
               type="text"
               value={singleUrl}
