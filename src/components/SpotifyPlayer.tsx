@@ -52,10 +52,7 @@ const SpotifyPlayer: React.FC = () => {
       return;
     }
     audioRef.current.src = currentTrack.url;
-    if (isPlaying) {
-      void audioRef.current.play();
-    }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack]);
 
   React.useEffect(() => {
     if (!audioRef.current) {
