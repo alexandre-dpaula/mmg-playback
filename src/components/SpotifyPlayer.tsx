@@ -204,6 +204,11 @@ const SpotifyPlayer: React.FC = () => {
     }
   };
 
+  const handleAudioError = () => {
+    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida e o arquivo é acessível.`);
+    setIsPlaying(false);
+  };
+
   return (
     <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
@@ -332,7 +337,7 @@ const SpotifyPlayer: React.FC = () => {
           </ScrollArea>
         </div>
       </div>
-      <audio ref={audioRef} hidden onEnded={playNextTrack} />
+      <audio ref={audioRef} hidden onEnded={playNextTrack} onError={handleAudioError} />
     </section>
   );
 };
