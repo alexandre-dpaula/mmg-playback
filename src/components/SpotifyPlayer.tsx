@@ -16,14 +16,6 @@ type Track = {
 const formatTitle = (name: string) =>
   name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ");
 
-const convertDriveUrl = (url: string) => {
-  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (match) {
-    return `https://drive.google.com/uc?export=download&id=${match[1]}`;
-  }
-  return url;
-};
-
 const SpotifyPlayer: React.FC = () => {
   const [tracks, setTracks] = React.useState<Track[]>([]);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
@@ -101,12 +93,11 @@ const SpotifyPlayer: React.FC = () => {
       alert("Por favor, insira a URL da faixa.");
       return;
     }
-    const convertedUrl = convertDriveUrl(singleUrl);
     const title = formatTitle(singleUrl);
     const newTrack = {
       title: title,
       file_name: title,
-      url: convertedUrl,
+      url: singleUrl,
     };
     const { error } = await supabase.from('tracks').insert(newTrack);
     if (error) {
@@ -211,7 +202,7 @@ const SpotifyPlayer: React.FC = () => {
               type="text"
               value={singleUrl}
               onChange={(e) => setSingleUrl(e.target.value)}
-              placeholder="URL do áudio"
+              placeholder="URL do áudio (ex: Github raw)"
               className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
             />
             <Button
