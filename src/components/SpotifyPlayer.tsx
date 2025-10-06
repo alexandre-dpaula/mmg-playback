@@ -23,7 +23,7 @@ const formatTitle = (name: string) => {
   } catch (error) {
     // If decode fails, try to remove % and format
     const cleaned = name.replace(/%/g, '').replace(/\.[^/.]+$/, "");
-    return cleaned.replace(/(\d+)\s+(\d+)/g, '$1_$2');
+    return withoutExt.replace(/(\d+)\s+(\d+)/g, '$1_$2');
   }
 };
 
@@ -347,7 +347,7 @@ const SpotifyPlayer: React.FC = () => {
         <div className="w-full max-w-sm rounded-2xl bg-white/5 p-4 sm:p-6 backdrop-blur">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/50">
+              <p className="text-xs uppercase text-white/50">
                 Agora tocando: {currentTrack?.title ?? "Nenhuma faixa selecionada"}
               </p>
             </div>
