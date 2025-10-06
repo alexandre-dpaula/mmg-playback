@@ -98,34 +98,44 @@ const SpotifyPlayer: React.FC = () => {
 
   const adicionarFaixas = async () => {
     if (!sheetUrl) {
-      alert("Por favor, insira a URL do arquivo JSON das faixas.");
+      alert("Por favor, insira a URL da planilha Google Sheets.");
       return;
     }
+    const csvUrl = sheetUrl.replace("/edit", "/export?format=csv");
     try {
-      const response = await fetch(sheetUrl);
-      const jsonData = await response.json();
-      const newTracks = jsonData
-        .filter((track: any) => track.title && track.url)
-        .map((track: any) => ({
-          title: track.title,
-          file_name: track.title,
-          url: convertDriveUrl(track.url),
-        }));
-      if (newTracks.length > 0) {
-        const { error } = await supabase.from('tracks').insert(newTracks);
-        if (error) {
-          console.error('Erro ao salvar faixas:', error);
-          alert('Erro ao salvar faixas no banco de dados.');
-          return;
-        }
-        await loadTracks(); // Recarregar as faixas após inserir
-        alert('Faixas carregadas e salvas com sucesso!');
-      } else {
-        alert('Nenhuma faixa válida encontrada no JSON.');
-      }
+      const response = await fetch(csvUrl);
+      const csvText = await response.text();
+      Papa.parse(csvText, {
+        header: true,
+        complete: async (results) => {
+          const newTracks = results.data
+            .filter((row: any) => row["nome da faixa"] && row["faixa"])
+            .map((row: any, index: number) => ({
+              title: row["nome da faixa"],
+              file_name: row["nome da faixa"],
+              url: convertDriveUrl(row["faixa"]),
+            }));
+          if (newTracks.length > 0) {
+            const { error } = await supabase.from('tracks').insert(newTracks);
+            if (error) {
+              console.error('Erro ao salvar faixas:', error);
+              alert('Erro ao salvar faixas no banco de dados.');
+              return;
+            }
+            await loadTracks(); // Recarregar as faixas após inserir
+            alert('Faixas carregadas e salvas com sucesso!');
+          } else {
+            alert('Nenhuma faixa válida encontrada na planilha.');
+          }
+        },
+        error: (error) => {
+          console.error("Erro ao parsear CSV:", error);
+          alert("Erro ao carregar a planilha. Verifique a URL e se a planilha é pública.");
+        },
+      });
     } catch (error) {
-      console.error("Erro ao buscar JSON:", error);
-      alert("Erro ao acessar o arquivo JSON. Verifique a URL e se o arquivo é público.");
+      console.error("Erro ao buscar CSV:", error);
+      alert("Erro ao acessar a planilha. Verifique se ela é pública e a URL está correta.");
     }
   };
 
@@ -197,7 +207,7 @@ const SpotifyPlayer: React.FC = () => {
               type="text"
               value={sheetUrl}
               onChange={(e) => setSheetUrl(e.target.value)}
-              placeholder="URL do arquivo JSON das faixas"
+              placeholder="URL da planilha Google Sheets"
               className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
             />
             <Button
@@ -205,7 +215,7 @@ const SpotifyPlayer: React.FC = () => {
               onClick={adicionarFaixas}
             >
               <UploadCloud className="mr-2 h-4 w-4" />
-              Carregar faixas do JSON
+              Carregar faixas da planilha
             </Button>
             <Button
               onClick={handlePlayPause}
@@ -268,7 +278,7 @@ const SpotifyPlayer: React.FC = () => {
               ))}
               {!tracks.length && (
                 <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
-                  Carregue faixas do JSON para iniciar a playlist.
+                  Carregue faixas da planilha para iniciar a playlist.
                 </li>
               )}
             </ul>
