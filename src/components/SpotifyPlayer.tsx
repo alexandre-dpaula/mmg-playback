@@ -76,6 +76,7 @@ const SpotifyPlayer: React.FC = () => {
     if (!audioRef.current || !currentTrack) {
       return;
     }
+    console.log('Setting audio src to:', currentTrack.url);
     audioRef.current.src = currentTrack.url;
   }, [currentTrack]);
 
@@ -101,6 +102,8 @@ const SpotifyPlayer: React.FC = () => {
       return;
     }
     const convertedUrl = convertUrl(singleUrl);
+    console.log('Original URL:', singleUrl);
+    console.log('Converted URL:', convertedUrl);
     const title = formatTitle(singleUrl);
     const newTrack = {
       title: title,
@@ -160,6 +163,7 @@ const SpotifyPlayer: React.FC = () => {
   };
 
   const handleAudioError = () => {
+    console.error('Audio error for URL:', currentTrack?.url);
     alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida e o arquivo é acessível.`);
     setIsPlaying(false);
   };
