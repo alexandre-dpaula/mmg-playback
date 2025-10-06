@@ -2,7 +2,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud, Plus, X } from "lucide-react";
+import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
 import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -150,6 +150,19 @@ const SpotifyPlayer: React.FC = () => {
     }
   };
 
+  const clearPlaylist = async () => {
+    if (!confirm('Tem certeza que deseja limpar toda a playlist? Todas as faixas serão removidas.')) return;
+    const { error } = await supabase.from('tracks').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+    if (error) {
+      console.error('Erro ao limpar playlist:', error);
+      alert('Erro ao limpar playlist.');
+      return;
+    }
+    await loadTracks();
+    setCurrentTrackId(null);
+    setIsPlaying(false);
+  };
+
   const handlePlayPause = () => {
     if (!tracks.length) {
       return;
@@ -237,6 +250,16 @@ const SpotifyPlayer: React.FC = () => {
                 </>
               )}
             </Button>
+            {tracks.length > 0 && (
+              <Button
+                onClick={clearPlaylist}
+                variant="outline"
+                className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white border-red-600 w-full sm:w-auto"
+              >
+                <Trash2 className="h-4 w-4" />
+                Limpar playlist
+              </Button>
+            )}
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <input
