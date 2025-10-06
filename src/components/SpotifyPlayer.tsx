@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { showError, showSuccess } from "@/utils/toast";
 
 type Track = {
   id: string;
@@ -30,6 +32,28 @@ const SpotifyPlayer: React.FC = () => {
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
     [tracks, currentTrackId],
   );
+
+  // Carregar a última capa salva ao montar o componente
+  React.useEffect(() => {
+    const loadLatestCover = async () => {
+      const { data, error } = await supabase
+        .from('covers')
+        .select('url')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Erro ao carregar capa:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setCoverUrl(data[0].url);
+      }
+    };
+
+    loadLatestCover();
+  }, []);
 
   React.useEffect(() => {
     if (!tracks.length) {
@@ -78,17 +102,49 @@ const SpotifyPlayer: React.FC = () => {
     audioInputRef.current?.click();
   };
 
-  const handleCoverUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
-    const url = URL.createObjectURL(file);
-    if (coverUrl) {
-      URL.revokeObjectURL(coverUrl);
+
+    try {
+      // Upload para o Supabase Storage
+      const fileName = `cover-${Date.now()}-${file.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('covers')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Obter a URL pública
+      const { data: urlData } = supabase.storage
+        .from('covers')
+        .getPublicUrl(fileName);
+
+      if (!urlData.publicUrl) {
+        throw new Error('Erro ao obter URL pública');
+      }
+
+      // Salvar no banco de dados
+      const { error: insertError } = await supabase
+        .from('covers')
+        .insert([{ url: urlData.publicUrl }]);
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      // Atualizar o estado local
+      setCoverUrl(urlData.publicUrl);
+      showSuccess('Capa salva com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar capa:', error);
+      showError('Erro ao salvar a capa. Tente novamente.');
     }
-    createdUrlsRef.current.push(url);
-    setCoverUrl(url);
+
     event.target.value = "";
   };
 
