@@ -107,10 +107,6 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
-  const uploadCapa = () => {
-    coverInputRef.current?.click();
-  };
-
   const adicionarFaixas = () => {
     audioInputRef.current?.click();
   };
@@ -291,22 +287,6 @@ const SpotifyPlayer: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <input
-              ref={coverInputRef}
-              id="cover-upload"
-              accept="image/*"
-              type="file"
-              className="hidden"
-              onChange={handleCoverUpload}
-            />
-            <Button
-              variant="secondary"
-              className="bg-white/10 text-white hover:bg-white/20"
-              onClick={uploadCapa}
-            >
-              <UploadCloud className="mr-2 h-4 w-4" />
-              Upload da capa
-            </Button>
             <input
               ref={audioInputRef}
               id="audio-upload"
