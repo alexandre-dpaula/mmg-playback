@@ -303,7 +303,7 @@ const SpotifyPlayer: React.FC = () => {
                   )}
                 >
                   <div className="flex-1" onClick={() => handleSelectTrack(track.id)}>
-                    <p className="font-semibold">{track.fileName}</p>
+                    <p className="font-semibold">{track.title}</p>
                     <span className="text-xs text-white/50">
                       Faixa {index + 1}
                     </span>
