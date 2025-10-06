@@ -2,7 +2,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
+import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2, Upload } from "lucide-react";
 import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,6 +30,7 @@ const SpotifyPlayer: React.FC = () => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [singleUrl, setSingleUrl] = React.useState("");
+  const [csvUrl, setCsvUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -133,6 +134,66 @@ const SpotifyPlayer: React.FC = () => {
     await loadTracks();
     setSingleUrl("");
     alert('Faixa adicionada com sucesso!');
+  };
+
+  const carregarDoCSV = async () => {
+    if (!csvUrl) {
+      alert("Por favor, insira a URL do arquivo CSV.");
+      return;
+    }
+    try {
+      const response = await fetch(csvUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const csvText = await response.text();
+      Papa.parse(csvText, {
+        header: true,
+        complete: async (results) => {
+          const data = results.data as { title?: string; url?: string }[];
+          const validTracks = [];
+          for (const row of data) {
+            if (row.title && row.url) {
+              const convertedUrl = convertUrl(row.url);
+              try {
+                const res = await fetch(convertedUrl, { method: 'HEAD' });
+                if (res.ok) {
+                  validTracks.push({
+                    title: row.title,
+                    file_name: row.title,
+                    url: convertedUrl,
+                  });
+                } else {
+                  console.warn(`URL inválida: ${convertedUrl}`);
+                }
+              } catch (error) {
+                console.warn(`Erro ao validar URL: ${convertedUrl}`, error);
+              }
+            }
+          }
+          if (validTracks.length === 0) {
+            alert('Nenhuma faixa válida encontrada no CSV.');
+            return;
+          }
+          const { error } = await supabase.from('tracks').insert(validTracks);
+          if (error) {
+            console.error('Erro ao salvar faixas do CSV:', error);
+            alert('Erro ao salvar faixas do CSV.');
+            return;
+          }
+          await loadTracks();
+          setCsvUrl("");
+          alert(`${validTracks.length} faixa(s) adicionada(s) com sucesso!`);
+        },
+        error: (error) => {
+          console.error('Erro ao analisar CSV:', error);
+          alert('Erro ao analisar o arquivo CSV.');
+        },
+      });
+    } catch (error) {
+      console.error('Erro ao carregar CSV:', error);
+      alert('Erro ao carregar o arquivo CSV.');
+    }
   };
 
   const deleteTrack = async (id: string) => {
@@ -275,6 +336,22 @@ const SpotifyPlayer: React.FC = () => {
             >
               <Plus className="mr-2 h-4 w-4" />
               Adicionar faixa
+            </Button>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            <input
+              type="text"
+              value={csvUrl}
+              onChange={(e) => setCsvUrl(e.target.value)}
+              placeholder="URL do arquivo CSV"
+              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
+            />
+            <Button
+              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
+              onClick={carregarDoCSV}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Carregar do CSV
             </Button>
           </div>
         </div>
