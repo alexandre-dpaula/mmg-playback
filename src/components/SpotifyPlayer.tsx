@@ -181,9 +181,7 @@ const SpotifyPlayer: React.FC = () => {
                 Celebre em harmonia!
               </h2>
               <p className="max-w-md text-sm text-white/60">
-                Carregue uma capa simbólica, importe seus arranjos vocais e
-                controle a reprodução com a atmosfera inspiradora da Festa dos
-                Tabernáculos.
+                Arranjos vocais com controle e reprodução para estudo do Ministério de Música.
               </p>
             </div>
           </div>
