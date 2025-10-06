@@ -158,26 +158,26 @@ const SpotifyPlayer: React.FC = () => {
   };
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <div className="flex flex-1 flex-col gap-6">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+    <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
+      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+        <div className="flex flex-1 flex-col gap-4 sm:gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
             {coverUrl ? (
               <img
                 src={coverUrl}
                 alt="Capa do áudio"
-                className="h-44 w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
+                className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
               />
             ) : (
-              <div className="flex h-44 w-44 items-center justify-center rounded-2xl bg-white/10 text-white/60 shadow-inner">
-                <Music2 className="h-12 w-12" />
+              <div className="flex h-32 w-32 sm:h-44 sm:w-44 items-center justify-center rounded-2xl bg-white/10 text-white/60 shadow-inner">
+                <Music2 className="h-8 w-8 sm:h-12 sm:w-12" />
               </div>
             )}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <span className="text-xs uppercase tracking-[0.4em] text-white/60">
                 Playlist — Festa dos Tabernáculos
               </span>
-              <h2 className="text-4xl font-bold md:text-5xl">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
                 Celebre em harmonia!
               </h2>
               <p className="max-w-md text-sm text-white/60">
@@ -185,7 +185,7 @@ const SpotifyPlayer: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <input
               ref={coverInputRef}
               id="cover-upload"
@@ -196,7 +196,7 @@ const SpotifyPlayer: React.FC = () => {
             />
             <Button
               variant="secondary"
-              className="bg-white/10 text-white hover:bg-white/20"
+              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
               onClick={uploadCapa}
             >
               <UploadCloud className="mr-2 h-4 w-4" />
@@ -212,7 +212,7 @@ const SpotifyPlayer: React.FC = () => {
               onChange={handleAudioUpload}
             />
             <Button
-              className="bg-white/10 text-white hover:bg-white/20"
+              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
               onClick={adicionarFaixas}
             >
               <UploadCloud className="mr-2 h-4 w-4" />
@@ -221,44 +221,44 @@ const SpotifyPlayer: React.FC = () => {
             <Button
               onClick={handlePlayPause}
               disabled={!tracks.length}
-              className="flex items-center gap-2 rounded-full bg-[#1DB954] px-6 py-5 text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 w-full sm:w-auto"
             >
               {isPlaying ? (
                 <>
-                  <Pause className="h-5 w-5" />
+                  <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
                   Pausar
                 </>
               ) : (
                 <>
-                  <Play className="h-5 w-5" />
+                  <Play className="h-4 w-4 sm:h-5 sm:w-5" />
                   Reproduzir
                 </>
               )}
             </Button>
           </div>
         </div>
-        <div className="w-full max-w-sm rounded-2xl bg-white/5 p-6 backdrop-blur">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="w-full max-w-sm rounded-2xl bg-white/5 p-4 sm:p-6 backdrop-blur">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-white/50">
                 Agora tocando
               </p>
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-base sm:text-lg font-semibold">
                 {currentTrack?.title ?? "Nenhuma faixa selecionada"}
               </h3>
             </div>
-            <span className="rounded-full bg-[#1DB954]/10 px-3 py-1 text-xs font-semibold text-[#1DB954]">
+            <span className="rounded-full bg-[#1DB954]/10 px-2 py-1 sm:px-3 sm:py-1 text-xs font-semibold text-[#1DB954] self-start sm:self-auto">
               {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
             </span>
           </div>
-          <ScrollArea className="h-56 pr-4">
+          <ScrollArea className="h-48 sm:h-56 pr-4">
             <ul className="space-y-2">
               {tracks.map((track, index) => (
                 <li
                   key={track.id}
                   onClick={() => handleSelectTrack(track.id)}
                   className={cn(
-                    "flex cursor-pointer items-center justify-between rounded-xl px-4 py-3 text-sm transition",
+                    "flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm transition",
                     currentTrackId === track.id
                       ? "bg-[#1DB954]/20 text-white"
                       : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white",
@@ -271,14 +271,14 @@ const SpotifyPlayer: React.FC = () => {
                     </span>
                   </div>
                   {currentTrackId === track.id && (
-                    <span className="rounded-full bg-[#1DB954] px-3 py-1 text-xs font-bold text-black">
+                    <span className="rounded-full bg-[#1DB954] px-2 py-1 sm:px-3 sm:py-1 text-xs font-bold text-black">
                       Tocando
                     </span>
                   )}
                 </li>
               ))}
               {!tracks.length && (
-                <li className="rounded-xl bg-white/5 px-4 py-8 text-center text-sm text-white/50">
+                <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
                   Adicione suas músicas para iniciar a playlist.
                 </li>
               )}
