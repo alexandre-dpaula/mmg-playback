@@ -16,9 +16,15 @@ type Track = {
 };
 
 const formatTitle = (name: string) => {
-  const decoded = decodeURIComponent(name);
-  const withoutExt = decoded.replace(/\.[^/.]+$/, "");
-  return withoutExt.replace(/(\d+)\s+(\d+)/g, '$1_$2');
+  try {
+    const decoded = decodeURIComponent(name);
+    const withoutExt = decoded.replace(/\.[^/.]+$/, "");
+    return withoutExt.replace(/(\d+)\s+(\d+)/g, '$1_$2');
+  } catch (error) {
+    // If decode fails, try to remove % and format
+    const cleaned = name.replace(/%/g, '').replace(/\.[^/.]+$/, "");
+    return cleaned.replace(/(\d+)\s+(\d+)/g, '$1_$2');
+  }
 };
 
 const convertGitHubToRaw = (url: string) => {
