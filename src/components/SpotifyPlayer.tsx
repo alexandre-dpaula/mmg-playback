@@ -2,7 +2,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud } from "lucide-react";
+import { Music2, Pause, Play, UploadCloud, Plus } from "lucide-react";
 import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,6 +31,8 @@ const SpotifyPlayer: React.FC = () => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [sheetUrl, setSheetUrl] = React.useState("");
+  const [singleTitle, setSingleTitle] = React.useState("");
+  const [singleUrl, setSingleUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -139,6 +141,28 @@ const SpotifyPlayer: React.FC = () => {
     }
   };
 
+  const adicionarFaixaUnica = async () => {
+    if (!singleTitle || !singleUrl) {
+      alert("Por favor, insira o título e a URL da faixa.");
+      return;
+    }
+    const newTrack = {
+      title: singleTitle,
+      file_name: singleTitle,
+      url: convertDriveUrl(singleUrl),
+    };
+    const { error } = await supabase.from('tracks').insert(newTrack);
+    if (error) {
+      console.error('Erro ao salvar faixa:', error);
+      alert('Erro ao salvar faixa no banco de dados.');
+      return;
+    }
+    await loadTracks();
+    setSingleTitle("");
+    setSingleUrl("");
+    alert('Faixa adicionada com sucesso!');
+  };
+
   const handlePlayPause = () => {
     if (!tracks.length) {
       return;
@@ -233,6 +257,29 @@ const SpotifyPlayer: React.FC = () => {
                   Reproduzir
                 </>
               )}
+            </Button>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            <input
+              type="text"
+              value={singleTitle}
+              onChange={(e) => setSingleTitle(e.target.value)}
+              placeholder="Título da faixa"
+              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
+            />
+            <input
+              type="text"
+              value={singleUrl}
+              onChange={(e) => setSingleUrl(e.target.value)}
+              placeholder="URL do áudio"
+              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
+            />
+            <Button
+              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
+              onClick={adicionarFaixaUnica}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar faixa
             </Button>
           </div>
         </div>
