@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
-import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 
 type Track = {
