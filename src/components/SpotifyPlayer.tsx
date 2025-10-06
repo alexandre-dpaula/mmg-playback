@@ -165,7 +165,7 @@ const SpotifyPlayer: React.FC = () => {
 
   const handleAudioError = () => {
     console.error('Audio error for URL:', currentTrack?.url);
-    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida e o arquivo é acessível.`);
+    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida, o arquivo é acessível e é um arquivo de áudio suportado (ex: MP3). Se o repositório no Github for privado, torne-o público ou use um serviço de hospedagem alternativo como Dropbox, Google Drive ou um servidor próprio.`);
     setIsPlaying(false);
   };
 
