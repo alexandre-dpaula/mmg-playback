@@ -35,6 +35,7 @@ const SpotifyPlayer: React.FC = () => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [singleUrl, setSingleUrl] = React.useState("");
+  const [coverSrc, setCoverSrc] = React.useState("https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3c2576.jpg");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -194,8 +195,9 @@ const SpotifyPlayer: React.FC = () => {
         <div className="flex flex-1 flex-col gap-4 sm:gap-6">
           <div className="flex flex-row items-center gap-6">
             <img
-              src="https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3c2576.jpg"
+              src={coverSrc}
               alt="Capa do áudio"
+              onError={() => setCoverSrc("/placeholder.svg")}
               className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
             />
             <div className="space-y-2 sm:space-y-3">
