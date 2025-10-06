@@ -99,44 +99,6 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
-  const adicionarFaixaUnica = async () => {
-    if (!singleUrl) {
-      alert("Por favor, insira a URL da faixa.");
-      return;
-    }
-    const convertedUrl = convertUrl(singleUrl);
-    console.log('Original URL:', singleUrl);
-    console.log('Converted URL:', convertedUrl);
-    
-    // Validate URL accessibility
-    try {
-      const response = await fetch(convertedUrl, { method: 'HEAD' });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Erro ao validar URL:', error);
-      alert('Erro: A URL fornecida não é acessível ou não existe. Verifique se o arquivo existe e é público.');
-      return;
-    }
-    
-    const title = formatTitle(singleUrl);
-    const newTrack = {
-      title: title,
-      file_name: title,
-      url: convertedUrl,
-    };
-    const { error } = await supabase.from('tracks').insert(newTrack);
-    if (error) {
-      console.error('Erro ao salvar faixa:', error);
-      alert('Erro ao salvar faixa no banco de dados.');
-      return;
-    }
-    await loadTracks();
-    setSingleUrl("");
-    alert('Faixa adicionada com sucesso!');
-  };
-
   const previewTrack = async () => {
     if (!singleUrl) {
       alert("Por favor, insira a URL da faixa para preview.");
@@ -328,13 +290,6 @@ const SpotifyPlayer: React.FC = () => {
             >
               <Eye className="mr-2 h-4 w-4" />
               {isPreviewing ? 'Parar Preview' : 'Preview'}
-            </Button>
-            <Button
-              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
-              onClick={adicionarFaixaUnica}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar faixa
             </Button>
           </div>
         </div>
