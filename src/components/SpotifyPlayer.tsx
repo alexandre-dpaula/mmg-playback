@@ -30,7 +30,7 @@ const SpotifyPlayer: React.FC = () => {
     null,
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [singleUrl, setSingleUrl] = React.useState("");
+  const [csvUrl, setCsvUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -96,27 +96,39 @@ const SpotifyPlayer: React.FC = () => {
     }
   }, [isPlaying, currentTrack]);
 
-  const adicionarFaixaUnica = async () => {
-    if (!singleUrl) {
-      alert("Por favor, insira a URL da faixa.");
+  const adicionarFaixas = async () => {
+    if (!csvUrl) {
+      alert("Por favor, insira a URL do CSV com as faixas.");
       return;
     }
-    const convertedUrl = convertDriveUrl(singleUrl);
-    const title = formatTitle(singleUrl);
-    const newTrack = {
-      title: title,
-      file_name: title,
-      url: convertedUrl,
-    };
-    const { error } = await supabase.from('tracks').insert(newTrack);
-    if (error) {
-      console.error('Erro ao salvar faixa:', error);
-      alert('Erro ao salvar faixa no banco de dados.');
-      return;
-    }
-    await loadTracks();
-    setSingleUrl("");
-    alert('Faixa adicionada com sucesso!');
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: async (results) => {
+        const newTracks = results.data.map((row: any) => ({
+          title: row.title || formatTitle(row.url),
+          file_name: row.title || formatTitle(row.url),
+          url: convertDriveUrl(row.url),
+        })).filter(track => track.url);
+        if (newTracks.length === 0) {
+          alert("Nenhuma faixa válida encontrada no CSV.");
+          return;
+        }
+        const { error } = await supabase.from('tracks').insert(newTracks);
+        if (error) {
+          console.error('Erro ao salvar faixas:', error);
+          alert('Erro ao salvar faixas no banco de dados.');
+          return;
+        }
+        await loadTracks();
+        setCsvUrl("");
+        alert(`${newTracks.length} faixas carregadas com sucesso!`);
+      },
+      error: (error) => {
+        console.error('Erro ao analisar CSV:', error);
+        alert('Erro ao carregar o CSV. Verifique a URL.');
+      }
+    });
   };
 
   const handlePlayPause = () => {
@@ -209,17 +221,17 @@ const SpotifyPlayer: React.FC = () => {
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <input
               type="text"
-              value={singleUrl}
-              onChange={(e) => setSingleUrl(e.target.value)}
-              placeholder="URL do áudio"
+              value={csvUrl}
+              onChange={(e) => setCsvUrl(e.target.value)}
+              placeholder="URL do CSV com faixas"
               className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
             />
             <Button
               className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
-              onClick={adicionarFaixaUnica}
+              onClick={adicionarFaixas}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Adicionar faixa
+              Carregar faixas
             </Button>
           </div>
         </div>
