@@ -53,12 +53,22 @@ const SpotifyPlayer: React.FC = () => {
         console.error('Erro ao carregar faixas do localStorage:', error);
       }
     }
+    // Load singleUrl from localStorage
+    const savedUrl = localStorage.getItem('singleUrl');
+    if (savedUrl) {
+      setSingleUrl(savedUrl);
+    }
   }, []);
 
   React.useEffect(() => {
     // Save tracks to localStorage whenever tracks change
     localStorage.setItem('tracks', JSON.stringify(tracks));
   }, [tracks]);
+
+  React.useEffect(() => {
+    // Save singleUrl to localStorage whenever it changes
+    localStorage.setItem('singleUrl', singleUrl);
+  }, [singleUrl]);
 
   React.useEffect(() => {
     if (!tracks.length) {
