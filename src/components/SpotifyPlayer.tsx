@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
+import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2, SkipBack, SkipForward } from "lucide-react";
 import { showSuccess, showError } from "@/utils/toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,6 +44,8 @@ const SpotifyPlayer: React.FC = () => {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [singleUrl, setSingleUrl] = React.useState("");
   const [loading, setLoading] = React.useState(true);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
@@ -231,6 +233,22 @@ const SpotifyPlayer: React.FC = () => {
     setIsPlaying((state) => !state);
   };
 
+  const handlePrevious = () => {
+    if (!tracks.length || !currentTrack) return;
+    const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
+    const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
+    setCurrentTrackId(tracks[prevIndex].id);
+    setIsPlaying(true);
+  };
+
+  const handleNext = () => {
+    if (!tracks.length || !currentTrack) return;
+    const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
+    const nextIndex = (currentIndex + 1) % tracks.length;
+    setCurrentTrackId(tracks[nextIndex].id);
+    setIsPlaying(true);
+  };
+
   const handleSelectTrack = (id: string) => {
     if (id === currentTrackId) {
       setIsPlaying(true);
@@ -241,29 +259,22 @@ const SpotifyPlayer: React.FC = () => {
   };
 
   const playNextTrack = () => {
-    if (!currentTrack) {
-      return;
-    }
-    const currentIndex = tracks.findIndex(
-      (track) => track.id === currentTrack.id,
-    );
-    const next = tracks[currentIndex + 1];
-    if (next) {
-      setCurrentTrackId(next.id);
-      setIsPlaying(true);
-      return;
-    }
-    setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
+    handleNext();
   };
 
   const handleAudioError = () => {
     console.error('Audio error for URL:', currentTrack?.url);
     alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida, o arquivo é acessível e é um arquivo de áudio suportado (ex: MP3). Se o repositório no Github for privado, torne-o público ou use um serviço de hospedagem alternativo como Dropbox, Google Drive ou um servidor próprio.`);
     setIsPlaying(false);
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!audioRef.current || !duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const newTime = (clickX / rect.width) * duration;
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
   if (loading) {
@@ -299,23 +310,39 @@ const SpotifyPlayer: React.FC = () => {
             Arranjos vocais com controle e reprodução para estudo do Ministério de Música.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <Button
-              onClick={handlePlayPause}
-              disabled={!tracks.length}
-              className="flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 w-full sm:w-auto"
-            >
-              {isPlaying ? (
-                <>
-                  <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Pausar
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Reproduzir
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handlePrevious}
+                disabled={!tracks.length}
+                className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <SkipBack className="h-5 w-5" />
+              </Button>
+              <Button
+                onClick={handlePlayPause}
+                disabled={!tracks.length}
+                className="flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Pausar
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Reproduzir
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleNext}
+                disabled={!tracks.length}
+                className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <SkipForward className="h-5 w-5" />
+              </Button>
+            </div>
             {tracks.length > 0 && (
               <Button
                 onClick={clearPlaylist}
@@ -327,6 +354,19 @@ const SpotifyPlayer: React.FC = () => {
               </Button>
             )}
           </div>
+          {currentTrack && (
+            <div className="audio-player">
+              <div
+                className="progress-bar w-full h-2 bg-white/20 rounded cursor-pointer"
+                onClick={handleProgressClick}
+              >
+                <div
+                  className="progress-thumb h-full bg-[#1DB954] rounded"
+                  style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                ></div>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <input
               type="text"
@@ -402,7 +442,14 @@ const SpotifyPlayer: React.FC = () => {
           </ScrollArea>
         </div>
       </div>
-      <audio ref={audioRef} hidden onEnded={playNextTrack} onError={handleAudioError} />
+      <audio
+        ref={audioRef}
+        hidden
+        onEnded={playNextTrack}
+        onError={handleAudioError}
+        onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
+        onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+      />
     </section>
   );
 };
