@@ -2,7 +2,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
+import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2, Eye } from "lucide-react";
 import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,7 +30,9 @@ const SpotifyPlayer: React.FC = () => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [singleUrl, setSingleUrl] = React.useState("");
+  const [isPreviewing, setIsPreviewing] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const previewAudioRef = React.useRef<HTMLAudioElement | null>(null);
   const createdUrlsRef = React.useRef<string[]>([]);
 
   const currentTrack = React.useMemo(
@@ -134,6 +136,57 @@ const SpotifyPlayer: React.FC = () => {
     setSingleUrl("");
     alert('Faixa adicionada com sucesso!');
   };
+
+  const previewTrack = async () => {
+    if (!singleUrl) {
+      alert("Por favor, insira a URL da faixa para preview.");
+      return;
+    }
+    const convertedUrl = convertUrl(singleUrl);
+    
+    // Validate URL accessibility
+    try {
+      const response = await fetch(convertedUrl, { method: 'HEAD' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Erro ao validar URL:', error);
+      alert('Erro: A URL fornecida não é acessível ou não existe. Verifique se o arquivo existe e é público.');
+      return;
+    }
+    
+    if (!previewAudioRef.current) {
+      previewAudioRef.current = new Audio();
+    }
+    
+    previewAudioRef.current.src = convertedUrl;
+    previewAudioRef.current.load();
+    setIsPreviewing(true);
+    try {
+      await previewAudioRef.current.play();
+    } catch (error) {
+      console.error('Erro ao tocar preview:', error);
+      alert('Erro ao tocar o preview. Verifique se o arquivo é um áudio válido.');
+      setIsPreviewing(false);
+    }
+  };
+
+  const stopPreview = () => {
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      previewAudioRef.current.currentTime = 0;
+    }
+    setIsPreviewing(false);
+  };
+
+  React.useEffect(() => {
+    const handlePreviewEnd = () => setIsPreviewing(false);
+    if (previewAudioRef.current) {
+      previewAudioRef.current.addEventListener('ended', handlePreviewEnd);
+      return () => previewAudioRef.current?.removeEventListener('ended', handlePreviewEnd);
+    }
+  }, []);
 
   const deleteTrack = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover esta faixa?')) return;
@@ -269,6 +322,13 @@ const SpotifyPlayer: React.FC = () => {
               placeholder="URL do áudio (ex: Github)"
               className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
             />
+            <Button
+              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
+              onClick={isPreviewing ? stopPreview : previewTrack}
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              {isPreviewing ? 'Parar Preview' : 'Preview'}
+            </Button>
             <Button
               className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
               onClick={adicionarFaixaUnica}
