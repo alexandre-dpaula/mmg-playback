@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Track = {
   id: string;
@@ -38,22 +39,23 @@ const SpotifyPlayer: React.FC = () => {
     [tracks, currentTrackId],
   );
 
-  React.useEffect(() => {
-    // Load tracks from localStorage on mount
-    const savedTracks = localStorage.getItem('tracks');
-    if (savedTracks) {
-      try {
-        setTracks(JSON.parse(savedTracks));
-      } catch (error) {
-        console.error('Erro ao carregar faixas do localStorage:', error);
-      }
+  const loadTracks = async () => {
+    const { data, error } = await supabase.from('tracks').select('*');
+    if (error) {
+      console.error('Erro ao carregar faixas:', error);
+      return;
     }
-  }, []);
+    setTracks(data.map(track => ({
+      id: track.id,
+      url: track.url,
+      title: track.title,
+      fileName: track.file_name,
+    })));
+  };
 
   React.useEffect(() => {
-    // Save tracks to localStorage whenever tracks change
-    localStorage.setItem('tracks', JSON.stringify(tracks));
-  }, [tracks]);
+    loadTracks();
+  }, []);
 
   React.useEffect(() => {
     if (!tracks.length) {
@@ -117,29 +119,47 @@ const SpotifyPlayer: React.FC = () => {
     
     const fileName = singleUrl.split('/').pop() || 'unknown';
     const title = formatTitle(fileName);
-    const newTrack: Track = {
-      id: Date.now().toString(),
+    
+    const { error } = await supabase.from('tracks').insert({
       url: convertedUrl,
       title: title,
-      fileName: fileName,
-    };
+      file_name: fileName,
+    });
     
-    setTracks(prev => [...prev, newTrack]);
+    if (error) {
+      console.error('Erro ao adicionar faixa:', error);
+      alert('Erro ao adicionar faixa.');
+      return;
+    }
+    
+    await loadTracks();
     setSingleUrl("");
   };
 
-  const deleteTrack = (id: string) => {
+  const deleteTrack = async (id: string) => {
     if (!confirm('Tem certeza que deseja remover esta faixa?')) return;
-    setTracks(prev => prev.filter(track => track.id !== id));
+    const { error } = await supabase.from('tracks').delete().eq('id', id);
+    if (error) {
+      console.error('Erro ao remover faixa:', error);
+      alert('Erro ao remover faixa.');
+      return;
+    }
+    await loadTracks();
     if (currentTrackId === id) {
       setCurrentTrackId(null);
       setIsPlaying(false);
     }
   };
 
-  const clearPlaylist = () => {
+  const clearPlaylist = async () => {
     if (!confirm('Tem certeza que deseja limpar toda a playlist? Todas as faixas serão removidas.')) return;
-    setTracks([]);
+    const { error } = await supabase.from('tracks').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+    if (error) {
+      console.error('Erro ao limpar playlist:', error);
+      alert('Erro ao limpar playlist.');
+      return;
+    }
+    await loadTracks();
     setCurrentTrackId(null);
     setIsPlaying(false);
   };
