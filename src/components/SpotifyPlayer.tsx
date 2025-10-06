@@ -39,20 +39,21 @@ const SpotifyPlayer: React.FC = () => {
     [tracks, currentTrackId],
   );
 
+  const loadTracks = async () => {
+    const { data, error } = await supabase.from('tracks').select('*');
+    if (error) {
+      console.error('Erro ao carregar faixas:', error);
+      return;
+    }
+    setTracks(data.map(track => ({
+      id: track.id,
+      url: track.url,
+      title: track.title,
+      fileName: track.file_name,
+    })));
+  };
+
   React.useEffect(() => {
-    const loadTracks = async () => {
-      const { data, error } = await supabase.from('tracks').select('*');
-      if (error) {
-        console.error('Erro ao carregar faixas:', error);
-        return;
-      }
-      setTracks(data.map(track => ({
-        id: track.id,
-        url: track.url,
-        title: track.title,
-        fileName: track.file_name,
-      })));
-    };
     loadTracks();
   }, []);
 
@@ -106,25 +107,35 @@ const SpotifyPlayer: React.FC = () => {
       const csvText = await response.text();
       Papa.parse(csvText, {
         header: true,
-        complete: (results) => {
-          const newTracks: Track[] = results.data
+        complete: async (results) => {
+          const newTracks = results.data
             .filter((row: any) => row["Nome da Faixa"] && row["Faixa"])
             .map((row: any, index: number) => ({
-              id: `sheet-${Date.now()}-${index}`,
-              url: convertDriveUrl(row["Faixa"]),
               title: row["Nome da Faixa"],
-              fileName: row["Nome da Faixa"],
+              file_name: row["Nome da Faixa"],
+              url: convertDriveUrl(row["Faixa"]),
             }));
-          setTracks((prev) => [...prev, ...newTracks]);
+          if (newTracks.length > 0) {
+            const { error } = await supabase.from('tracks').insert(newTracks);
+            if (error) {
+              console.error('Erro ao salvar faixas:', error);
+              alert('Erro ao salvar faixas no banco de dados.');
+              return;
+            }
+            await loadTracks(); // Recarregar as faixas após inserir
+            alert('Faixas carregadas e salvas com sucesso!');
+          } else {
+            alert('Nenhuma faixa válida encontrada na planilha.');
+          }
         },
         error: (error) => {
           console.error("Erro ao parsear CSV:", error);
-          alert("Erro ao carregar a planilha. Verifique a URL.");
+          alert("Erro ao carregar a planilha. Verifique a URL e se a planilha é pública.");
         },
       });
     } catch (error) {
       console.error("Erro ao buscar CSV:", error);
-      alert("Erro ao acessar a planilha. Verifique se ela é pública.");
+      alert("Erro ao acessar a planilha. Verifique se ela é pública e a URL está correta.");
     }
   };
 
