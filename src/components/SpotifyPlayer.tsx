@@ -333,7 +333,7 @@ const SpotifyPlayer: React.FC = () => {
               value={singleUrl}
               onChange={(e) => setSingleUrl(e.target.value)}
               placeholder="Cole a URL"
-              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
+              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto text-center"
             />
             <Button
               onClick={adicionarFaixaUnica}
