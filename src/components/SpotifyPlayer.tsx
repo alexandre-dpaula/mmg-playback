@@ -78,6 +78,7 @@ const SpotifyPlayer: React.FC = () => {
     }
     console.log('Setting audio src to:', currentTrack.url);
     audioRef.current.src = currentTrack.url;
+    audioRef.current.load();
   }, [currentTrack]);
 
   React.useEffect(() => {
