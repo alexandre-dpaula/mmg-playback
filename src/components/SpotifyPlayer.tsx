@@ -32,6 +32,14 @@ const SpotifyPlayer: React.FC = () => {
   );
 
   React.useEffect(() => {
+    // Load cover from localStorage on mount
+    const savedCover = localStorage.getItem('spotifyPlayerCover');
+    if (savedCover) {
+      setCoverUrl(savedCover);
+    }
+  }, []);
+
+  React.useEffect(() => {
     if (!tracks.length) {
       setCurrentTrackId(null);
       setIsPlaying(false);
@@ -83,12 +91,13 @@ const SpotifyPlayer: React.FC = () => {
     if (!file) {
       return;
     }
-    const url = URL.createObjectURL(file);
-    if (coverUrl) {
-      URL.revokeObjectURL(coverUrl);
-    }
-    createdUrlsRef.current.push(url);
-    setCoverUrl(url);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setCoverUrl(result);
+      localStorage.setItem('spotifyPlayerCover', result);
+    };
+    reader.readAsDataURL(file);
     event.target.value = "";
   };
 
