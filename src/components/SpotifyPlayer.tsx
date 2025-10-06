@@ -30,7 +30,6 @@ const SpotifyPlayer: React.FC = () => {
     null,
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [sheetUrl, setSheetUrl] = React.useState("");
   const [singleTitle, setSingleTitle] = React.useState("");
   const [singleUrl, setSingleUrl] = React.useState("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -97,49 +96,6 @@ const SpotifyPlayer: React.FC = () => {
       audioRef.current.pause();
     }
   }, [isPlaying, currentTrack]);
-
-  const adicionarFaixas = async () => {
-    if (!sheetUrl) {
-      alert("Por favor, insira a URL da planilha Google Sheets.");
-      return;
-    }
-    const csvUrl = sheetUrl.replace("/edit", "/export?format=csv");
-    try {
-      const response = await fetch(csvUrl);
-      const csvText = await response.text();
-      Papa.parse(csvText, {
-        header: true,
-        complete: async (results) => {
-          const newTracks = results.data
-            .filter((row: any) => row["nome da faixa"] && row["faixa"])
-            .map((row: any, index: number) => ({
-              title: row["nome da faixa"],
-              file_name: row["nome da faixa"],
-              url: convertDriveUrl(row["faixa"]),
-            }));
-          if (newTracks.length > 0) {
-            const { error } = await supabase.from('tracks').insert(newTracks);
-            if (error) {
-              console.error('Erro ao salvar faixas:', error);
-              alert('Erro ao salvar faixas no banco de dados.');
-              return;
-            }
-            await loadTracks(); // Recarregar as faixas após inserir
-            alert('Faixas carregadas e salvas com sucesso!');
-          } else {
-            alert('Nenhuma faixa válida encontrada na planilha.');
-          }
-        },
-        error: (error) => {
-          console.error("Erro ao parsear CSV:", error);
-          alert("Erro ao carregar a planilha. Verifique a URL e se a planilha é pública.");
-        },
-      });
-    } catch (error) {
-      console.error("Erro ao buscar CSV:", error);
-      alert("Erro ao acessar a planilha. Verifique se ela é pública e a URL está correta.");
-    }
-  };
 
   const adicionarFaixaUnica = async () => {
     if (!singleTitle || !singleUrl) {
@@ -232,20 +188,6 @@ const SpotifyPlayer: React.FC = () => {
             Arranjos vocais com controle e reprodução para estudo do Ministério de Música.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <input
-              type="text"
-              value={sheetUrl}
-              onChange={(e) => setSheetUrl(e.target.value)}
-              placeholder="URL da planilha Google Sheets"
-              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto"
-            />
-            <Button
-              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
-              onClick={adicionarFaixas}
-            >
-              <UploadCloud className="mr-2 h-4 w-4" />
-              Carregar faixas da planilha
-            </Button>
             <Button
               onClick={handlePlayPause}
               disabled={!tracks.length}
@@ -330,7 +272,7 @@ const SpotifyPlayer: React.FC = () => {
               ))}
               {!tracks.length && (
                 <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
-                  Carregue faixas da planilha para iniciar a playlist.
+                  Adicione faixas para iniciar a playlist.
                 </li>
               )}
             </ul>
