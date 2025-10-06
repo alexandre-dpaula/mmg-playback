@@ -178,14 +178,15 @@ const SpotifyPlayer: React.FC = () => {
             )}
             <div className="space-y-3">
               <span className="text-xs uppercase tracking-[0.4em] text-white/60">
-                Playlist personalizada
+                Playlist — Festa dos Tabernáculos
               </span>
               <h2 className="text-4xl font-bold md:text-5xl">
-                Vibrações do Spotify
+                Celebre em harmonia!
               </h2>
               <p className="max-w-md text-sm text-white/60">
-                Carregue uma capa marcante, importe suas músicas favoritas e
-                controle a reprodução com o clima clássico do Spotify.
+                Carregue uma capa simbólica, importe seus arranjos vocais e
+                controle a reprodução com a atmosfera inspiradora da Festa dos
+                Tabernáculos.
               </p>
             </div>
           </div>
