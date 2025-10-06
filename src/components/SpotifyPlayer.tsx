@@ -294,7 +294,7 @@ const SpotifyPlayer: React.FC = () => {
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
+    <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10 mb-2">
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
         <div className="flex flex-1 flex-col gap-4 sm:gap-6">
           <div className="flex flex-row items-center gap-6">
