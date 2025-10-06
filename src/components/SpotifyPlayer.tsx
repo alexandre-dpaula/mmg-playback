@@ -1,3 +1,16 @@
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2 } from "lucide-react";
+
+type Track = {
+  id: string;
+  url: string;
+  title: string;
+  fileName: string;
+};
+
 const formatTitle = (name: string) =>
   name.replace(/\.[^/.]+$/, "").replace(/[_-]+/g, " ");
 
