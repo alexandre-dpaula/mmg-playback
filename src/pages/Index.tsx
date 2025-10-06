@@ -15,9 +15,6 @@ const Index = () => {
           <p className="max-w-2xl text-white/60">
             Crie, organize e ouça seus arranjos vocais com uma interface envolvente e inspirada no clima da celebração.
           </p>
-          <p className="max-w-2xl text-white/60">
-            Importe vozes, monte sua sequência de louvores e controle a reprodução com praticidade e harmonia.
-          </p>
         </header>
         <SpotifyPlayer />
         <div className="text-center">
