@@ -105,6 +105,19 @@ const SpotifyPlayer: React.FC = () => {
     const convertedUrl = convertUrl(singleUrl);
     console.log('Original URL:', singleUrl);
     console.log('Converted URL:', convertedUrl);
+    
+    // Validate URL accessibility
+    try {
+      const response = await fetch(convertedUrl, { method: 'HEAD' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Erro ao validar URL:', error);
+      alert('Erro: A URL fornecida não é acessível ou não existe. Verifique se o arquivo existe e é público.');
+      return;
+    }
+    
     const title = formatTitle(singleUrl);
     const newTrack = {
       title: title,
