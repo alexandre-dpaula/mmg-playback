@@ -109,11 +109,11 @@ const SpotifyPlayer: React.FC = () => {
         header: true,
         complete: async (results) => {
           const newTracks = results.data
-            .filter((row: any) => row["Nome da Faixa"] && row["Faixa"])
+            .filter((row: any) => row["nome da faixa"] && row["faixa"])
             .map((row: any, index: number) => ({
-              title: row["Nome da Faixa"],
-              file_name: row["Nome da Faixa"],
-              url: convertDriveUrl(row["Faixa"]),
+              title: row["nome da faixa"],
+              file_name: row["nome da faixa"],
+              url: convertDriveUrl(row["faixa"]),
             }));
           if (newTracks.length > 0) {
             const { error } = await supabase.from('tracks').insert(newTracks);
