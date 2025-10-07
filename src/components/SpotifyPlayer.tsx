@@ -300,7 +300,7 @@ const SpotifyPlayer: React.FC = () => {
               className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
             />
             <div className="space-y-2 sm:space-y-3">
-              <span className="text-[10px] uppercase tracking-[0.4em] text-white/60">
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                 Playlist — Festa dos Tabernáculos
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
