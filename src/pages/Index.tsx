@@ -10,7 +10,7 @@ const Index = () => {
             ARRANJOS VOCAIS
           </p>
           <h1 className="text-4xl font-bold md:text-5xl">
-            MMG — Festa dos Tabernáculos
+            MMG - Festa dos Tabernáculos
           </h1>
           <p className="max-w-2xl text-white/60">
             Playlist de vozes para ensaio das Músicas de Tabernáculos.
