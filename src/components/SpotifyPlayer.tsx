@@ -309,7 +309,7 @@ const SpotifyPlayer: React.FC = () => {
             </div>
           </div>
           <p className="max-w-md text-sm text-white/60">
-            Arranjos vocais com controle e reprodução para estudo do Ministério de Música.
+            Arranjos vocais HINEI MA TOV com controle e reprodução para estudo do Ministério de Música.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             {tracks.length > 0 && (
