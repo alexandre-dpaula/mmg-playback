@@ -13,7 +13,7 @@ const Index = () => {
             MMG — Festa dos Tabernáculos
           </h1>
           <p className="max-w-2xl text-white/60">
-            Aqui está a playlist de ensaio para as vozes das Músicas de Tabernáculos.
+            Playlist de vozes para ensaio das Músicas de Tabernáculos.
           </p>
         </header>
         <SpotifyPlayer />
