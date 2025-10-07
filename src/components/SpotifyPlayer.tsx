@@ -15,16 +15,12 @@ type Track = {
   fileName: string;
 };
 
-const formatTitle = (name: string) => {
-  try {
-    const decoded = decodeURIComponent(name);
-    const withoutExt = decoded.replace(/\.[^/.]+$/, "");
-    return withoutExt.replace(/(\d+)\s+(\d+)/g, '$1_$2');
-  } catch (error) {
-    // If decode fails, try to remove % and format
-    const cleaned = name.replace(/%/g, '').replace(/\.[^/.]+$/, "");
-    return withoutExt.replace(/(\d+)\s+(\d+)/g, '$1_$2');
-  }
+const formatTitle = (url: string) => {
+  // Pega só o nome do arquivo
+  const nomeCodificado = url.substring(url.lastIndexOf('/') + 1);
+  // Decodifica caracteres especiais (%20, %2C, etc)
+  const nomeDecodificado = decodeURIComponent(nomeCodificado);
+  return nomeDecodificado;
 };
 
 const convertGitHubToRaw = (url: string) => {
@@ -151,8 +147,8 @@ const SpotifyPlayer: React.FC = () => {
     }
     const convertedUrl = convertGitHubToRaw(singleUrl);
     
-    const fileName = singleUrl.split('/').pop() || 'unknown';
-    const title = formatTitle(fileName);
+    const fileName = formatTitle(convertedUrl);
+    const title = fileName.replace(/\.[^/.]+$/, ""); // Remove extension for title
 
     try {
       const { data, error } = await supabase
