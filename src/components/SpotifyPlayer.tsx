@@ -16,10 +16,28 @@ const formatTime = (seconds: number) => {
 
 const SpotifyPlayer: React.FC = () => {
   const { data: playlistData, isLoading, isError, error, refetch } = useGooglePlaylist();
-  const tracks: PlaylistTrack[] = React.useMemo(
+  const [filter, setFilter] = React.useState<"all" | "vocal" | "instrumental">("all");
+
+  const allTracks: PlaylistTrack[] = React.useMemo(
     () => playlistData?.tracks ?? [],
     [playlistData?.tracks],
   );
+
+  const tracks: PlaylistTrack[] = React.useMemo(() => {
+    if (filter === "all") return allTracks;
+    if (filter === "vocal") {
+      return allTracks.filter(track =>
+        track.artist?.toLowerCase().includes("vocal")
+      );
+    }
+    if (filter === "instrumental") {
+      return allTracks.filter(track =>
+        track.artist?.toLowerCase().includes("instrumental")
+      );
+    }
+    return allTracks;
+  }, [allTracks, filter]);
+
   const coverImage = playlistData?.coverUrl ?? DEFAULT_PLAYLIST.coverUrl;
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
@@ -158,6 +176,41 @@ const SpotifyPlayer: React.FC = () => {
               <p className="text-sm text-white/60">
                 {playlistData?.description ?? "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
               </p>
+              <div className="flex gap-2 mt-3">
+                <Button
+                  onClick={() => setFilter("all")}
+                  className={cn(
+                    "px-3 py-1 text-xs rounded-full transition",
+                    filter === "all"
+                      ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  )}
+                >
+                  Todas
+                </Button>
+                <Button
+                  onClick={() => setFilter("vocal")}
+                  className={cn(
+                    "px-3 py-1 text-xs rounded-full transition",
+                    filter === "vocal"
+                      ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  )}
+                >
+                  Vocal
+                </Button>
+                <Button
+                  onClick={() => setFilter("instrumental")}
+                  className={cn(
+                    "px-3 py-1 text-xs rounded-full transition",
+                    filter === "instrumental"
+                      ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                      : "bg-white/10 text-white hover:bg-white/20"
+                  )}
+                >
+                  Instrumental
+                </Button>
+              </div>
             </div>
           </div>
           {isError && (
