@@ -20,7 +20,7 @@ import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
 type SpotifyPlayerProps = {
@@ -28,22 +28,28 @@ type SpotifyPlayerProps = {
 };
 
 const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
-  const { data: playlistData, isLoading, isError, error, refetch } = useGooglePlaylist();
+  const {
+    data: playlistData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGooglePlaylist();
 
   const allTracks: PlaylistTrack[] = React.useMemo(
     () => playlistData?.tracks ?? [],
-    [playlistData?.tracks],
+    [playlistData?.tracks]
   );
 
   const tracks: PlaylistTrack[] = React.useMemo(() => {
     if (filter === "all") return allTracks;
     if (filter === "vocal") {
-      return allTracks.filter(track =>
+      return allTracks.filter((track) =>
         track.artist?.toLowerCase().includes("vocal")
       );
     }
     if (filter === "instrumental") {
-      return allTracks.filter(track =>
+      return allTracks.filter((track) =>
         track.artist?.toLowerCase().includes("instrumental")
       );
     }
@@ -51,7 +57,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   }, [allTracks, filter]);
 
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
-    null,
+    null
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
@@ -61,7 +67,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
-    [tracks, currentTrackId],
+    [tracks, currentTrackId]
   );
 
   // Usa a coverUrl da track atual, se disponível, senão usa a coverUrl da playlist
@@ -71,7 +77,10 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     if (!tracks.length) {
       setCurrentTrackId(null);
       setIsPlaying(false);
-    } else if (!currentTrackId || !tracks.some(track => track.id === currentTrackId)) {
+    } else if (
+      !currentTrackId ||
+      !tracks.some((track) => track.id === currentTrackId)
+    ) {
       setCurrentTrackId(tracks[0].id);
     }
   }, [tracks, currentTrackId]);
@@ -87,7 +96,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     if (!audioRef.current || !currentTrack) {
       return;
     }
-    console.log('Setting audio src to:', currentTrack.url);
+    console.log("Setting audio src to:", currentTrack.url);
     audioRef.current.src = currentTrack.url;
     audioRef.current.load();
   }, [currentTrack]);
@@ -103,9 +112,11 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     }
     if (isPlaying) {
       audioRef.current.play().catch((error) => {
-        console.error('Erro ao reproduzir:', error);
+        console.error("Erro ao reproduzir:", error);
         setIsPlaying(false);
-        alert(`Erro ao reproduzir a faixa "${currentTrack.title}": ${error.message}`);
+        alert(
+          `Erro ao reproduzir a faixa "${currentTrack.title}": ${error.message}`
+        );
       });
     } else {
       audioRef.current.pause();
@@ -126,7 +137,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   const handlePrevious = () => {
     if (!tracks.length || !currentTrack) return;
-    const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
+    const currentIndex = tracks.findIndex(
+      (track) => track.id === currentTrack.id
+    );
     const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
     setCurrentTrackId(tracks[prevIndex].id);
     setIsPlaying(true);
@@ -134,7 +147,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   const handleNext = () => {
     if (!tracks.length || !currentTrack) return;
-    const currentIndex = tracks.findIndex(track => track.id === currentTrack.id);
+    const currentIndex = tracks.findIndex(
+      (track) => track.id === currentTrack.id
+    );
     const nextIndex = (currentIndex + 1) % tracks.length;
     setCurrentTrackId(tracks[nextIndex].id);
     setIsPlaying(true);
@@ -154,8 +169,10 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   };
 
   const handleAudioError = () => {
-    console.error('Audio error for URL:', currentTrack?.url);
-    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se o link do Google Drive está compartilhado publicamente e se o arquivo é um áudio suportado (ex: MP3).`);
+    console.error("Audio error for URL:", currentTrack?.url);
+    alert(
+      `Erro ao carregar a faixa "${currentTrack?.title}". Verifique se o link do Google Drive está compartilhado publicamente e se o arquivo é um áudio suportado (ex: MP3).`
+    );
     setIsPlaying(false);
   };
 
@@ -190,19 +207,24 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                 className="w-24 aspect-[3/4] sm:w-32 sm:aspect-square md:w-44 rounded-xl sm:rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)] flex-shrink-0"
               />
             )}
-            <div className="space-y-1.5 sm:space-y-2 md:space-y-3 flex-1 min-w-0">
+            <div className="space-y-1 flex-1 min-w-0">
               <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/60">
-                {currentTrack?.artist ?? (isLoading ? "Carregando..." : "Selecione uma faixa")}
+                {currentTrack?.artist ??
+                  (isLoading ? "Carregando..." : "Selecione uma faixa")}
               </span>
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
-                {currentTrack?.title ?? (isLoading ? "Carregando..." : "Selecione uma faixa")}
+                {currentTrack?.title ??
+                  (isLoading ? "Carregando..." : "Selecione uma faixa")}
               </h2>
               <p className="text-xs sm:text-sm text-white/60 tracking-[0px]">
-                {playlistData?.description ?? "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
+                {playlistData?.description ??
+                  "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
               </p>
               {currentTrack?.tom && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[#1DB954] font-semibold text-xs sm:text-sm">Tom:</span>
+                <div className="flex items-center gap-2 mt-5">
+                  <span className="text-[#1DB954] font-semibold text-xs sm:text-sm">
+                    Tom:
+                  </span>
                   <Select value={selectedKey} onValueChange={setSelectedKey}>
                     <SelectTrigger className="w-16 sm:w-20 h-7 sm:h-8 bg-white/10 border-white/20 text-white text-xs sm:text-sm">
                       <SelectValue placeholder={currentTrack.tom} />
@@ -230,9 +252,17 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
           />
           {isError && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-              <p className="font-semibold">Erro ao sincronizar com a planilha.</p>
-              <p>{error?.message ?? "Verifique a URL do App Script e tente novamente."}</p>
-              <Button onClick={() => refetch()} className="mt-2 bg-white/10 text-white hover:bg-white/20">
+              <p className="font-semibold">
+                Erro ao sincronizar com a planilha.
+              </p>
+              <p>
+                {error?.message ??
+                  "Verifique a URL do App Script e tente novamente."}
+              </p>
+              <Button
+                onClick={() => refetch()}
+                className="mt-2 bg-white/10 text-white hover:bg-white/20"
+              >
                 Tentar novamente
               </Button>
             </div>
@@ -241,11 +271,16 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
         <div className="w-full lg:max-w-sm rounded-xl sm:rounded-2xl bg-white/5 p-3 sm:p-4 md:p-6 backdrop-blur">
           <div className="mb-3 sm:mb-4 flex flex-col gap-1.5 sm:gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] sm:text-xs uppercase text-white/50 tracking-[0px]">
-                Agora tocando: {currentTrack ? <strong className="truncate">{currentTrack.title}</strong> : "Nenhuma faixa selecionada"}
+              <p className="text-[12px] sm:text-sm uppercase text-white/50 tracking-[1px]">
+                Tocando:{" "}
+                {currentTrack ? (
+                  <strong className="truncate">{currentTrack.title}</strong>
+                ) : (
+                  "Nenhuma faixa selecionada"
+                )}
               </p>
             </div>
-            <span className="rounded-full bg-[#1DB954]/10 px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold text-[#1DB954] self-start sm:self-auto whitespace-nowrap">
+            <span className="rounded-full bg-[#1DB954]/10 px-2 py-0.5 sm:px-3 sm:py-1 text-[12px] sm:text-sm font-semibold text-[#1DB954] self-start sm:self-auto whitespace-nowrap">
               {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
             </span>
           </div>
@@ -255,15 +290,18 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                 <li
                   key={track.id}
                   className={cn(
-                    "flex cursor-pointer items-center justify-between rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 text-xs sm:text-sm transition",
+                    "flex cursor-pointer items-center justify-between rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 text-[13px] sm:text-base transition",
                     currentTrackId === track.id
                       ? "bg-[#1DB954]/20 text-white"
-                      : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white",
+                      : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <div className="flex-1 min-w-0" onClick={() => handleSelectTrack(track.id)}>
+                  <div
+                    className="flex-1 min-w-0"
+                    onClick={() => handleSelectTrack(track.id)}
+                  >
                     <p className="font-semibold truncate">{track.title}</p>
-                    <span className="text-[10px] sm:text-xs text-white/50">
+                    <span className="text-[13px] sm:text-base text-white/50">
                       Faixa {index + 1}
                     </span>
                   </div>
@@ -276,7 +314,8 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
               ))}
               {!tracks.length && (
                 <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
-                  Nenhuma faixa encontrada na planilha. Verifique se os links do Google Drive estão publicados.
+                  Nenhuma faixa encontrada na planilha. Verifique se os links do
+                  Google Drive estão publicados.
                 </li>
               )}
             </ul>
@@ -292,7 +331,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
             >
               <div
                 className="progress-thumb h-full bg-[#1DB954] rounded"
-                style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                style={{
+                  width: duration ? `${(currentTime / duration) * 100}%` : "0%",
+                }}
               ></div>
             </div>
             <div className="flex justify-between text-[10px] sm:text-xs text-white/60 mt-1">

@@ -41,18 +41,13 @@ const renderCifraContent = (content: string, highlightTitle = false) => {
     if (titleRendered && !ensuredTitleSpacing) {
       if (trimmed.length === 0) {
         blankAfterTitleCount++;
-        elements.push(renderLine(`title-gap-${lineIndex}-${blankAfterTitleCount}`, 'white', undefined, line));
-        if (blankAfterTitleCount >= 2) {
+        // Não adiciona linhas em branco, apenas conta
+        if (blankAfterTitleCount >= 0) {
           ensuredTitleSpacing = true;
         }
         continue;
-      } else if (blankAfterTitleCount < 2) {
-        while (blankAfterTitleCount < 2) {
-          blankAfterTitleCount++;
-          elements.push(renderLine(`title-gap-fill-${lineIndex}-${blankAfterTitleCount}`, 'white', undefined, ""));
-        }
-        ensuredTitleSpacing = true;
       } else {
+        // Não adiciona linhas em branco forçadas
         ensuredTitleSpacing = true;
       }
     }
@@ -125,7 +120,7 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, originalKey, 
               Abrir no Google Docs
             </a>
           </div>
-          <div className="text-[11px] sm:text-xs md:text-sm font-mono overflow-x-auto max-h-60 sm:max-h-80 md:max-h-96 overflow-y-auto">
+          <div className="text-[13px] sm:text-sm md:text-base font-mono overflow-x-auto max-h-60 sm:max-h-80 md:max-h-96 overflow-y-auto">
             {renderCifraContent(transposedContent || docContent || '', true)}
           </div>
         </div>

@@ -101,6 +101,7 @@ export const transposeLine = (line: string, semitones: number): string => {
 
 /**
  * Transpõe todo o conteúdo de uma cifra
+ * IMPORTANTE: O título (primeira linha não vazia) NÃO é transposto e mantém-se sempre em negrito
  */
 export const transposeContent = (content: string, fromKey: string, toKey: string): string => {
   const semitones = getSemitoneDifference(fromKey, toKey);
@@ -108,7 +109,20 @@ export const transposeContent = (content: string, fromKey: string, toKey: string
   if (semitones === 0) return content;
 
   const lines = content.split('\n');
-  return lines.map(line => transposeLine(line, semitones)).join('\n');
+  let firstNonEmptyLineFound = false;
+
+  return lines.map((line) => {
+    const trimmed = line.trim();
+
+    // Se é a primeira linha não vazia (título), retorna sem modificar
+    if (!firstNonEmptyLineFound && trimmed.length > 0) {
+      firstNonEmptyLineFound = true;
+      return line; // Título não é transposto
+    }
+
+    // Para as demais linhas, transpõe normalmente
+    return transposeLine(line, semitones);
+  }).join('\n');
 };
 
 /**
