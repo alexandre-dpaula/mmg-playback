@@ -37,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
               </SelectTrigger>
               <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
                 <SelectItem value="all" className="text-xs">
-                  Todos
+                  Cifras
                 </SelectItem>
                 <SelectItem value="vocal" className="text-xs">
                   Vocal
@@ -60,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
                   : "bg-white/10 text-white hover:bg-white/20"
               )}
             >
-              Todos
+              Cifras
             </Button>
             <Button
               onClick={() => onFilterChange("vocal")}

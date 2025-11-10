@@ -185,15 +185,19 @@ function getTracksData(sheet, thumbMap) {
     const tom = tomIndex >= 0 ? row[tomIndex]?.toString().trim() : "";
     const cifra = cifraIndex >= 0 ? row[cifraIndex]?.toString().trim() : "";
 
-    // Só adiciona se tiver título e URL
-    if (title && url) {
+    // Adiciona se tiver título (URL é opcional para faixas de cifra)
+    if (title) {
       const track = {
         id: `track-${i}`,
         title: title,
-        url: url,
         artist: artist || undefined,
         order: i - 1
       };
+
+      // Adiciona URL apenas se existir
+      if (url) {
+        track.url = url;
+      }
 
       // Se existe um mapeamento de thumb para este artista, adiciona a coverUrl
       if (artist && thumbMap[artist]) {
