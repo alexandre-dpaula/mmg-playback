@@ -34,8 +34,8 @@ type GoogleSheetPayload = {
 };
 
 const DEFAULT_PLAYLIST: PlaylistData = {
-  title: "MMG - Festa dos Tabernáculos",
-  description: "Playlist de vozes para ensaio das Músicas de Tabernáculos.",
+  title: "Carregando...",
+  description: "Carregando...",
   coverUrl: "",
   tracks: [],
 };
@@ -191,7 +191,6 @@ export const useGooglePlaylist = () =>
     staleTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
     retry: 1,
-    placeholderData: DEFAULT_PLAYLIST,
   });
 
 export { DEFAULT_PLAYLIST };
