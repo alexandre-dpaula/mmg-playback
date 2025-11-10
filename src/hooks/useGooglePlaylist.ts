@@ -7,6 +7,8 @@ export type PlaylistTrack = {
   artist?: string;
   order: number;
   coverUrl?: string;
+  tom?: string;
+  cifra?: string;
 };
 
 export type PlaylistData = {
@@ -25,6 +27,8 @@ type GoogleSheetTrack = {
   driveId?: string;
   order?: number;
   coverUrl?: string;
+  tom?: string;
+  cifra?: string;
 };
 
 type GoogleSheetPayload = {
@@ -114,6 +118,8 @@ const normalizeTracks = (payload: GoogleSheetPayload): PlaylistTrack[] => {
     const titleIndex = findIndexByKeywords(["titulo", "título", "nome", "faixa"]);
     const urlIndex = findIndexByKeywords(["url", "link"]);
     const artistIndex = findIndexByKeywords(["voz", "cantor", "artista"]);
+    const tomIndex = findIndexByKeywords(["tom"]);
+    const cifraIndex = findIndexByKeywords(["cifra"]);
 
     return sortByOrder(
       rows
@@ -123,6 +129,8 @@ const normalizeTracks = (payload: GoogleSheetPayload): PlaylistTrack[] => {
               title: titleIndex >= 0 ? row[titleIndex] : undefined,
               url: urlIndex >= 0 ? row[urlIndex] : undefined,
               artist: artistIndex >= 0 ? row[artistIndex] : undefined,
+              tom: tomIndex >= 0 ? row[tomIndex] : undefined,
+              cifra: cifraIndex >= 0 ? row[cifraIndex] : undefined,
               order: index,
             },
             index,
@@ -163,6 +171,8 @@ const normalizeTrack = (track: GoogleSheetTrack, index: number): PlaylistTrack |
     artist: track.artist?.trim() || undefined,
     order: typeof track.order === "number" ? track.order : index,
     coverUrl,
+    tom: track.tom?.trim() || undefined,
+    cifra: track.cifra?.trim() || undefined,
   };
 };
 
@@ -175,7 +185,17 @@ const normalizePayload = (payload?: GoogleSheetPayload | null): PlaylistData => 
 
   // Converte a URL da capa se for do Google Drive
   const coverUrl = payload.coverUrl?.trim() || DEFAULT_PLAYLIST.coverUrl;
-  const normalizedCoverUrl = convertDriveReferenceToDirectUrl(coverUrl) || coverUrl;
+
+  // Para coverUrl, usa diretamente o formato de thumbnail do Google Drive
+  let normalizedCoverUrl = coverUrl;
+  if (coverUrl.includes("drive.google.com")) {
+    const fileIdMatch = coverUrl.match(/[-\w]{25,}/);
+    if (fileIdMatch) {
+      normalizedCoverUrl = `https://drive.google.com/thumbnail?id=${fileIdMatch[0]}&sz=w400`;
+    }
+  } else {
+    normalizedCoverUrl = convertDriveReferenceToDirectUrl(coverUrl) || coverUrl;
+  }
 
   return {
     title: payload.playlistTitle?.trim() || DEFAULT_PLAYLIST.title,
@@ -206,7 +226,7 @@ export const useGooglePlaylist = () =>
   useQuery<PlaylistData, Error>({
     queryKey: ["google-playlist"],
     queryFn: fetchPlaylistFromSheet,
-    staleTime: 1000 * 60 * 10,
+    staleTime: 0, // Sempre busca dados frescos
     refetchOnWindowFocus: false,
     retry: 1,
   });

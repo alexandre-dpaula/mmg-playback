@@ -168,6 +168,12 @@ function getTracksData(sheet, thumbMap) {
   const artistIndex = headers.findIndex(h =>
     h.includes("voz") || h.includes("cantor") || h.includes("artista")
   );
+  const tomIndex = headers.findIndex(h =>
+    h.includes("tom")
+  );
+  const cifraIndex = headers.findIndex(h =>
+    h.includes("cifra")
+  );
 
   // Processar cada linha de dados
   for (let i = 1; i < data.length; i++) {
@@ -176,6 +182,8 @@ function getTracksData(sheet, thumbMap) {
     const title = titleIndex >= 0 ? row[titleIndex]?.toString().trim() : "";
     const url = urlIndex >= 0 ? row[urlIndex]?.toString().trim() : "";
     const artist = artistIndex >= 0 ? row[artistIndex]?.toString().trim() : "";
+    const tom = tomIndex >= 0 ? row[tomIndex]?.toString().trim() : "";
+    const cifra = cifraIndex >= 0 ? row[cifraIndex]?.toString().trim() : "";
 
     // Só adiciona se tiver título e URL
     if (title && url) {
@@ -190,6 +198,14 @@ function getTracksData(sheet, thumbMap) {
       // Se existe um mapeamento de thumb para este artista, adiciona a coverUrl
       if (artist && thumbMap[artist]) {
         track.coverUrl = thumbMap[artist];
+      }
+
+      // Adiciona tom e cifra se existirem
+      if (tom) {
+        track.tom = tom;
+      }
+      if (cifra) {
+        track.cifra = cifra;
       }
 
       tracks.push(track);

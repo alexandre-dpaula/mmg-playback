@@ -7,6 +7,15 @@ import { cn } from "@/lib/utils";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { DEFAULT_PLAYLIST, useGooglePlaylist } from "@/hooks/useGooglePlaylist";
 import type { PlaylistTrack } from "@/hooks/useGooglePlaylist";
+import { CifraDisplay } from "@/components/CifraDisplay";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -47,6 +56,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
+  const [selectedKey, setSelectedKey] = React.useState<string>("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const currentTrack = React.useMemo(
@@ -65,6 +75,13 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
       setCurrentTrackId(tracks[0].id);
     }
   }, [tracks, currentTrackId]);
+
+  // Atualiza o tom selecionado quando a faixa muda
+  React.useEffect(() => {
+    if (currentTrack?.tom) {
+      setSelectedKey(currentTrack.tom);
+    }
+  }, [currentTrack]);
 
   React.useEffect(() => {
     if (!audioRef.current || !currentTrack) {
@@ -162,29 +179,55 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 pb-6 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-        <div className="flex flex-1 flex-col gap-4 sm:gap-6">
-          <div className="flex flex-row items-center gap-6">
+    <section className="overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-3 sm:p-6 md:p-8 pb-4 sm:pb-6 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
+      <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:gap-8">
+        <div className="flex flex-1 flex-col gap-3 sm:gap-4 md:gap-6 min-w-0">
+          <div className="flex flex-row items-start gap-3 sm:gap-4 md:gap-6">
             {coverImage && (
               <img
                 src={coverImage}
                 alt="Capa do álbum"
-                className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
+                className="w-24 aspect-[3/4] sm:w-32 sm:aspect-square md:w-44 rounded-xl sm:rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)] flex-shrink-0"
               />
             )}
-            <div className="space-y-2 sm:space-y-3">
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
+            <div className="space-y-1.5 sm:space-y-2 md:space-y-3 flex-1 min-w-0">
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/60">
                 {currentTrack?.artist ?? (isLoading ? "Carregando..." : "Selecione uma faixa")}
               </span>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
                 {currentTrack?.title ?? (isLoading ? "Carregando..." : "Selecione uma faixa")}
               </h2>
-              <p className="text-sm text-white/60">
+              <p className="text-xs sm:text-sm text-white/60 tracking-[0px]">
                 {playlistData?.description ?? "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
               </p>
+              {currentTrack?.tom && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[#1DB954] font-semibold text-xs sm:text-sm">Tom:</span>
+                  <Select value={selectedKey} onValueChange={setSelectedKey}>
+                    <SelectTrigger className="w-16 sm:w-20 h-7 sm:h-8 bg-white/10 border-white/20 text-white text-xs sm:text-sm">
+                      <SelectValue placeholder={currentTrack.tom} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#282828] border-white/20">
+                      {AVAILABLE_KEYS.map((key) => (
+                        <SelectItem
+                          key={key}
+                          value={key}
+                          className="text-white hover:bg-white/10 focus:bg-white/20 text-xs sm:text-sm"
+                        >
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           </div>
+          <CifraDisplay
+            cifra={currentTrack?.cifra}
+            originalKey={currentTrack?.tom}
+            selectedKey={selectedKey}
+          />
           {isError && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
               <p className="font-semibold">Erro ao sincronizar com a planilha.</p>
@@ -195,37 +238,37 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
             </div>
           )}
         </div>
-        <div className="w-full max-w-sm rounded-2xl bg-white/5 p-4 sm:p-6 backdrop-blur">
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="w-full lg:max-w-sm rounded-xl sm:rounded-2xl bg-white/5 p-3 sm:p-4 md:p-6 backdrop-blur">
+          <div className="mb-3 sm:mb-4 flex flex-col gap-1.5 sm:gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs uppercase text-white/50">
-                Agora tocando: {currentTrack ? <strong>{currentTrack.title}</strong> : "Nenhuma faixa selecionada"}
+              <p className="text-[10px] sm:text-xs uppercase text-white/50 tracking-[0px]">
+                Agora tocando: {currentTrack ? <strong className="truncate">{currentTrack.title}</strong> : "Nenhuma faixa selecionada"}
               </p>
             </div>
-            <span className="rounded-full bg-[#1DB954]/10 px-2 py-1 sm:px-3 sm:py-1 text-xs font-semibold text-[#1DB954] self-start sm:self-auto">
+            <span className="rounded-full bg-[#1DB954]/10 px-2 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold text-[#1DB954] self-start sm:self-auto whitespace-nowrap">
               {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
             </span>
           </div>
-          <ScrollArea className="h-48 sm:h-56 pr-4">
+          <ScrollArea className="h-40 sm:h-48 md:h-56 pr-2 sm:pr-4">
             <ul className="space-y-2">
               {tracks.map((track, index) => (
                 <li
                   key={track.id}
                   className={cn(
-                    "flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 sm:px-4 sm:py-3 text-sm transition",
+                    "flex cursor-pointer items-center justify-between rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 text-xs sm:text-sm transition",
                     currentTrackId === track.id
                       ? "bg-[#1DB954]/20 text-white"
                       : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  <div className="flex-1" onClick={() => handleSelectTrack(track.id)}>
-                    <p className="font-semibold">{track.title}</p>
-                    <span className="text-xs text-white/50">
+                  <div className="flex-1 min-w-0" onClick={() => handleSelectTrack(track.id)}>
+                    <p className="font-semibold truncate">{track.title}</p>
+                    <span className="text-[10px] sm:text-xs text-white/50">
                       Faixa {index + 1}
                     </span>
                   </div>
                   {currentTrackId === track.id && (
-                    <span className="rounded-full bg-[#1DB954] px-2 py-1 sm:px-3 sm:py-1 text-xs font-bold text-black">
+                    <span className="rounded-full bg-[#1DB954] px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap ml-2">
                       Tocando
                     </span>
                   )}
@@ -240,11 +283,11 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
           </ScrollArea>
         </div>
       </div>
-      <div className="flex flex-col items-center gap-4 mt-6">
+      <div className="flex flex-col items-center gap-3 sm:gap-4 mt-4 sm:mt-6">
         {currentTrack && (
-          <div className="audio-player w-full max-w-md">
+          <div className="audio-player w-full max-w-md px-2 sm:px-0">
             <div
-              className="progress-bar w-full h-2 bg-white/20 rounded cursor-pointer"
+              className="progress-bar w-full h-1.5 sm:h-2 bg-white/20 rounded cursor-pointer"
               onClick={handleProgressClick}
             >
               <div
@@ -252,43 +295,43 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                 style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
               ></div>
             </div>
-            <div className="flex justify-between text-xs text-white/60 mt-1">
+            <div className="flex justify-between text-[10px] sm:text-xs text-white/60 mt-1">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <Button
             onClick={handlePrevious}
             disabled={!tracks.length}
-            className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center justify-center rounded-full bg-white/10 p-2 sm:px-3 sm:py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <SkipBack className="h-5 w-5" />
+            <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <Button
             onClick={handlePlayPause}
             disabled={!tracks.length}
-            className="flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-4 py-3 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+            className="flex items-center justify-center gap-1.5 sm:gap-2 rounded-full bg-[#1DB954] px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-5 text-xs sm:text-sm md:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
           >
             {isPlaying ? (
               <>
-                <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
-                Pausar
+                <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                <span className="hidden xs:inline">Pausar</span>
               </>
             ) : (
               <>
-                <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-                Reproduzir
+                <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                <span className="hidden xs:inline">Reproduzir</span>
               </>
             )}
           </Button>
           <Button
             onClick={handleNext}
             disabled={!tracks.length}
-            className="flex items-center justify-center rounded-full bg-white/10 px-3 py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center justify-center rounded-full bg-white/10 p-2 sm:px-3 sm:py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <SkipForward className="h-5 w-5" />
+            <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         </div>
       </div>
