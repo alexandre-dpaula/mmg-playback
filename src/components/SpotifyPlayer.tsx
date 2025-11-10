@@ -23,6 +23,12 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+// Função para detectar se a URL é do Google Docs (cifra) ou áudio
+const isGoogleDocsUrl = (url?: string): boolean => {
+  if (!url) return false;
+  return url.includes('docs.google.com/document');
+};
+
 type SpotifyPlayerProps = {
   filter: "all" | "vocal" | "instrumental";
 };
@@ -43,12 +49,13 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   const tracks: PlaylistTrack[] = React.useMemo(() => {
     if (filter === "all") {
-      // Filtro "Cifras": faixas com artist="Cifras" OU que tenham campo pauta/cifra preenchido
+      // Filtro "Cifras": faixas com artist="Cifras" OU URL do Google Docs OU campo pauta/cifra
       return allTracks.filter((track) => {
         const artist = track.artist?.toLowerCase().trim() || "";
         const hasPauta = track.pauta && track.pauta.trim().length > 0;
         const hasCifra = track.cifra && track.cifra.trim().length > 0;
-        return artist === "cifras" || artist.includes("cifra") || hasPauta || hasCifra;
+        const isDocsUrl = track.url && isGoogleDocsUrl(track.url);
+        return artist === "cifras" || artist.includes("cifra") || hasPauta || hasCifra || isDocsUrl;
       });
     }
     if (filter === "vocal") {
@@ -102,6 +109,10 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   React.useEffect(() => {
     if (!audioRef.current || !currentTrack || !currentTrack.url) {
+      return;
+    }
+    // Não carrega áudio se for URL do Google Docs (cifra)
+    if (isGoogleDocsUrl(currentTrack.url)) {
       return;
     }
     console.log("Setting audio src to:", currentTrack.url);
@@ -254,7 +265,11 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
             </div>
           </div>
           <CifraDisplay
-            cifra={currentTrack?.pauta || currentTrack?.cifra}
+            cifra={
+              currentTrack?.pauta ||
+              currentTrack?.cifra ||
+              (currentTrack?.url && isGoogleDocsUrl(currentTrack.url) ? currentTrack.url : undefined)
+            }
             originalKey={currentTrack?.tom}
             selectedKey={selectedKey}
           />
