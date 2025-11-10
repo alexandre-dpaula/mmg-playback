@@ -358,12 +358,12 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
             {isPlaying ? (
               <>
                 <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-                <span className="hidden xs:inline">Pausar</span>
+                <span>Pausar</span>
               </>
             ) : (
               <>
                 <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-                <span className="hidden xs:inline">Reproduzir</span>
+                <span>Reproduzir</span>
               </>
             )}
           </Button>
