@@ -11,9 +11,6 @@ const Index = () => {
     <div className="min-h-screen bg-[#121212] text-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-12">
         <header className="space-y-3">
-          <p className="text-xs uppercase tracking-[0.4em] text-white/60">
-            ARRANJOS VOCAIS
-          </p>
           <h1 className="text-4xl font-bold md:text-5xl">
             {title}
           </h1>
