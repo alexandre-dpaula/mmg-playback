@@ -19,9 +19,13 @@ function doGet(e) {
     const configSheet = spreadsheet.getSheetByName("Config");
     const config = getConfigData(configSheet);
 
+    // Buscar dados da aba "Thumb" (mapeamento de artista para imagem)
+    const thumbSheet = spreadsheet.getSheetByName("Thumb");
+    const thumbMap = getThumbData(thumbSheet);
+
     // Buscar dados da aba "Tracks"
     const tracksSheet = spreadsheet.getSheetByName("Tracks");
-    const tracks = getTracksData(tracksSheet);
+    const tracks = getTracksData(tracksSheet, thumbMap);
 
     // Montar resposta JSON
     const response = {
@@ -82,12 +86,61 @@ function getConfigData(sheet) {
 }
 
 /**
+ * Busca mapeamento de artista para imagem da aba "Thumb"
+ * Formato esperado:
+ *   Linha 1: Cabeçalhos (Voz/Artista, Valor)
+ *   Linhas seguintes: Mapeamento artista -> URL da imagem
+ */
+function getThumbData(sheet) {
+  const thumbMap = {};
+
+  if (!sheet) {
+    Logger.log("Aba 'Thumb' não encontrada");
+    return thumbMap;
+  }
+
+  const data = sheet.getDataRange().getValues();
+
+  if (data.length <= 1) {
+    Logger.log("Nenhum mapeamento de thumb encontrado");
+    return thumbMap;
+  }
+
+  // Primeira linha são os cabeçalhos
+  const headers = data[0].map(h => h.toString().toLowerCase());
+
+  // Encontrar índices das colunas
+  const artistIndex = headers.findIndex(h =>
+    h.includes("voz") || h.includes("artista")
+  );
+  const valueIndex = headers.findIndex(h =>
+    h.includes("valor") || h.includes("url") || h.includes("imagem")
+  );
+
+  // Processar cada linha de dados
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+
+    const artist = artistIndex >= 0 ? row[artistIndex]?.toString().trim() : "";
+    const value = valueIndex >= 0 ? row[valueIndex]?.toString().trim() : "";
+
+    // Cria o mapeamento
+    if (artist && value) {
+      thumbMap[artist] = value;
+    }
+  }
+
+  Logger.log(`Total de mapeamentos de thumb: ${Object.keys(thumbMap).length}`);
+  return thumbMap;
+}
+
+/**
  * Busca dados das faixas da aba "Tracks"
  * Formato esperado:
  *   Linha 1: Cabeçalhos (Título, URL, Voz/Artista)
  *   Linhas seguintes: Dados das faixas
  */
-function getTracksData(sheet) {
+function getTracksData(sheet, thumbMap) {
   const tracks = [];
 
   if (!sheet) {
@@ -126,13 +179,20 @@ function getTracksData(sheet) {
 
     // Só adiciona se tiver título e URL
     if (title && url) {
-      tracks.push({
+      const track = {
         id: `track-${i}`,
         title: title,
         url: url,
         artist: artist || undefined,
         order: i - 1
-      });
+      };
+
+      // Se existe um mapeamento de thumb para este artista, adiciona a coverUrl
+      if (artist && thumbMap[artist]) {
+        track.coverUrl = thumbMap[artist];
+      }
+
+      tracks.push(track);
     }
   }
 

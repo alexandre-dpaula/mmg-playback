@@ -38,7 +38,6 @@ const SpotifyPlayer: React.FC = () => {
     return allTracks;
   }, [allTracks, filter]);
 
-  const coverImage = playlistData?.coverUrl;
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
   );
@@ -51,6 +50,9 @@ const SpotifyPlayer: React.FC = () => {
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
     [tracks, currentTrackId],
   );
+
+  // Usa a coverUrl da track atual, se disponível, senão usa a coverUrl da playlist
+  const coverImage = currentTrack?.coverUrl || playlistData?.coverUrl;
 
   React.useEffect(() => {
     if (!tracks.length) {

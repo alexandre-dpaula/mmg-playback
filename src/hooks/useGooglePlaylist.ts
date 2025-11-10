@@ -6,6 +6,7 @@ export type PlaylistTrack = {
   url: string;
   artist?: string;
   order: number;
+  coverUrl?: string;
 };
 
 export type PlaylistData = {
@@ -23,6 +24,7 @@ type GoogleSheetTrack = {
   driveUrl?: string;
   driveId?: string;
   order?: number;
+  coverUrl?: string;
 };
 
 type GoogleSheetPayload = {
@@ -149,12 +151,18 @@ const normalizeTrack = (track: GoogleSheetTrack, index: number): PlaylistTrack |
     return null;
   }
 
+  // Processa a coverUrl se existir
+  const coverUrl = track.coverUrl?.trim()
+    ? convertDriveReferenceToDirectUrl(track.coverUrl.trim())
+    : undefined;
+
   return {
     id: track.id || `${title}-${index}`,
     title,
     url,
     artist: track.artist?.trim() || undefined,
     order: typeof track.order === "number" ? track.order : index,
+    coverUrl,
   };
 };
 
