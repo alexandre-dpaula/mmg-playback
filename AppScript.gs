@@ -19,20 +19,21 @@ function doGet(e) {
     const configSheet = spreadsheet.getSheetByName("Config");
     const config = getConfigData(configSheet);
 
-    // Buscar dados da aba "Thumb" (mapeamento de artista para imagem)
+    // Buscar dados da aba "Thumb" (mapeamento de categoria para imagem)
     const thumbSheet = spreadsheet.getSheetByName("Thumb");
     const thumbMap = getThumbData(thumbSheet);
 
     // Buscar dados da aba "Tracks"
     const tracksSheet = spreadsheet.getSheetByName("Tracks");
-    const tracks = getTracksData(tracksSheet, thumbMap);
+    const tracks = getTracksData(tracksSheet);
 
     // Montar resposta JSON
     const response = {
       playlistTitle: config.playlistTitle || "MMG - Festa dos Tabernáculos",
       playlistDescription: config.playlistDescription || "Playlist de vozes para ensaio das Músicas de Tabernáculos.",
-      coverUrl: config.coverUrl || "https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg",
-      tracks: tracks
+      coverUrl: config.coverUrl || "",
+      tracks: tracks,
+      thumbs: thumbMap
     };
 
     return ContentService
@@ -46,7 +47,7 @@ function doGet(e) {
         error: error.toString(),
         playlistTitle: "MMG - Festa dos Tabernáculos",
         playlistDescription: "Playlist de vozes para ensaio das Músicas de Tabernáculos.",
-        coverUrl: "https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg",
+        coverUrl: "",
         tracks: []
       }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -86,10 +87,10 @@ function getConfigData(sheet) {
 }
 
 /**
- * Busca mapeamento de artista para imagem da aba "Thumb"
+ * Busca mapeamento de categoria para imagem da aba "Thumb"
  * Formato esperado:
- *   Linha 1: Cabeçalhos (Voz/Artista, Valor)
- *   Linhas seguintes: Mapeamento artista -> URL da imagem
+ *   Linha 1: Cabeçalhos (Categoria, Valor)
+ *   Linhas seguintes: Mapeamento categoria (Vocal, Instrumental, Cifras) -> URL da imagem
  */
 function getThumbData(sheet) {
   const thumbMap = {};
@@ -110,8 +111,8 @@ function getThumbData(sheet) {
   const headers = data[0].map(h => h.toString().toLowerCase());
 
   // Encontrar índices das colunas
-  const artistIndex = headers.findIndex(h =>
-    h.includes("voz") || h.includes("artista")
+  const categoryIndex = headers.findIndex(h =>
+    h.includes("categoria") || h.includes("tipo") || h.includes("filtro")
   );
   const valueIndex = headers.findIndex(h =>
     h.includes("valor") || h.includes("url") || h.includes("imagem")
@@ -121,12 +122,12 @@ function getThumbData(sheet) {
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
 
-    const artist = artistIndex >= 0 ? row[artistIndex]?.toString().trim() : "";
+    const category = categoryIndex >= 0 ? row[categoryIndex]?.toString().trim() : "";
     const value = valueIndex >= 0 ? row[valueIndex]?.toString().trim() : "";
 
-    // Cria o mapeamento
-    if (artist && value) {
-      thumbMap[artist] = value;
+    // Cria o mapeamento (capitaliza a categoria para padronizar)
+    if (category && value) {
+      thumbMap[category] = value;
     }
   }
 
@@ -140,7 +141,7 @@ function getThumbData(sheet) {
  *   Linha 1: Cabeçalhos (Título, URL, Voz/Artista)
  *   Linhas seguintes: Dados das faixas
  */
-function getTracksData(sheet, thumbMap) {
+function getTracksData(sheet) {
   const tracks = [];
 
   if (!sheet) {
@@ -197,11 +198,6 @@ function getTracksData(sheet, thumbMap) {
       // Adiciona URL apenas se existir
       if (url) {
         track.url = url;
-      }
-
-      // Se existe um mapeamento de thumb para este artista, adiciona a coverUrl
-      if (artist && thumbMap[artist]) {
-        track.coverUrl = thumbMap[artist];
       }
 
       // Adiciona tom e pauta se existirem

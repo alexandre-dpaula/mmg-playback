@@ -17,6 +17,11 @@ export type PlaylistData = {
   description: string;
   coverUrl: string;
   tracks: PlaylistTrack[];
+  thumbs?: {
+    Vocal?: string;
+    Instrumental?: string;
+    Cifras?: string;
+  };
 };
 
 type GoogleSheetTrack = {
@@ -38,6 +43,11 @@ type GoogleSheetPayload = {
   coverUrl?: string;
   tracks?: GoogleSheetTrack[];
   values?: string[][];
+  thumbs?: {
+    Vocal?: string;
+    Instrumental?: string;
+    Cifras?: string;
+  };
 };
 
 const DEFAULT_PLAYLIST: PlaylistData = {
@@ -203,6 +213,7 @@ const normalizePayload = (payload?: GoogleSheetPayload | null): PlaylistData => 
     description: payload.playlistDescription?.trim() || DEFAULT_PLAYLIST.description,
     coverUrl: normalizedCoverUrl,
     tracks,
+    thumbs: payload.thumbs,
   };
 };
 

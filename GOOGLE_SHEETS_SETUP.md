@@ -14,7 +14,7 @@ Acesse [Google Sheets](https://sheets.google.com) e crie uma nova planilha com a
 |-------|-------|
 | playlistTitle | MMG - Festa dos Tabernáculos |
 | playlistDescription | Playlist de vozes para ensaio das Músicas de Tabernáculos. |
-| coverUrl | https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg |
+| coverUrl | [URL da imagem de capa da playlist] |
 
 #### Aba: "Tracks" (Faixas de Áudio)
 
@@ -73,7 +73,7 @@ function doGet(e) {
     const response = {
       playlistTitle: config.playlistTitle || "MMG - Festa dos Tabernáculos",
       playlistDescription: config.playlistDescription || "Playlist de vozes para ensaio das Músicas de Tabernáculos.",
-      coverUrl: config.coverUrl || "https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg",
+      coverUrl: config.coverUrl || "",
       tracks: tracks
     };
 
@@ -88,7 +88,7 @@ function doGet(e) {
         error: error.toString(),
         playlistTitle: "MMG - Festa dos Tabernáculos",
         playlistDescription: "Playlist de vozes para ensaio das Músicas de Tabernáculos.",
-        coverUrl: "https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg",
+        coverUrl: "",
         tracks: []
       }))
       .setMimeType(ContentService.MimeType.JSON);

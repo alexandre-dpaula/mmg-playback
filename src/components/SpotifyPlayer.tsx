@@ -26,7 +26,12 @@ const formatTime = (seconds: number) => {
 // Função para detectar se a URL é do Google Docs (cifra) ou áudio
 const isGoogleDocsUrl = (url?: string): boolean => {
   if (!url) return false;
-  return url.includes('docs.google.com/document');
+  const lowerUrl = url.toLowerCase();
+  return (
+    lowerUrl.includes('docs.google.com/document') ||
+    lowerUrl.includes('docs.google.com/d/') ||
+    lowerUrl.includes('drive.google.com/file/d/') && lowerUrl.includes('/view')
+  );
 };
 
 type SpotifyPlayerProps = {
@@ -85,8 +90,27 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     [tracks, currentTrackId]
   );
 
-  // Usa a coverUrl da track atual, se disponível, senão usa a coverUrl da playlist
-  const coverImage = currentTrack?.coverUrl || playlistData?.coverUrl;
+  // Determina a imagem de capa baseada no filtro ativo
+  const coverImage = React.useMemo(() => {
+    // Se há uma faixa atual com coverUrl própria, usa ela
+    if (currentTrack?.coverUrl) {
+      return currentTrack.coverUrl;
+    }
+
+    // Usa a imagem do filtro ativo
+    if (filter === "all" && playlistData?.thumbs?.Cifras) {
+      return playlistData.thumbs.Cifras;
+    }
+    if (filter === "vocal" && playlistData?.thumbs?.Vocal) {
+      return playlistData.thumbs.Vocal;
+    }
+    if (filter === "instrumental" && playlistData?.thumbs?.Instrumental) {
+      return playlistData.thumbs.Instrumental;
+    }
+
+    // Fallback para coverUrl da playlist
+    return playlistData?.coverUrl || "";
+  }, [currentTrack, filter, playlistData]);
 
   React.useEffect(() => {
     if (!tracks.length) {
@@ -129,6 +153,11 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
       audioRef.current.currentTime = 0;
       return;
     }
+    // Não tenta tocar se for URL do Google Docs
+    if (currentTrack.url && isGoogleDocsUrl(currentTrack.url)) {
+      setIsPlaying(false);
+      return;
+    }
     if (isPlaying) {
       audioRef.current.play().catch((error) => {
         console.error("Erro ao reproduzir:", error);
@@ -151,6 +180,10 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
       setIsPlaying(true);
       return;
     }
+    // Não permite play/pause se for Google Docs
+    if (currentTrack.url && isGoogleDocsUrl(currentTrack.url)) {
+      return;
+    }
     setIsPlaying((state) => !state);
   };
 
@@ -160,8 +193,11 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
       (track) => track.id === currentTrack.id
     );
     const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
-    setCurrentTrackId(tracks[prevIndex].id);
-    setIsPlaying(true);
+    const prevTrack = tracks[prevIndex];
+    setCurrentTrackId(prevTrack.id);
+    // Só toca automaticamente se tiver URL de áudio válida
+    const hasAudioUrl = prevTrack.url && !isGoogleDocsUrl(prevTrack.url);
+    setIsPlaying(hasAudioUrl);
   };
 
   const handleNext = () => {
@@ -170,17 +206,30 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
       (track) => track.id === currentTrack.id
     );
     const nextIndex = (currentIndex + 1) % tracks.length;
-    setCurrentTrackId(tracks[nextIndex].id);
-    setIsPlaying(true);
+    const nextTrack = tracks[nextIndex];
+    setCurrentTrackId(nextTrack.id);
+    // Só toca automaticamente se tiver URL de áudio válida
+    const hasAudioUrl = nextTrack.url && !isGoogleDocsUrl(nextTrack.url);
+    setIsPlaying(hasAudioUrl);
   };
 
   const handleSelectTrack = (id: string) => {
+    const track = tracks.find((t) => t.id === id);
+    // Não permite tocar se for Google Docs ou não tiver URL de áudio
+    const hasAudioUrl = track?.url && !isGoogleDocsUrl(track.url);
+
     if (id === currentTrackId) {
-      setIsPlaying(true);
+      if (hasAudioUrl) {
+        setIsPlaying(true);
+      }
       return;
     }
     setCurrentTrackId(id);
-    setIsPlaying(true);
+    if (hasAudioUrl) {
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+    }
   };
 
   const playNextTrack = () => {
@@ -375,7 +424,11 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
           </Button>
           <Button
             onClick={handlePlayPause}
-            disabled={!tracks.length}
+            disabled={
+              !tracks.length ||
+              (currentTrack?.url && isGoogleDocsUrl(currentTrack.url)) ||
+              !currentTrack?.url
+            }
             className="flex items-center justify-center gap-1.5 sm:gap-2 rounded-full bg-[#1DB954] px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-5 text-xs sm:text-sm md:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
           >
             {isPlaying ? (
