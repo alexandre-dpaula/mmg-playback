@@ -14,9 +14,12 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-const SpotifyPlayer: React.FC = () => {
+type SpotifyPlayerProps = {
+  filter: "all" | "vocal" | "instrumental";
+};
+
+const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   const { data: playlistData, isLoading, isError, error, refetch } = useGooglePlaylist();
-  const [filter, setFilter] = React.useState<"all" | "vocal" | "instrumental">("all");
 
   const allTracks: PlaylistTrack[] = React.useMemo(
     () => playlistData?.tracks ?? [],
@@ -180,41 +183,6 @@ const SpotifyPlayer: React.FC = () => {
               <p className="text-sm text-white/60">
                 {playlistData?.description ?? "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
               </p>
-              <div className="flex gap-2 mt-3">
-                <Button
-                  onClick={() => setFilter("all")}
-                  className={cn(
-                    "px-3 py-1 text-xs rounded-full transition",
-                    filter === "all"
-                      ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  )}
-                >
-                  Todas
-                </Button>
-                <Button
-                  onClick={() => setFilter("vocal")}
-                  className={cn(
-                    "px-3 py-1 text-xs rounded-full transition",
-                    filter === "vocal"
-                      ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  )}
-                >
-                  Vocal
-                </Button>
-                <Button
-                  onClick={() => setFilter("instrumental")}
-                  className={cn(
-                    "px-3 py-1 text-xs rounded-full transition",
-                    filter === "instrumental"
-                      ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
-                      : "bg-white/10 text-white hover:bg-white/20"
-                  )}
-                >
-                  Instrumental
-                </Button>
-              </div>
             </div>
           </div>
           {isError && (
