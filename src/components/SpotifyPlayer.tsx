@@ -42,7 +42,15 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   );
 
   const tracks: PlaylistTrack[] = React.useMemo(() => {
-    if (filter === "all") return allTracks;
+    if (filter === "all") {
+      // Filtro "Cifras": faixas com artist="Cifras" OU que tenham campo pauta/cifra preenchido
+      return allTracks.filter((track) => {
+        const artist = track.artist?.toLowerCase().trim() || "";
+        const hasPauta = track.pauta && track.pauta.trim().length > 0;
+        const hasCifra = track.cifra && track.cifra.trim().length > 0;
+        return artist === "cifras" || artist.includes("cifra") || hasPauta || hasCifra;
+      });
+    }
     if (filter === "vocal") {
       return allTracks.filter((track) =>
         track.artist?.toLowerCase().includes("vocal")

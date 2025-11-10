@@ -9,6 +9,7 @@ export type PlaylistTrack = {
   coverUrl?: string;
   tom?: string;
   cifra?: string;
+  pauta?: string;
 };
 
 export type PlaylistData = {

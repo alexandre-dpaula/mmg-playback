@@ -171,8 +171,8 @@ function getTracksData(sheet, thumbMap) {
   const tomIndex = headers.findIndex(h =>
     h.includes("tom")
   );
-  const cifraIndex = headers.findIndex(h =>
-    h.includes("cifra")
+  const pautaIndex = headers.findIndex(h =>
+    h.includes("pauta") || h.includes("cifra")
   );
 
   // Processar cada linha de dados
@@ -183,7 +183,7 @@ function getTracksData(sheet, thumbMap) {
     const url = urlIndex >= 0 ? row[urlIndex]?.toString().trim() : "";
     const artist = artistIndex >= 0 ? row[artistIndex]?.toString().trim() : "";
     const tom = tomIndex >= 0 ? row[tomIndex]?.toString().trim() : "";
-    const cifra = cifraIndex >= 0 ? row[cifraIndex]?.toString().trim() : "";
+    const pauta = pautaIndex >= 0 ? row[pautaIndex]?.toString().trim() : "";
 
     // Adiciona se tiver título (URL é opcional para faixas de cifra)
     if (title) {
@@ -204,12 +204,12 @@ function getTracksData(sheet, thumbMap) {
         track.coverUrl = thumbMap[artist];
       }
 
-      // Adiciona tom e cifra se existirem
+      // Adiciona tom e pauta se existirem
       if (tom) {
         track.tom = tom;
       }
-      if (cifra) {
-        track.cifra = cifra;
+      if (pauta) {
+        track.pauta = pauta;
       }
 
       tracks.push(track);
