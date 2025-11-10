@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type NavbarProps = {
   filter: "all" | "vocal" | "instrumental";
@@ -11,35 +12,46 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
     <nav className="sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-sm border-b border-white/10">
       <div className="mx-auto max-w-6xl px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Menu de Filtros */}
-          <div className="flex gap-6">
-            <button
+          {/* Logo MMG */}
+          <div className="flex items-center">
+            <h2 className="text-xl font-bold text-white">MMG</h2>
+          </div>
+
+          {/* Menu de Filtros - Centro */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 flex gap-2">
+            <Button
               onClick={() => onFilterChange("all")}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-white",
-                filter === "all" ? "text-white" : "text-white/60"
+                "px-4 py-2 text-sm rounded-full transition",
+                filter === "all"
+                  ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                  : "bg-white/10 text-white hover:bg-white/20"
               )}
             >
               Todos
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => onFilterChange("vocal")}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-white",
-                filter === "vocal" ? "text-white" : "text-white/60"
+                "px-4 py-2 text-sm rounded-full transition",
+                filter === "vocal"
+                  ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                  : "bg-white/10 text-white hover:bg-white/20"
               )}
             >
               Vocal
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => onFilterChange("instrumental")}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-white",
-                filter === "instrumental" ? "text-white" : "text-white/60"
+                "px-4 py-2 text-sm rounded-full transition",
+                filter === "instrumental"
+                  ? "bg-[#1DB954] text-black hover:bg-[#1ed760]"
+                  : "bg-white/10 text-white hover:bg-white/20"
               )}
             >
               Instrumental
-            </button>
+            </Button>
           </div>
 
           {/* Imagem de Perfil */}
