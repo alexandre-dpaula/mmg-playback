@@ -54,8 +54,18 @@ const convertDriveReferenceToDirectUrl = (driveReference?: string) => {
       .replace("/blob/", "/");
   }
 
-  // Se não for URL do Drive, retorna como está (pode ser URL externa)
+  // Se for uma URL HTTP completa que NÃO é do Drive, retorna como está
+  if (driveReference.startsWith("http") && !driveReference.includes("drive.google.com")) {
+    return driveReference;
+  }
+
+  // Se não contém drive.google.com e não parece ser um ID do Drive, retorna como está
   if (!driveReference.includes("drive.google.com") && !DRIVE_FILE_ID_REGEX.test(driveReference)) {
+    return driveReference;
+  }
+
+  // Apenas processa se for URL do Google Drive
+  if (!driveReference.includes("drive.google.com")) {
     return driveReference;
   }
 
