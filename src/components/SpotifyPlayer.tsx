@@ -101,7 +101,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   }, [currentTrack]);
 
   React.useEffect(() => {
-    if (!audioRef.current || !currentTrack) {
+    if (!audioRef.current || !currentTrack || !currentTrack.url) {
       return;
     }
     console.log("Setting audio src to:", currentTrack.url);

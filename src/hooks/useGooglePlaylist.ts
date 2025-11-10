@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 export type PlaylistTrack = {
   id: string;
   title: string;
-  url: string;
+  url?: string;
   artist?: string;
   order: number;
   coverUrl?: string;
