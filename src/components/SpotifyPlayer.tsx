@@ -168,10 +168,10 @@ const SpotifyPlayer: React.FC = () => {
             />
             <div className="space-y-2 sm:space-y-3">
               <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
-                {currentTrack?.artist ?? "Selecione uma faixa"}
+                {currentTrack?.artist ?? (isLoading ? "Carregando..." : "Selecione uma faixa")}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                {currentTrack?.title ?? "Selecione uma faixa"}
+                {currentTrack?.title ?? (isLoading ? "Carregando..." : "Selecione uma faixa")}
               </h2>
               <p className="text-sm text-white/60">
                 {playlistData?.description ?? "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
