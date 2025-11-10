@@ -4,33 +4,9 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Music2, Pause, Play, UploadCloud, Plus, X, Trash2, SkipBack, SkipForward } from "lucide-react";
-import { showSuccess, showError } from "@/utils/toast";
-import { supabase } from "@/integrations/supabase/client";
-
-type Track = {
-  id: string;
-  url: string;
-  title: string;
-  fileName: string;
-};
-
-const formatTitle = (url: string) => {
-  // Pega só o nome do arquivo
-  const nomeCodificado = url.substring(url.lastIndexOf('/') + 1);
-  // Decodifica caracteres especiais (%20, %2C, etc)
-  const nomeDecodificado = decodeURIComponent(nomeCodificado);
-  return nomeDecodificado;
-};
-
-const convertGitHubToRaw = (url: string) => {
-  if (url.includes('github.com')) {
-    return url
-      .replace('github.com', 'raw.githubusercontent.com')
-      .replace('/blob/', '/');
-  }
-  return url;
-};
+import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { DEFAULT_PLAYLIST, useGooglePlaylist } from "@/hooks/useGooglePlaylist";
+import type { PlaylistTrack } from "@/hooks/useGooglePlaylist";
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -39,17 +15,19 @@ const formatTime = (seconds: number) => {
 };
 
 const SpotifyPlayer: React.FC = () => {
-  const [tracks, setTracks] = React.useState<Track[]>([]);
+  const { data: playlistData, isLoading, isError, error, refetch } = useGooglePlaylist();
+  const tracks: PlaylistTrack[] = React.useMemo(
+    () => playlistData?.tracks ?? [],
+    [playlistData?.tracks],
+  );
+  const coverImage = playlistData?.coverUrl ?? DEFAULT_PLAYLIST.coverUrl;
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
-  const [singleUrl, setSingleUrl] = React.useState("");
-  const [loading, setLoading] = React.useState(true);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  const createdUrlsRef = React.useRef<string[]>([]);
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
@@ -57,34 +35,13 @@ const SpotifyPlayer: React.FC = () => {
   );
 
   React.useEffect(() => {
-    loadTracks();
-    // Load singleUrl from localStorage
-    const savedUrl = localStorage.getItem('singleUrl');
-    if (savedUrl) {
-      setSingleUrl(savedUrl);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    // Save singleUrl to localStorage whenever it changes
-    localStorage.setItem('singleUrl', singleUrl);
-  }, [singleUrl]);
-
-  React.useEffect(() => {
     if (!tracks.length) {
       setCurrentTrackId(null);
       setIsPlaying(false);
-    } else if (!currentTrackId) {
+    } else if (!currentTrackId || !tracks.some(track => track.id === currentTrackId)) {
       setCurrentTrackId(tracks[0].id);
     }
   }, [tracks, currentTrackId]);
-
-  React.useEffect(
-    () => () => {
-      createdUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-    },
-    [],
-  );
 
   React.useEffect(() => {
     if (!audioRef.current || !currentTrack) {
@@ -114,114 +71,6 @@ const SpotifyPlayer: React.FC = () => {
       audioRef.current.pause();
     }
   }, [isPlaying, currentTrack]);
-
-  const loadTracks = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('tracks')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const formattedTracks = data.map(track => ({
-        id: track.id,
-        url: track.url,
-        title: track.title,
-        fileName: track.file_name,
-      }));
-
-      setTracks(formattedTracks);
-    } catch (error) {
-      console.error('Erro ao carregar faixas:', error);
-      showError('Erro ao carregar faixas do banco de dados');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const adicionarFaixaUnica = async () => {
-    if (!singleUrl) {
-      alert("Por favor, insira a URL da faixa.");
-      return;
-    }
-    const convertedUrl = convertGitHubToRaw(singleUrl);
-    
-    const fileName = formatTitle(convertedUrl);
-    const title = fileName.replace(/\.[^/.]+$/, ""); // Remove extension for title
-
-    try {
-      const { data, error } = await supabase
-        .from('tracks')
-        .insert({
-          title: title,
-          file_name: fileName,
-          url: convertedUrl,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newTrack: Track = {
-        id: data.id,
-        url: data.url,
-        title: data.title,
-        fileName: data.file_name,
-      };
-
-      setTracks(prev => [newTrack, ...prev]);
-      setSingleUrl("");
-      showSuccess(`Faixa "${title}" adicionada à playlist!`);
-    } catch (error) {
-      console.error('Erro ao adicionar faixa:', error);
-      showError('Erro ao adicionar faixa ao banco de dados');
-    }
-  };
-
-  const deleteTrack = async (id: string) => {
-    if (!confirm('Tem certeza que deseja remover esta faixa?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('tracks')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setTracks(prev => prev.filter(track => track.id !== id));
-      if (currentTrackId === id) {
-        setCurrentTrackId(null);
-        setIsPlaying(false);
-      }
-      showSuccess('Faixa removida com sucesso!');
-    } catch (error) {
-      console.error('Erro ao remover faixa:', error);
-      showError('Erro ao remover faixa do banco de dados');
-    }
-  };
-
-  const clearPlaylist = async () => {
-    if (!confirm('Tem certeza que deseja limpar toda a playlist? Todas as faixas serão removidas.')) return;
-
-    try {
-      const { error } = await supabase
-        .from('tracks')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
-
-      if (error) throw error;
-
-      setTracks([]);
-      setCurrentTrackId(null);
-      setIsPlaying(false);
-      showSuccess('Playlist limpa com sucesso!');
-    } catch (error) {
-      console.error('Erro ao limpar playlist:', error);
-      showError('Erro ao limpar playlist do banco de dados');
-    }
-  };
 
   const handlePlayPause = () => {
     if (!tracks.length) {
@@ -266,7 +115,7 @@ const SpotifyPlayer: React.FC = () => {
 
   const handleAudioError = () => {
     console.error('Audio error for URL:', currentTrack?.url);
-    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se a URL é válida, o arquivo é acessível e é um arquivo de áudio suportado (ex: MP3). Se o repositório no Github for privado, torne-o público ou use um serviço de hospedagem alternativo como Dropbox, Google Drive ou um servidor próprio.`);
+    alert(`Erro ao carregar a faixa "${currentTrack?.title}". Verifique se o link do Google Drive está compartilhado publicamente e se o arquivo é um áudio suportado (ex: MP3).`);
     setIsPlaying(false);
   };
 
@@ -279,7 +128,7 @@ const SpotifyPlayer: React.FC = () => {
     setCurrentTime(newTime);
   };
 
-  if (loading) {
+  if (isLoading && !tracks.length) {
     return (
       <section className="overflow-hidden rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-4 sm:p-6 md:p-8 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
         <div className="flex items-center justify-center h-64">
@@ -295,50 +144,31 @@ const SpotifyPlayer: React.FC = () => {
         <div className="flex flex-1 flex-col gap-4 sm:gap-6">
           <div className="flex flex-row items-center gap-6">
             <img
-              src="https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg"
-              alt="Capa do áudio"
+              src={coverImage}
+              alt="Capa do álbum"
               className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
             />
             <div className="space-y-2 sm:space-y-3">
               <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
-                Playlist — Festa dos Tabernáculos
+                {currentTrack?.artist ?? "Selecione uma faixa"}
               </span>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold">
-                HINEI MA TOV
+                {currentTrack?.title ?? "Selecione uma faixa"}
               </h2>
+              <p className="text-sm text-white/60">
+                {playlistData?.description ?? "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
+              </p>
             </div>
           </div>
-          <p className="max-w-md text-sm text-white/60">
-            Arranjos vocais da Musica HINEI MA TOV para estudo do Ministério de Música.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            {tracks.length > 0 && (
-              <Button
-                onClick={clearPlaylist}
-                variant="outline"
-                className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white border-red-600 w-full sm:w-auto"
-              >
-                <Trash2 className="h-4 w-4" />
-                Limpar playlist
+          {isError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+              <p className="font-semibold">Erro ao sincronizar com a planilha.</p>
+              <p>{error?.message ?? "Verifique a URL do App Script e tente novamente."}</p>
+              <Button onClick={() => refetch()} className="mt-2 bg-white/10 text-white hover:bg-white/20">
+                Tentar novamente
               </Button>
-            )}
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <input
-              type="text"
-              value={singleUrl}
-              onChange={(e) => setSingleUrl(e.target.value)}
-              placeholder="Cole a URL"
-              className="bg-white/10 text-white placeholder-white/50 rounded-md px-3 py-2 w-full sm:w-auto text-center"
-            />
-            <Button
-              onClick={adicionarFaixaUnica}
-              className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar faixa
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
         <div className="w-full max-w-sm rounded-2xl bg-white/5 p-4 sm:p-6 backdrop-blur">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -369,29 +199,16 @@ const SpotifyPlayer: React.FC = () => {
                       Faixa {index + 1}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {currentTrackId === track.id && (
-                      <span className="rounded-full bg-[#1DB954] px-2 py-1 sm:px-3 sm:py-1 text-xs font-bold text-black">
-                        Tocando
-                      </span>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteTrack(track.id);
-                      }}
-                      className="h-6 w-6 p-0 text-white/50 hover:text-red-400 hover:bg-red-400/10"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {currentTrackId === track.id && (
+                    <span className="rounded-full bg-[#1DB954] px-2 py-1 sm:px-3 sm:py-1 text-xs font-bold text-black">
+                      Tocando
+                    </span>
+                  )}
                 </li>
               ))}
               {!tracks.length && (
                 <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
-                  Adicione faixas para iniciar a playlist.
+                  Nenhuma faixa encontrada na planilha. Verifique se os links do Google Drive estão publicados.
                 </li>
               )}
             </ul>

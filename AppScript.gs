@@ -1,0 +1,150 @@
+/**
+ * App Script para expor dados da planilha do Google Sheets
+ * como API JSON para o player de música
+ *
+ * INSTRUÇÕES DE USO:
+ * 1. Crie uma planilha no Google Sheets com duas abas: "Config" e "Tracks"
+ * 2. Abra Extensões > Apps Script
+ * 3. Cole este código
+ * 4. Clique em Implantar > Nova implantação > Aplicativo da Web
+ * 5. Configure "Quem tem acesso" como "Qualquer pessoa"
+ * 6. Copie a URL gerada e cole no arquivo .env do projeto
+ */
+
+function doGet(e) {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+    // Buscar dados da aba "Config"
+    const configSheet = spreadsheet.getSheetByName("Config");
+    const config = getConfigData(configSheet);
+
+    // Buscar dados da aba "Tracks"
+    const tracksSheet = spreadsheet.getSheetByName("Tracks");
+    const tracks = getTracksData(tracksSheet);
+
+    // Montar resposta JSON
+    const response = {
+      playlistTitle: config.playlistTitle || "MMG - Festa dos Tabernáculos",
+      playlistDescription: config.playlistDescription || "Playlist de vozes para ensaio das Músicas de Tabernáculos.",
+      coverUrl: config.coverUrl || "https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg",
+      tracks: tracks
+    };
+
+    return ContentService
+      .createTextOutput(JSON.stringify(response))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    Logger.log("Erro: " + error.toString());
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        error: error.toString(),
+        playlistTitle: "MMG - Festa dos Tabernáculos",
+        playlistDescription: "Playlist de vozes para ensaio das Músicas de Tabernáculos.",
+        coverUrl: "https://i.pinimg.com/736x/ec/9b/b2/ec9bb2fde5e3cbba195ee0db0e3d2576.jpg",
+        tracks: []
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Busca dados de configuração da aba "Config"
+ * Formato esperado:
+ *   Coluna A: Nome do campo (playlistTitle, playlistDescription, coverUrl)
+ *   Coluna B: Valor
+ */
+function getConfigData(sheet) {
+  const config = {
+    playlistTitle: "",
+    playlistDescription: "",
+    coverUrl: ""
+  };
+
+  if (!sheet) {
+    Logger.log("Aba 'Config' não encontrada");
+    return config;
+  }
+
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 0; i < data.length; i++) {
+    const key = data[i][0];
+    const value = data[i][1];
+
+    if (key && value) {
+      config[key.toString().trim()] = value.toString().trim();
+    }
+  }
+
+  return config;
+}
+
+/**
+ * Busca dados das faixas da aba "Tracks"
+ * Formato esperado:
+ *   Linha 1: Cabeçalhos (Título, URL, Voz/Artista)
+ *   Linhas seguintes: Dados das faixas
+ */
+function getTracksData(sheet) {
+  const tracks = [];
+
+  if (!sheet) {
+    Logger.log("Aba 'Tracks' não encontrada");
+    return tracks;
+  }
+
+  const data = sheet.getDataRange().getValues();
+
+  if (data.length <= 1) {
+    Logger.log("Nenhuma faixa encontrada");
+    return tracks;
+  }
+
+  // Primeira linha são os cabeçalhos
+  const headers = data[0].map(h => h.toString().toLowerCase());
+
+  // Encontrar índices das colunas
+  const titleIndex = headers.findIndex(h =>
+    h.includes("titulo") || h.includes("título") || h.includes("nome") || h.includes("faixa")
+  );
+  const urlIndex = headers.findIndex(h =>
+    h.includes("url") || h.includes("link")
+  );
+  const artistIndex = headers.findIndex(h =>
+    h.includes("voz") || h.includes("cantor") || h.includes("artista")
+  );
+
+  // Processar cada linha de dados
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+
+    const title = titleIndex >= 0 ? row[titleIndex]?.toString().trim() : "";
+    const url = urlIndex >= 0 ? row[urlIndex]?.toString().trim() : "";
+    const artist = artistIndex >= 0 ? row[artistIndex]?.toString().trim() : "";
+
+    // Só adiciona se tiver título e URL
+    if (title && url) {
+      tracks.push({
+        id: `track-${i}`,
+        title: title,
+        url: url,
+        artist: artist || undefined,
+        order: i - 1
+      });
+    }
+  }
+
+  Logger.log(`Total de faixas encontradas: ${tracks.length}`);
+  return tracks;
+}
+
+/**
+ * Função para testar o script manualmente
+ * Vá em Executar > Executar função > testScript
+ */
+function testScript() {
+  const result = doGet();
+  Logger.log(result.getContent());
+}
