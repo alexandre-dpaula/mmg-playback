@@ -254,7 +254,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
             </div>
           </div>
           <CifraDisplay
-            cifra={currentTrack?.cifra}
+            cifra={currentTrack?.pauta || currentTrack?.cifra}
             originalKey={currentTrack?.tom}
             selectedKey={selectedKey}
           />
