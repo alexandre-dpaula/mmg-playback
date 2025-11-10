@@ -39,7 +39,6 @@ const SpotifyPlayer: React.FC = () => {
   }, [allTracks, filter]);
 
   const coverImage = playlistData?.coverUrl;
-  const [imageLoaded, setImageLoaded] = React.useState(false);
   const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
     null,
   );
@@ -162,25 +161,13 @@ const SpotifyPlayer: React.FC = () => {
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
         <div className="flex flex-1 flex-col gap-4 sm:gap-6">
           <div className="flex flex-row items-center gap-6">
-            <div className="relative h-32 w-32 sm:h-44 sm:w-44">
-              {!coverImage || !imageLoaded ? (
-                <div className="h-full w-full rounded-2xl bg-white/5 flex items-center justify-center shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]">
-                  <div className="w-12 h-12 border-4 border-[#1DB954] border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : null}
-              {coverImage && (
-                <img
-                  src={coverImage}
-                  alt="Capa do álbum"
-                  className={cn(
-                    "h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)] transition-opacity duration-300",
-                    imageLoaded ? "opacity-100" : "opacity-0 absolute"
-                  )}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageLoaded(false)}
-                />
-              )}
-            </div>
+            {coverImage && (
+              <img
+                src={coverImage}
+                alt="Capa do álbum"
+                className="h-32 w-32 sm:h-44 sm:w-44 rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)]"
+              />
+            )}
             <div className="space-y-2 sm:space-y-3">
               <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                 {currentTrack?.artist ?? (isLoading ? "Carregando..." : "Selecione uma faixa")}
