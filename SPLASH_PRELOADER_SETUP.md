@@ -2,16 +2,16 @@
 
 ## Arquivos necessários
 
-Você precisa adicionar os seguintes arquivos na pasta `public/`:
-
-### 1. splash.mp4
-- **Localização**: `/public/splash.mp4`
+### 1. Vídeo Splash (Google Drive)
+- **URL Atual**: `https://drive.google.com/file/d/1ITGG0jnSU7XTbmprBmnU3WytxsIlPqwQ/view?usp=sharing`
 - **Descrição**: Vídeo que será exibido na tela splash (apenas em dispositivos móveis)
 - **Formato**: MP4
+- **Configuração**: O vídeo é carregado diretamente do Google Drive
 - **Recomendações**:
   - Duração: 2-5 segundos
   - Resolução: 1080x1920 (vertical/portrait) ou 1920x1080 (horizontal/landscape)
-  - Tamanho: Recomendado < 5MB para carregamento rápido
+  - Tamanho: Recomendado < 10MB para carregamento rápido
+  - O arquivo deve ter permissão de visualização pública no Google Drive
 
 ### 2. preloader.jpg
 - **Localização**: `/public/preloader.jpg`
@@ -38,16 +38,26 @@ Você precisa adicionar os seguintes arquivos na pasta `public/`:
 ```
 MMG - Ensaio Vocal/
 ├── public/
-│   ├── splash.mp4      ← Adicione aqui
-│   └── preloader.jpg   ← Adicione aqui
+│   └── preloader.jpg   ← Imagem do preloader
 ├── src/
 │   └── components/
-│       ├── SplashScreen.tsx  (criado)
-│       └── Preloader.tsx     (criado)
+│       ├── SplashScreen.tsx  (vídeo carregado do Google Drive)
+│       └── Preloader.tsx     (usa preloader.jpg)
 └── ...
 ```
 
 ## Personalização
+
+### Trocar o vídeo splash
+Para usar outro vídeo do Google Drive, edite o arquivo `src/components/SplashScreen.tsx`:
+
+1. Faça upload do novo vídeo no Google Drive
+2. Configure as permissões para "Qualquer pessoa com o link pode visualizar"
+3. Copie o ID do arquivo da URL (a parte entre `/d/` e `/view`)
+4. Substitua na linha 48:
+```typescript
+<source src="https://drive.google.com/uc?export=download&id=SEU_ID_AQUI" type="video/mp4" />
+```
 
 ### Ajustar duração mínima do splash
 Edite o arquivo `src/components/SplashScreen.tsx`, linha que contém o timeout:
