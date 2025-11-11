@@ -109,18 +109,18 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, originalKey, 
 
     if (transposedContent || docContent) {
       return (
-        <div className="mt-2 sm:mt-3 md:mt-4 w-full p-2 sm:p-3 md:p-4 bg-white/5 rounded-lg border border-white/10">
-          <div className="flex items-center justify-end mb-1.5 sm:mb-2">
+        <div className="mt-3 sm:mt-4 md:mt-5 w-full p-3 sm:p-4 md:p-5 bg-white/5 rounded-lg sm:rounded-xl border border-white/10">
+          <div className="flex items-center justify-end mb-2 sm:mb-2.5">
             <a
               href={cifra}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#1DB954] text-[10px] sm:text-xs hover:underline"
+              className="text-[#1DB954] text-xs sm:text-sm hover:underline transition-colors"
             >
               Abrir no Google Docs
             </a>
           </div>
-          <div className="text-[13px] sm:text-sm md:text-base font-mono overflow-x-auto max-h-60 sm:max-h-80 md:max-h-96 overflow-y-auto">
+          <div className="text-sm sm:text-base md:text-lg font-mono overflow-x-auto max-h-[500px] sm:max-h-[600px] md:max-h-[700px] overflow-y-auto leading-relaxed">
             {renderCifraContent(transposedContent || docContent || '', true)}
           </div>
         </div>
