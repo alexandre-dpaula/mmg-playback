@@ -17,8 +17,8 @@ type NavbarProps = {
 export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
   return (
     <nav className="sticky top-0 z-50 bg-[#121212]/95 backdrop-blur-sm border-b border-white/10">
-      <div className="mx-auto max-w-6xl px-3 sm:px-4 md:px-6 py-3 sm:py-4">
-        <div className="flex items-center justify-between gap-2 sm:gap-4">
+      <div className="mx-auto max-w-6xl px-4 sm:px-4 md:px-6 py-4 sm:py-4">
+        <div className="flex items-center justify-between gap-4 sm:gap-4">
           {/* Logo MMG */}
           <div className="flex items-center flex-shrink-0">
             <img
@@ -29,24 +29,24 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
           </div>
 
           {/* Select para filtros - mobile */}
-          <div className="flex sm:hidden flex-1 justify-center max-w-[180px]">
+          <div className="flex sm:hidden flex-1 justify-center max-w-[200px]">
             <Select
               value={filter}
               onValueChange={(value) =>
                 onFilterChange(value as "all" | "vocal" | "instrumental")
               }
             >
-              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white text-xs">
+              <SelectTrigger className="w-full h-10 bg-white/10 border-white/20 text-white text-sm font-medium">
                 <SelectValue placeholder="Filtro" />
               </SelectTrigger>
               <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
-                <SelectItem value="all" className="text-xs">
+                <SelectItem value="all" className="text-sm py-3">
                   Cifras
                 </SelectItem>
-                <SelectItem value="vocal" className="text-xs">
+                <SelectItem value="vocal" className="text-sm py-3">
                   Vocal
                 </SelectItem>
-                <SelectItem value="instrumental" className="text-xs">
+                <SelectItem value="instrumental" className="text-sm py-3">
                   Instrumental
                 </SelectItem>
               </SelectContent>
@@ -96,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
             <img
               src="/perfil.jpg"
               alt="Perfil"
-              className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full object-cover ring-2 ring-white/10"
+              className="h-12 w-12 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full object-cover ring-2 ring-white/10"
               onError={(e) => {
                 console.error('Erro ao carregar imagem de perfil:', e);
                 e.currentTarget.src = "https://ui-avatars.com/api/?name=MMG&background=1DB954&color=000&size=200";
