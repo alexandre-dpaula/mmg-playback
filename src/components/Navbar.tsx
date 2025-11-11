@@ -21,7 +21,11 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo MMG */}
           <div className="flex items-center flex-shrink-0">
-            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-white">MMG</h2>
+            <img
+              src="/logo.png"
+              alt="MMG"
+              className="h-8 sm:h-9 md:h-10 w-auto object-contain"
+            />
           </div>
 
           {/* Select para filtros - mobile */}
