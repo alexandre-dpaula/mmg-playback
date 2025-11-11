@@ -24,7 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
             <img
               src="/logo.png"
               alt="MMG"
-              className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto object-contain"
+              className="h-8 sm:h-10 md:h-[60px] w-auto object-contain"
             />
           </div>
 
