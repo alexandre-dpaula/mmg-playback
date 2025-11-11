@@ -55,7 +55,7 @@ const renderCifraContent = (content: string, highlightTitle = false) => {
     // Se a linha contém apenas acordes (sem letras longas)
     const hasOnlyChords = trimmed.length > 0 &&
                           trimmed.length < 50 &&
-                          /^[A-G#b\s\/m0-9]+$/.test(trimmed);
+                          /^[A-G#b\s/m0-9]+$/.test(trimmed);
 
     if (hasOnlyChords) {
       elements.push(renderLine(lineIndex, '#ff7700', undefined, line));
