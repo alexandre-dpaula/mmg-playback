@@ -20,13 +20,13 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
 
       {/* Texto sobre a imagem */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">
-        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-2 drop-shadow-lg">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-1 drop-shadow-lg">
           MMG
         </h1>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 drop-shadow-lg">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mb-1 drop-shadow-lg">
           Playback
         </h2>
-        <p className="text-base sm:text-lg md:text-xl italic drop-shadow-lg">
+        <p className="text-sm sm:text-base md:text-lg italic drop-shadow-lg text-white/60">
           By M2Studio
         </p>
       </div>
