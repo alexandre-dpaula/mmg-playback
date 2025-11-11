@@ -24,12 +24,25 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
     const handleLoadedData = () => {
       console.log("Vídeo carregado com sucesso");
       setIsVideoLoaded(true);
-      video.play().catch((error) => {
-        console.error("Erro ao reproduzir vídeo splash:", error);
-        setHasError(true);
-        // Se não conseguir reproduzir, pula o splash
-        setTimeout(onComplete, 1000);
-      });
+    };
+
+    const handleCanPlay = () => {
+      console.log("Vídeo pronto para reproduzir");
+      // Tenta reproduzir o vídeo
+      const playPromise = video.play();
+
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log("Vídeo reproduzindo");
+          })
+          .catch((error) => {
+            console.error("Erro ao reproduzir vídeo splash:", error);
+            setHasError(true);
+            // Se não conseguir reproduzir, pula o splash
+            setTimeout(onComplete, 500);
+          });
+      }
     };
 
     const handleEnded = () => {
@@ -42,17 +55,22 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
       console.error("Erro ao carregar vídeo splash:", e);
       setHasError(true);
       clearTimeout(timeout);
-      // Se houver erro, pula o splash após 1 segundo
-      setTimeout(onComplete, 1000);
+      // Se houver erro, pula o splash após 500ms
+      setTimeout(onComplete, 500);
     };
 
     video.addEventListener("loadeddata", handleLoadedData);
+    video.addEventListener("canplay", handleCanPlay);
     video.addEventListener("ended", handleEnded);
     video.addEventListener("error", handleError);
+
+    // Tenta carregar o vídeo
+    video.load();
 
     return () => {
       clearTimeout(timeout);
       video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("canplay", handleCanPlay);
       video.removeEventListener("ended", handleEnded);
       video.removeEventListener("error", handleError);
     };
@@ -65,7 +83,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         className="w-full h-full object-cover"
         playsInline
         muted
+        autoPlay
         preload="auto"
+        webkit-playsinline="true"
       >
         <source src="/splash.mp4" type="video/mp4" />
       </video>
