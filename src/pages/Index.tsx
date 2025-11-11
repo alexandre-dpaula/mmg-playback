@@ -16,13 +16,21 @@ const Index = () => {
 
   // Detecta se é mobile
   const isMobile = React.useMemo(() => {
-    return window.innerWidth < 768;
+    const mobile = window.innerWidth < 768;
+    console.log("isMobile detectado:", mobile, "largura:", window.innerWidth);
+    return mobile;
   }, []);
 
+  React.useEffect(() => {
+    console.log("Estado atual - showSplash:", showSplash, "splashCompleted:", splashCompleted, "isMobile:", isMobile);
+  }, [showSplash, splashCompleted, isMobile]);
+
   const handleSplashComplete = () => {
+    console.log("handleSplashComplete chamado");
     setSplashCompleted(true);
     // Pequeno delay para transição suave
     setTimeout(() => {
+      console.log("Ocultando splash");
       setShowSplash(false);
     }, 300);
   };
@@ -33,6 +41,8 @@ const Index = () => {
   const shouldShowPreloader = isMobile
     ? (splashCompleted && isLoading)
     : isLoading;
+
+  console.log("shouldShowSplash:", shouldShowSplash, "shouldShowPreloader:", shouldShowPreloader);
 
   return (
     <>
