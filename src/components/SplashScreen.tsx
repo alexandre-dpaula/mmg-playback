@@ -66,9 +66,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         playsInline
         muted
         preload="auto"
-        crossOrigin="anonymous"
       >
-        <source src="https://drive.google.com/uc?export=download&id=1ITGG0jnSU7XTbmprBmnU3WytxsIlPqwQ" type="video/mp4" />
+        <source src="/splash.mp4" type="video/mp4" />
       </video>
       {!isVideoLoaded && !hasError && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black gap-4">

@@ -2,16 +2,16 @@
 
 ## Arquivos necessários
 
-### 1. Vídeo Splash (Google Drive)
-- **URL Atual**: `https://drive.google.com/file/d/1ITGG0jnSU7XTbmprBmnU3WytxsIlPqwQ/view?usp=sharing`
+### 1. Vídeo Splash
+- **Localização**: `/public/splash.mp4`
 - **Descrição**: Vídeo que será exibido na tela splash (apenas em dispositivos móveis)
 - **Formato**: MP4
-- **Configuração**: O vídeo é carregado diretamente do Google Drive
+- **Tamanho atual**: 9.0MB
 - **Recomendações**:
   - Duração: 2-5 segundos
   - Resolução: 1080x1920 (vertical/portrait) ou 1920x1080 (horizontal/landscape)
   - Tamanho: Recomendado < 10MB para carregamento rápido
-  - O arquivo deve ter permissão de visualização pública no Google Drive
+  - Formato: MP4 com codecs compatíveis (H.264)
 
 ### 2. preloader.jpg
 - **Localização**: `/public/preloader.jpg`
@@ -38,10 +38,11 @@
 ```
 MMG - Ensaio Vocal/
 ├── public/
+│   ├── splash.mp4      ← Vídeo do splash screen
 │   └── preloader.jpg   ← Imagem do preloader
 ├── src/
 │   └── components/
-│       ├── SplashScreen.tsx  (vídeo carregado do Google Drive)
+│       ├── SplashScreen.tsx  (reproduz splash.mp4)
 │       └── Preloader.tsx     (usa preloader.jpg)
 └── ...
 ```
@@ -49,14 +50,18 @@ MMG - Ensaio Vocal/
 ## Personalização
 
 ### Trocar o vídeo splash
-Para usar outro vídeo do Google Drive, edite o arquivo `src/components/SplashScreen.tsx`:
+Para usar outro vídeo:
 
-1. Faça upload do novo vídeo no Google Drive
-2. Configure as permissões para "Qualquer pessoa com o link pode visualizar"
-3. Copie o ID do arquivo da URL (a parte entre `/d/` e `/view`)
-4. Substitua na linha 48:
+1. Substitua o arquivo `/public/splash.mp4` pelo seu vídeo
+2. Certifique-se de que:
+   - O arquivo está em formato MP4
+   - O codec é H.264 (compatível com navegadores)
+   - O tamanho é menor que 10MB para melhor performance
+   - O nome do arquivo é exatamente `splash.mp4`
+
+Ou edite `src/components/SplashScreen.tsx` linha 70 para usar outro nome/caminho:
 ```typescript
-<source src="https://drive.google.com/uc?export=download&id=SEU_ID_AQUI" type="video/mp4" />
+<source src="/seu-video.mp4" type="video/mp4" />
 ```
 
 ### Ajustar duração mínima do splash
