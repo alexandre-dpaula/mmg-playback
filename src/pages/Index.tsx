@@ -3,7 +3,6 @@ import SpotifyPlayer from "@/components/SpotifyPlayer";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Navbar } from "@/components/Navbar";
 import { DEFAULT_PLAYLIST, useGooglePlaylist } from "@/hooks/useGooglePlaylist";
-import { SplashScreen } from "@/components/SplashScreen";
 import { Preloader } from "@/components/Preloader";
 
 const Index = () => {
@@ -11,43 +10,10 @@ const Index = () => {
   const title = playlistData?.title ?? DEFAULT_PLAYLIST.title;
   const description = playlistData?.description ?? DEFAULT_PLAYLIST.description;
   const [filter, setFilter] = React.useState<"all" | "vocal" | "instrumental">("all");
-  const [showSplash, setShowSplash] = React.useState(true);
-  const [splashCompleted, setSplashCompleted] = React.useState(false);
-
-  // Detecta se é mobile
-  const isMobile = React.useMemo(() => {
-    const mobile = window.innerWidth < 768;
-    console.log("isMobile detectado:", mobile, "largura:", window.innerWidth);
-    return mobile;
-  }, []);
-
-  React.useEffect(() => {
-    console.log("Estado atual - showSplash:", showSplash, "splashCompleted:", splashCompleted, "isMobile:", isMobile);
-  }, [showSplash, splashCompleted, isMobile]);
-
-  const handleSplashComplete = () => {
-    console.log("handleSplashComplete chamado");
-    setSplashCompleted(true);
-    // Pequeno delay para transição suave
-    setTimeout(() => {
-      console.log("Ocultando splash");
-      setShowSplash(false);
-    }, 300);
-  };
-
-  // No mobile, mostra splash primeiro, depois preloader
-  // No desktop, pula o splash e vai direto para o preloader
-  const shouldShowSplash = isMobile && showSplash;
-  const shouldShowPreloader = isMobile
-    ? (splashCompleted && isLoading)
-    : isLoading;
-
-  console.log("shouldShowSplash:", shouldShowSplash, "shouldShowPreloader:", shouldShowPreloader);
 
   return (
     <>
-      {shouldShowSplash && <SplashScreen onComplete={handleSplashComplete} />}
-      {shouldShowPreloader && <Preloader isLoading={true} />}
+      <Preloader isLoading={isLoading} />
 
       <div className="min-h-screen bg-[#121212] text-white">
         <Navbar filter={filter} onFilterChange={setFilter} />

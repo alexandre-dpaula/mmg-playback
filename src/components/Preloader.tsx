@@ -18,8 +18,21 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
         className="w-full h-full object-cover"
       />
 
+      {/* Texto sobre a imagem */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-2 drop-shadow-lg">
+          MMG
+        </h1>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold mb-4 drop-shadow-lg">
+          Playback
+        </h2>
+        <p className="text-base sm:text-lg md:text-xl italic drop-shadow-lg">
+          By M2Studio
+        </p>
+      </div>
+
       {/* Spinner apenas em desktop (md e acima) */}
-      <div className="hidden md:flex absolute inset-0 items-center justify-center">
+      <div className="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none mt-64">
         <div className="w-44 h-44 border-4 border-white/10 border-t-[#1DB954] rounded-full animate-spin" />
       </div>
     </div>
