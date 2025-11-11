@@ -131,6 +131,15 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     }
   }, [currentTrack]);
 
+  // Atualiza o título da página quando a música muda (para PWA no iPhone)
+  React.useEffect(() => {
+    if (currentTrack) {
+      document.title = `${currentTrack.name} - MMG Playback`;
+    } else {
+      document.title = "MMG Playback";
+    }
+  }, [currentTrack]);
+
   React.useEffect(() => {
     if (!audioRef.current || !currentTrack || !currentTrack.url) {
       return;
