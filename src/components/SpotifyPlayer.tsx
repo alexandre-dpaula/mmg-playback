@@ -394,33 +394,35 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
           </ScrollArea>
         </div>
       </div>
-      <div className="flex flex-col items-center gap-3 sm:gap-4 mt-4 sm:mt-6">
+      <div className="flex flex-col items-center gap-4 sm:gap-5 md:gap-6 mt-5 sm:mt-6 md:mt-8">
         {currentTrack && (
-          <div className="audio-player w-full max-w-md px-2 sm:px-0">
+          <div className="audio-player w-full max-w-lg px-3 sm:px-4">
             <div
-              className="progress-bar w-full h-1.5 sm:h-2 bg-white/20 rounded cursor-pointer"
+              className="progress-bar w-full h-2 sm:h-2.5 bg-white/10 rounded-full cursor-pointer hover:bg-white/15 transition-colors group"
               onClick={handleProgressClick}
             >
               <div
-                className="progress-thumb h-full bg-[#1DB954] rounded"
+                className="progress-thumb h-full bg-[#1DB954] rounded-full transition-all group-hover:bg-[#1ed760] relative"
                 style={{
                   width: duration ? `${(currentTime / duration) * 100}%` : "0%",
                 }}
-              ></div>
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </div>
             </div>
-            <div className="flex justify-between text-[10px] sm:text-xs text-white/60 mt-1">
+            <div className="flex justify-between text-xs sm:text-sm text-white/70 mt-2 font-medium">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
           </div>
         )}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
           <Button
             onClick={handlePrevious}
             disabled={!tracks.length}
-            className="flex items-center justify-center rounded-full bg-white/10 p-2 sm:px-3 sm:py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center justify-center rounded-full bg-white/10 p-3 sm:p-3.5 md:p-4 text-white hover:bg-white/20 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 transition-all duration-200 shadow-md hover:shadow-lg"
           >
-            <SkipBack className="h-4 w-4 sm:h-5 sm:w-5" />
+            <SkipBack className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
           <Button
             onClick={handlePlayPause}
@@ -429,26 +431,26 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
               (currentTrack?.url && isGoogleDocsUrl(currentTrack.url)) ||
               !currentTrack?.url
             }
-            className="flex items-center justify-center gap-1.5 sm:gap-2 rounded-full bg-[#1DB954] px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-5 text-xs sm:text-sm md:text-base font-semibold text-black shadow-lg shadow-[#1DB954]/40 transition hover:bg-[#1ed760] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+            className="flex items-center justify-center gap-2 sm:gap-2.5 rounded-full bg-[#1DB954] px-6 py-3 sm:px-7 sm:py-3.5 md:px-8 md:py-4 text-sm sm:text-base md:text-lg font-bold text-black shadow-xl shadow-[#1DB954]/50 transition-all duration-200 hover:bg-[#1ed760] hover:scale-105 hover:shadow-2xl hover:shadow-[#1DB954]/60 active:scale-95 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40 disabled:shadow-none disabled:hover:scale-100"
           >
             {isPlaying ? (
               <>
-                <Pause className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-                <span>Pausar</span>
+                <Pause className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span className="hidden sm:inline">Pausar</span>
               </>
             ) : (
               <>
-                <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" />
-                <span>Reproduzir</span>
+                <Play className="h-5 w-5 sm:h-6 sm:w-6" />
+                <span className="hidden sm:inline">Reproduzir</span>
               </>
             )}
           </Button>
           <Button
             onClick={handleNext}
             disabled={!tracks.length}
-            className="flex items-center justify-center rounded-full bg-white/10 p-2 sm:px-3 sm:py-3 text-white hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center justify-center rounded-full bg-white/10 p-3 sm:p-3.5 md:p-4 text-white hover:bg-white/20 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 transition-all duration-200 shadow-md hover:shadow-lg"
           >
-            <SkipForward className="h-4 w-4 sm:h-5 sm:w-5" />
+            <SkipForward className="h-5 w-5 sm:h-6 sm:w-6" />
           </Button>
         </div>
       </div>
