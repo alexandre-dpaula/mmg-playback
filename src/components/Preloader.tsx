@@ -2,6 +2,15 @@
 
 import React from "react";
 
+const SAFE_AREA_TOP = "env(safe-area-inset-top, 0px)";
+const SAFE_AREA_BOTTOM = "env(safe-area-inset-bottom, 0px)";
+const SAFE_AREA_LEFT = "env(safe-area-inset-left, 0px)";
+const SAFE_AREA_RIGHT = "env(safe-area-inset-right, 0px)";
+const IMAGE_OVERSCAN = 20; // pixels extras para garantir cobertura total
+
+const expandWithSafeArea = (inset: string) =>
+  `calc(-${IMAGE_OVERSCAN}px - ${inset})`;
+
 type PreloaderProps = {
   isLoading: boolean;
 };
@@ -31,38 +40,44 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
 
   if (!isLoading) return null;
 
+  const containerStyle: React.CSSProperties = {
+    position: "fixed",
+    inset: 0,
+    width: "100vw",
+    minWidth: "100dvw",
+    height: "100vh",
+    minHeight: "100dvh",
+    zIndex: 9999,
+    overflow: "hidden",
+    margin: 0,
+    padding: 0,
+    backgroundColor: "#121212",
+  };
+
+  const imageStyle: React.CSSProperties = {
+    position: "absolute",
+    top: expandWithSafeArea(SAFE_AREA_TOP),
+    bottom: expandWithSafeArea(SAFE_AREA_BOTTOM),
+    left: expandWithSafeArea(SAFE_AREA_LEFT),
+    right: expandWithSafeArea(SAFE_AREA_RIGHT),
+    objectFit: "cover",
+    objectPosition: "center",
+    width: "auto",
+    height: "auto",
+    margin: 0,
+    padding: 0,
+  };
+
   return (
     <div
       className="fixed bg-[#121212]"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 9999,
-        overflow: 'hidden',
-        margin: 0,
-        padding: 0
-      }}
+      style={containerStyle}
     >
-      {/* Imagem se estende além dos limites para cobrir safe areas */}
+      {/* Expande além dos limites, inclusive as safe areas dos PWAs */}
       <img
         src="/preloader.jpg"
         alt="Carregando"
-        style={{
-          position: 'absolute',
-          top: '-20px',
-          left: '-20px',
-          width: 'calc(100% + 40px)',
-          height: 'calc(100% + 40px)',
-          objectFit: 'cover',
-          objectPosition: 'center',
-          margin: 0,
-          padding: 0
-        }}
+        style={imageStyle}
       />
     </div>
   );
