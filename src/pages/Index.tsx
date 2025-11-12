@@ -13,6 +13,18 @@ const Index = () => {
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [pullStartY, setPullStartY] = React.useState(0);
   const [pullDistance, setPullDistance] = React.useState(0);
+  const [showPreloader, setShowPreloader] = React.useState(() => {
+    // Mostra preloader apenas na primeira visita da sessão
+    const hasVisited = sessionStorage.getItem('hasVisited');
+    return !hasVisited;
+  });
+
+  // Marca que já visitou na primeira renderização
+  React.useEffect(() => {
+    if (!sessionStorage.getItem('hasVisited')) {
+      sessionStorage.setItem('hasVisited', 'true');
+    }
+  }, []);
 
   // Pull to refresh
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -43,8 +55,8 @@ const Index = () => {
     setPullStartY(0);
   };
 
-  // Se está carregando, mostra apenas o preloader (página completa)
-  if (isLoading) {
+  // Se está carregando E é a primeira visita, mostra o preloader
+  if (isLoading && showPreloader) {
     return <Preloader isLoading={true} />;
   }
 
@@ -58,6 +70,11 @@ const Index = () => {
       onTouchEnd={handleTouchEnd}
     >
       <Navbar filter={filter} onFilterChange={setFilter} />
+
+      {/* Indicador de loading discreto para refreshes */}
+      {isLoading && !showPreloader && (
+        <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />
+      )}
 
       {/* Pull to refresh indicator */}
       {pullDistance > 0 && (
