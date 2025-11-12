@@ -138,7 +138,7 @@ function getThumbData(sheet) {
 /**
  * Busca dados das faixas da aba "Tracks"
  * Formato esperado:
- *   Linha 1: Cabeçalhos (Título, URL, Voz/Artista)
+ *   Linha 1: Cabeçalhos (Título, URL, Tag, Versão, Tom, Pauta/Cifra)
  *   Linhas seguintes: Dados das faixas
  */
 function getTracksData(sheet) {
@@ -169,6 +169,12 @@ function getTracksData(sheet) {
   const artistIndex = headers.findIndex(h =>
     h.includes("voz") || h.includes("cantor") || h.includes("artista")
   );
+  const tagIndex = headers.findIndex(h =>
+    h.includes("tag")
+  );
+  const versaoIndex = headers.findIndex(h =>
+    h.includes("versão") || h.includes("versao") || h.includes("version")
+  );
   const tomIndex = headers.findIndex(h =>
     h.includes("tom")
   );
@@ -183,6 +189,8 @@ function getTracksData(sheet) {
     const title = titleIndex >= 0 ? row[titleIndex]?.toString().trim() : "";
     const url = urlIndex >= 0 ? row[urlIndex]?.toString().trim() : "";
     const artist = artistIndex >= 0 ? row[artistIndex]?.toString().trim() : "";
+    const tag = tagIndex >= 0 ? row[tagIndex]?.toString().trim() : "";
+    const versao = versaoIndex >= 0 ? row[versaoIndex]?.toString().trim() : "";
     const tom = tomIndex >= 0 ? row[tomIndex]?.toString().trim() : "";
     const pauta = pautaIndex >= 0 ? row[pautaIndex]?.toString().trim() : "";
 
@@ -198,6 +206,14 @@ function getTracksData(sheet) {
       // Adiciona URL apenas se existir
       if (url) {
         track.url = url;
+      }
+
+      // Adiciona tag e versao se existirem
+      if (tag) {
+        track.tag = tag;
+      }
+      if (versao) {
+        track.versao = versao;
       }
 
       // Adiciona tom e pauta se existirem
