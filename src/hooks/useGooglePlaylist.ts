@@ -5,6 +5,8 @@ export type PlaylistTrack = {
   title: string;
   url?: string;
   artist?: string;
+  tag?: string;
+  versao?: string;
   order: number;
   coverUrl?: string;
   tom?: string;
@@ -28,6 +30,8 @@ type GoogleSheetTrack = {
   id?: string;
   title?: string;
   artist?: string;
+  tag?: string;
+  versao?: string;
   url?: string;
   driveUrl?: string;
   driveId?: string;
@@ -129,6 +133,8 @@ const normalizeTracks = (payload: GoogleSheetPayload): PlaylistTrack[] => {
     const titleIndex = findIndexByKeywords(["titulo", "título", "nome", "faixa"]);
     const urlIndex = findIndexByKeywords(["url", "link"]);
     const artistIndex = findIndexByKeywords(["voz", "cantor", "artista"]);
+    const tagIndex = findIndexByKeywords(["tag"]);
+    const versaoIndex = findIndexByKeywords(["versão", "versao", "version"]);
     const tomIndex = findIndexByKeywords(["tom"]);
     const cifraIndex = findIndexByKeywords(["cifra"]);
 
@@ -140,6 +146,8 @@ const normalizeTracks = (payload: GoogleSheetPayload): PlaylistTrack[] => {
               title: titleIndex >= 0 ? row[titleIndex] : undefined,
               url: urlIndex >= 0 ? row[urlIndex] : undefined,
               artist: artistIndex >= 0 ? row[artistIndex] : undefined,
+              tag: tagIndex >= 0 ? row[tagIndex] : undefined,
+              versao: versaoIndex >= 0 ? row[versaoIndex] : undefined,
               tom: tomIndex >= 0 ? row[tomIndex] : undefined,
               cifra: cifraIndex >= 0 ? row[cifraIndex] : undefined,
               order: index,
@@ -180,6 +188,8 @@ const normalizeTrack = (track: GoogleSheetTrack, index: number): PlaylistTrack |
     title,
     url,
     artist: track.artist?.trim() || undefined,
+    tag: track.tag?.trim() || undefined,
+    versao: track.versao?.trim() || undefined,
     order: typeof track.order === "number" ? track.order : index,
     coverUrl,
     tom: track.tom?.trim() || undefined,
