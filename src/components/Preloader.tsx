@@ -41,27 +41,23 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
         right: 0,
         bottom: 0,
         width: '100vw',
-        height: '100dvh', // Dynamic viewport height para mobile
-        maxHeight: '100dvh',
-        minHeight: '100dvh',
+        height: '100vh',
         zIndex: 9999,
         overflow: 'hidden',
         margin: 0,
         padding: 0
       }}
     >
-      {/* Imagem ocupa tela toda do dispositivo real */}
+      {/* Imagem ocupa tela toda incluindo safe areas */}
       <img
         src="/preloader.jpg"
         alt="Carregando"
         style={{
-          position: 'fixed',
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100dvh',
-          maxHeight: '100dvh',
-          minHeight: '100dvh',
+          width: '100%',
+          height: '100%',
           objectFit: 'cover',
           objectPosition: 'center',
           margin: 0,
