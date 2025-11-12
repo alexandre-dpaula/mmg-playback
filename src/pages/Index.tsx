@@ -22,12 +22,12 @@ const Index = () => {
       <Navbar filter={filter} onFilterChange={setFilter} />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
         <header className="text-center space-y-2">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
-            {title}
-          </h1>
           <p className="text-sm sm:text-base text-white/70">
             {description}
           </p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
+            {title}
+          </h1>
         </header>
         <SpotifyPlayer filter={filter} />
         <div className="text-center pb-4 sm:pb-0">
