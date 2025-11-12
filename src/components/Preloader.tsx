@@ -11,6 +11,9 @@ const IMAGE_OVERSCAN = 20; // pixels extras para garantir cobertura total
 const expandWithSafeArea = (inset: string) =>
   `calc(-${IMAGE_OVERSCAN}px - ${inset})`;
 
+const calcSizeWithSafeArea = (safeAreaA: string, safeAreaB: string) =>
+  `calc(100% + ${IMAGE_OVERSCAN * 2}px + ${safeAreaA} + ${safeAreaB})`;
+
 type PreloaderProps = {
   isLoading: boolean;
 };
@@ -62,8 +65,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
     right: expandWithSafeArea(SAFE_AREA_RIGHT),
     objectFit: "cover",
     objectPosition: "center",
-    width: "auto",
-    height: "auto",
+    width: calcSizeWithSafeArea(SAFE_AREA_LEFT, SAFE_AREA_RIGHT),
+    height: calcSizeWithSafeArea(SAFE_AREA_TOP, SAFE_AREA_BOTTOM),
     margin: 0,
     padding: 0,
   };
