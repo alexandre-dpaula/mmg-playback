@@ -20,7 +20,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-[#121212] text-white">
       <Navbar filter={filter} onFilterChange={setFilter} />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12" style={{ paddingTop: 'calc(80px + env(safe-area-inset-top) + 1.5rem)' }}>
         <header className="text-center space-y-2">
           <p className="text-sm sm:text-base text-white/70">
             {description}
