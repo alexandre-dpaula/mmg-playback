@@ -1,0 +1,64 @@
+{
+  "name": "MMG Playback",
+  "short_name": "MMG Playback",
+  "description": "Playlist de Vozes e Instrumental para ensaios",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "entertainment"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Cifras",
+      "short_name": "Cifras",
+      "description": "Abrir cifras",
+      "url": "/?filter=all",
+      "icons": [
+        {
+          "src": "/icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Vocal",
+      "short_name": "Vocal",
+      "description": "Abrir playlist vocal",
+      "url": "/?filter=vocal",
+      "icons": [
+        {
+          "src": "/icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Instrumental",
+      "short_name": "Instrumental",
+      "description": "Abrir playlist instrumental",
+      "url": "/?filter=instrumental",
+      "icons": [
+        {
+          "src": "/icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
