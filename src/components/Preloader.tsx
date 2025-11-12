@@ -33,7 +33,7 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212]"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#121212]"
       style={{
         height: '100dvh',
         minHeight: '100dvh',
@@ -44,7 +44,9 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
         left: 0,
         right: 0,
         bottom: 0,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
       }}
     >
       {/* Imagem ocupa tela toda incluindo barra de status */}
@@ -53,8 +55,8 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
         alt="Carregando"
         className="absolute inset-0 w-full h-full object-cover"
         style={{
-          height: '100dvh',
-          width: '100vw',
+          height: '100%',
+          width: '100%',
           objectFit: 'cover'
         }}
       />
