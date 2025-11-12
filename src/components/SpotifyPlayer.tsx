@@ -294,8 +294,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                   (isLoading ? "Carregando..." : "Selecione uma faixa")}
               </h2>
               <p className="text-xs sm:text-sm text-white/60 tracking-[0px]">
-                {playlistData?.description ??
-                  "Playlist de vozes para ensaio das Músicas de Tabernáculos."}
+                {currentTrack?.versao || ""}
               </p>
               {currentTrack?.tom && (
                 <div className="flex items-center gap-2 mt-5">
