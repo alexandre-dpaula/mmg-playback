@@ -48,16 +48,16 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
         padding: 0
       }}
     >
-      {/* Imagem ocupa tela toda incluindo safe areas */}
+      {/* Imagem se estende além dos limites para cobrir safe areas */}
       <img
         src="/preloader.jpg"
         alt="Carregando"
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
+          top: '-20px',
+          left: '-20px',
+          width: 'calc(100% + 40px)',
+          height: 'calc(100% + 40px)',
           objectFit: 'cover',
           objectPosition: 'center',
           margin: 0,

@@ -28,14 +28,67 @@ const isGoogleDocsUrl = (url?: string): boolean => {
   if (!url) return false;
   const lowerUrl = url.toLowerCase();
   return (
-    lowerUrl.includes('docs.google.com/document') ||
-    lowerUrl.includes('docs.google.com/d/') ||
-    lowerUrl.includes('drive.google.com/file/d/') && lowerUrl.includes('/view')
+    lowerUrl.includes("docs.google.com/document") ||
+    lowerUrl.includes("docs.google.com/d/") ||
+    (lowerUrl.includes("drive.google.com/file/d/") && lowerUrl.includes("/view"))
   );
+};
+
+const normalizeFilterValue = (value?: string) => (value ? value.toLowerCase().trim() : "");
+
+const FLAT_TO_SHARP_MAP: Record<string, string> = {
+  Db: "C#",
+  Eb: "D#",
+  Gb: "F#",
+  Ab: "G#",
+  Bb: "A#",
+};
+
+const NOTE_FREQUENCIES: Record<string, number> = {
+  C: 261.63,
+  "C#": 277.18,
+  D: 293.66,
+  "D#": 311.13,
+  E: 329.63,
+  F: 349.23,
+  "F#": 369.99,
+  G: 392.0,
+  "G#": 415.3,
+  A: 440.0,
+  "A#": 466.16,
+  B: 493.88,
+};
+
+const extractKeyToken = (value?: string) => {
+  if (!value) return "";
+  const cleaned = value.replace(/♯/g, "#").replace(/♭/g, "b");
+  const match = cleaned.match(/([A-Ga-g][#b]?)/);
+  if (!match) return "";
+  const [note] = match;
+  return note.charAt(0).toUpperCase() + (note.charAt(1) ? note.charAt(1).toLowerCase() : "");
+};
+
+const normalizeKeyForSelect = (value?: string) => {
+  const token = extractKeyToken(value);
+  if (!token) return "";
+  const normalized = FLAT_TO_SHARP_MAP[token] || token.toUpperCase();
+  return AVAILABLE_KEYS.includes(normalized) ? normalized : "";
+};
+
+const getFrequencyForKey = (value?: string) => {
+  const key = normalizeKeyForSelect(value);
+  if (!key) return undefined;
+  return NOTE_FREQUENCIES[key];
 };
 
 type SpotifyPlayerProps = {
   filter: "all" | "vocal" | "instrumental";
+};
+
+type PadNodes = {
+  oscillators: OscillatorNode[];
+  filter: BiquadFilterNode;
+  gain: GainNode;
 };
 
 const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
@@ -53,26 +106,35 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   );
 
   const tracks: PlaylistTrack[] = React.useMemo(() => {
+    const filterByTag = (track: PlaylistTrack, ...tags: string[]) => {
+      const normalizedTag = normalizeFilterValue(track.tag);
+      const normalizedArtist = normalizeFilterValue(track.artist);
+      return tags.some((tag) => normalizedTag === tag || normalizedArtist.includes(tag));
+    };
+
     if (filter === "all") {
-      // Filtro "Cifras": faixas com artist="Cifras" OU URL do Google Docs OU campo pauta/cifra
+      // Filtro "Cifras": usa a coluna Tag e mantém os fallbacks antigos
       return allTracks.filter((track) => {
-        const artist = track.artist?.toLowerCase().trim() || "";
+        const normalizedTag = normalizeFilterValue(track.tag);
+        const normalizedArtist = normalizeFilterValue(track.artist);
         const hasPauta = track.pauta && track.pauta.trim().length > 0;
         const hasCifra = track.cifra && track.cifra.trim().length > 0;
         const isDocsUrl = track.url && isGoogleDocsUrl(track.url);
-        return artist === "cifras" || artist.includes("cifra") || hasPauta || hasCifra || isDocsUrl;
+        const matchesTag = normalizedTag === "cifra" || normalizedTag === "cifras";
+        const matchesArtist =
+          normalizedArtist === "cifras" || normalizedArtist.includes("cifra");
+        return matchesTag || matchesArtist || hasPauta || hasCifra || isDocsUrl;
       });
     }
+
     if (filter === "vocal") {
-      return allTracks.filter((track) =>
-        track.artist?.toLowerCase().includes("vocal")
-      );
+      return allTracks.filter((track) => filterByTag(track, "vocal", "voz", "vozes"));
     }
+
     if (filter === "instrumental") {
-      return allTracks.filter((track) =>
-        track.artist?.toLowerCase().includes("instrumental")
-      );
+      return allTracks.filter((track) => filterByTag(track, "instrumental"));
     }
+
     return allTracks;
   }, [allTracks, filter]);
 
@@ -83,11 +145,22 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
   const [selectedKey, setSelectedKey] = React.useState<string>("");
+  const [isPadPlaying, setIsPadPlaying] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = React.useRef<AudioContext | null>(null);
+  const padNodesRef = React.useRef<PadNodes | null>(null);
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
     [tracks, currentTrackId]
+  );
+
+  const currentPadKey = React.useMemo(
+    () =>
+      normalizeKeyForSelect(selectedKey) ||
+      normalizeKeyForSelect(currentTrack?.tom) ||
+      AVAILABLE_KEYS[0],
+    [selectedKey, currentTrack?.tom]
   );
 
   // Determina a imagem de capa baseada no filtro ativo
@@ -124,17 +197,132 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     }
   }, [tracks, currentTrackId]);
 
+  const stopPadNodes = React.useCallback(() => {
+    if (padNodesRef.current && audioContextRef.current) {
+      const ctx = audioContextRef.current;
+      const previousNodes = padNodesRef.current;
+      const { oscillators, gain, filter } = previousNodes;
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+      oscillators.forEach((oscillator) => {
+        try {
+          oscillator.stop(ctx.currentTime + 0.5);
+        } catch {
+          // ignore stop errors if already stopped
+        }
+        oscillator.disconnect();
+      });
+      filter.disconnect();
+      setTimeout(() => {
+        gain.disconnect();
+        if (padNodesRef.current === previousNodes) {
+          padNodesRef.current = null;
+        }
+      }, 600);
+    }
+  }, []);
+
+  const stopPad = React.useCallback(() => {
+    stopPadNodes();
+    setIsPadPlaying(false);
+  }, [stopPadNodes]);
+
+  const startPad = React.useCallback(
+    (keyValue?: string) => {
+      if (typeof window === "undefined") return;
+
+      const normalizedSelection =
+        normalizeKeyForSelect(keyValue) || currentPadKey;
+
+      const frequency = getFrequencyForKey(normalizedSelection);
+
+      if (!frequency) {
+        console.warn("Não foi possível determinar o tom para o Pad.");
+        return;
+      }
+
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as Window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+
+      if (!AudioContextClass) {
+        console.warn("Web Audio API não suportada neste navegador.");
+        return;
+      }
+
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContextClass();
+      }
+
+      if (audioContextRef.current.state === "suspended") {
+        void audioContextRef.current.resume();
+      }
+
+      const ctx = audioContextRef.current;
+      const outputGain = ctx.createGain();
+      outputGain.gain.value = 0;
+      outputGain.connect(ctx.destination);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.Q.value = 0.8;
+      filter.frequency.value = 900;
+      filter.connect(outputGain);
+
+      const createOscillator = (
+        type: OscillatorType,
+        gainValue: number,
+        freqMultiplier = 1,
+        detune = 0
+      ) => {
+        const oscillator = ctx.createOscillator();
+        oscillator.type = type;
+        oscillator.frequency.value = frequency * freqMultiplier;
+        oscillator.detune.value = detune;
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = gainValue;
+        oscillator.connect(gainNode).connect(filter);
+        oscillator.start();
+        return oscillator;
+      };
+
+      const oscillators = [
+        createOscillator("sawtooth", 0.18),
+        createOscillator("triangle", 0.08, 0.5),
+        createOscillator("sine", 0.05, 1.5, 700),
+      ];
+
+      outputGain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 1.2);
+      padNodesRef.current = { oscillators, filter, gain: outputGain };
+    },
+    [currentPadKey]
+  );
+
   // Atualiza o tom selecionado quando a faixa muda
   React.useEffect(() => {
-    if (currentTrack?.tom) {
-      setSelectedKey(currentTrack.tom);
+    const normalizedKey = normalizeKeyForSelect(currentTrack?.tom);
+    setSelectedKey(normalizedKey || "");
+    stopPad();
+  }, [currentTrack?.tom, stopPad]);
+
+  React.useEffect(() => {
+    if (!isPadPlaying) {
+      stopPadNodes();
+      return;
     }
-  }, [currentTrack]);
+
+    startPad(currentPadKey);
+
+    return () => {
+      stopPadNodes();
+    };
+  }, [isPadPlaying, currentPadKey, startPad, stopPadNodes]);
 
   // Atualiza o título da página quando a música muda (para PWA no iPhone)
   React.useEffect(() => {
     if (currentTrack) {
-      document.title = `${currentTrack.name} - MMG Playback`;
+      document.title = `${currentTrack.title} - MMG Playback`;
     } else {
       document.title = "MMG Playback";
     }
@@ -179,6 +367,15 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
       audioRef.current.pause();
     }
   }, [isPlaying, currentTrack]);
+
+  React.useEffect(() => {
+    return () => {
+      stopPad();
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => undefined);
+      }
+    };
+  }, [stopPad]);
 
   const handlePlayPause = () => {
     if (!tracks.length) {
@@ -241,6 +438,16 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     }
   };
 
+  const handleTogglePad = () => {
+    setIsPadPlaying((prev) => {
+      if (prev) {
+        stopPadNodes();
+        return false;
+      }
+      return true;
+    });
+  };
+
   const playNextTrack = () => {
     handleNext();
   };
@@ -284,39 +491,56 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                 className="w-24 aspect-[3/4] sm:w-32 sm:aspect-square md:w-44 rounded-xl sm:rounded-2xl object-cover shadow-[0_20px_45px_-20px_rgba(0,0,0,0.8)] flex-shrink-0"
               />
             )}
-            <div className="space-y-1 flex-1 min-w-0">
-              <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/60">
-                {currentTrack?.artist ??
-                  (isLoading ? "Carregando..." : "Selecione uma faixa")}
-              </span>
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
-                {currentTrack?.title ??
-                  (isLoading ? "Carregando..." : "Selecione uma faixa")}
-              </h2>
-              <p className="text-xs sm:text-sm text-white/60 tracking-[0px]">
-                {currentTrack?.versao || ""}
-              </p>
-              {currentTrack?.tom && (
-                <div className="flex items-center gap-2 mt-5">
-                  <span className="text-[#1DB954] font-semibold text-xs sm:text-sm">
-                    Tom:
-                  </span>
-                  <Select value={selectedKey} onValueChange={setSelectedKey}>
-                    <SelectTrigger className="w-16 sm:w-20 h-7 sm:h-8 bg-white/10 border-white/20 text-white text-xs sm:text-sm">
-                      <SelectValue placeholder={currentTrack.tom} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#282828] border-white/20">
-                      {AVAILABLE_KEYS.map((key) => (
-                        <SelectItem
-                          key={key}
-                          value={key}
-                          className="text-white hover:bg-white/10 focus:bg-white/20 text-xs sm:text-sm"
-                        >
-                          {key}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <div className="flex-1 min-w-0">
+              <div className="space-y-1">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/60">
+                  {currentTrack?.artist ??
+                    (isLoading ? "Carregando..." : "Selecione uma faixa")}
+                </span>
+                <div className="flex flex-wrap items-baseline gap-1 text-balance">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
+                    {currentTrack?.title ??
+                      (isLoading ? "Carregando..." : "Selecione uma faixa")}
+                  </h2>
+                  {currentTrack?.versao && (
+                    <span className="text-xs sm:text-sm text-white/70 font-semibold">
+                      • {currentTrack.versao}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {(currentTrack?.tom || selectedKey) && (
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 pb-2 border-b border-white/10">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[#1DB954] text-xs sm:text-sm font-semibold uppercase tracking-wide">
+                      Tom
+                    </span>
+                    <Select value={selectedKey} onValueChange={setSelectedKey}>
+                      <SelectTrigger className="w-20 sm:w-24 h-9 sm:h-10 bg-white/10 border-white/15 text-white text-xs sm:text-sm font-semibold">
+                        <SelectValue placeholder={currentTrack?.tom || "—"} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#282828] border-white/20">
+                        {AVAILABLE_KEYS.map((key) => (
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            className="text-white hover:bg-white/10 focus:bg-white/20 text-sm"
+                          >
+                            {key}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={handleTogglePad}
+                    className={cn(
+                      "h-9 sm:h-10 w-20 sm:w-24 rounded-lg bg-white/10 border border-white/15 text-white text-xs sm:text-sm font-semibold transition hover:bg-white/15",
+                      isPadPlaying && "bg-[#1DB954] text-black border-[#1DB954]"
+                    )}
+                  >
+                    {isPadPlaying ? "Parar Pad" : "Pad"}
+                  </Button>
                 </div>
               )}
             </div>

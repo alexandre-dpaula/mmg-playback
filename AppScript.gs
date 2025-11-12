@@ -11,9 +11,24 @@
  * 6. Copie a URL gerada e cole no arquivo .env do projeto
  */
 
+const SPREADSHEET_ID = "11vl4pBX-XOQCpRZdzbRPGwSR9xGP2ai4TS_14qtwYxc";
+
+function getSpreadsheet() {
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) {
+    return active;
+  }
+
+  if (SPREADSHEET_ID) {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+
+  throw new Error("Planilha não encontrada. Defina SPREADSHEET_ID.");
+}
+
 function doGet(e) {
   try {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const spreadsheet = getSpreadsheet();
 
     // Buscar dados da aba "Config"
     const configSheet = spreadsheet.getSheetByName("Config");
@@ -136,6 +151,60 @@ function getThumbData(sheet) {
 }
 
 /**
+ * Retorna a URL de um valor RichText (inclui hyperlinks parciais).
+ */
+function getLinkFromRichText(richValue) {
+  if (!richValue) {
+    return "";
+  }
+
+  if (typeof richValue.getLinkUrl === "function") {
+    const link = richValue.getLinkUrl();
+    if (link) {
+      return link;
+    }
+  }
+
+  if (typeof richValue.getRuns === "function") {
+    const runs = richValue.getRuns();
+    if (runs && runs.length) {
+      for (let i = 0; i < runs.length; i++) {
+        const runLink = runs[i].getLinkUrl();
+        if (runLink) {
+          return runLink;
+        }
+      }
+    }
+  }
+
+  return "";
+}
+
+/**
+ * Obtém o valor textual de uma célula e, se preferido, extrai o hyperlink real.
+ */
+function getCellValue(row, rowRich, index, options) {
+  const opts = options || {};
+  if (index < 0) {
+    return "";
+  }
+
+  const rawValue = row[index];
+  const stringValue = rawValue !== null && rawValue !== undefined
+    ? rawValue.toString().trim()
+    : "";
+
+  if (opts.preferLink && rowRich && rowRich[index]) {
+    const linkValue = getLinkFromRichText(rowRich[index]);
+    if (linkValue) {
+      return linkValue.trim();
+    }
+  }
+
+  return stringValue;
+}
+
+/**
  * Busca dados das faixas da aba "Tracks"
  * Formato esperado:
  *   Linha 1: Cabeçalhos (Título, URL, Tag, Versão, Tom, Pauta/Cifra)
@@ -149,7 +218,9 @@ function getTracksData(sheet) {
     return tracks;
   }
 
-  const data = sheet.getDataRange().getValues();
+  const range = sheet.getDataRange();
+  const data = range.getValues();
+  const richData = range.getRichTextValues();
 
   if (data.length <= 1) {
     Logger.log("Nenhuma faixa encontrada");
@@ -185,14 +256,15 @@ function getTracksData(sheet) {
   // Processar cada linha de dados
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
+    const rowRich = richData[i] || [];
 
-    const title = titleIndex >= 0 ? row[titleIndex]?.toString().trim() : "";
-    const url = urlIndex >= 0 ? row[urlIndex]?.toString().trim() : "";
-    const artist = artistIndex >= 0 ? row[artistIndex]?.toString().trim() : "";
-    const tag = tagIndex >= 0 ? row[tagIndex]?.toString().trim() : "";
-    const versao = versaoIndex >= 0 ? row[versaoIndex]?.toString().trim() : "";
-    const tom = tomIndex >= 0 ? row[tomIndex]?.toString().trim() : "";
-    const pauta = pautaIndex >= 0 ? row[pautaIndex]?.toString().trim() : "";
+    const title = getCellValue(row, rowRich, titleIndex);
+    const url = getCellValue(row, rowRich, urlIndex, { preferLink: true });
+    const artist = getCellValue(row, rowRich, artistIndex);
+    const tag = getCellValue(row, rowRich, tagIndex);
+    const versao = getCellValue(row, rowRich, versaoIndex);
+    const tom = getCellValue(row, rowRich, tomIndex);
+    const pauta = getCellValue(row, rowRich, pautaIndex, { preferLink: true });
 
     // Adiciona se tiver título (URL é opcional para faixas de cifra)
     if (title) {

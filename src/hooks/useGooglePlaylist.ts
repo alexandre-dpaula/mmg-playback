@@ -39,6 +39,7 @@ type GoogleSheetTrack = {
   coverUrl?: string;
   tom?: string;
   cifra?: string;
+  pauta?: string;
 };
 
 type GoogleSheetPayload = {
@@ -137,6 +138,7 @@ const normalizeTracks = (payload: GoogleSheetPayload): PlaylistTrack[] => {
     const versaoIndex = findIndexByKeywords(["versão", "versao", "version"]);
     const tomIndex = findIndexByKeywords(["tom"]);
     const cifraIndex = findIndexByKeywords(["cifra"]);
+    const pautaIndex = findIndexByKeywords(["pauta"]);
 
     return sortByOrder(
       rows
@@ -150,6 +152,7 @@ const normalizeTracks = (payload: GoogleSheetPayload): PlaylistTrack[] => {
               versao: versaoIndex >= 0 ? row[versaoIndex] : undefined,
               tom: tomIndex >= 0 ? row[tomIndex] : undefined,
               cifra: cifraIndex >= 0 ? row[cifraIndex] : undefined,
+              pauta: pautaIndex >= 0 ? row[pautaIndex] : undefined,
               order: index,
             },
             index,
@@ -174,7 +177,10 @@ const normalizeTrack = (track: GoogleSheetTrack, index: number): PlaylistTrack |
   // Sempre converte a URL do Drive para formato de download direto
   url = convertDriveReferenceToDirectUrl(url);
 
-  if (!url) {
+  const hasAudio = !!url;
+  const hasScore = !!(track.pauta?.trim() || track.cifra?.trim());
+
+  if (!hasAudio && !hasScore) {
     return null;
   }
 
@@ -186,7 +192,7 @@ const normalizeTrack = (track: GoogleSheetTrack, index: number): PlaylistTrack |
   return {
     id: track.id || `${title}-${index}`,
     title,
-    url,
+    url: hasAudio ? url : undefined,
     artist: track.artist?.trim() || undefined,
     tag: track.tag?.trim() || undefined,
     versao: track.versao?.trim() || undefined,
@@ -194,6 +200,7 @@ const normalizeTrack = (track: GoogleSheetTrack, index: number): PlaylistTrack |
     coverUrl,
     tom: track.tom?.trim() || undefined,
     cifra: track.cifra?.trim() || undefined,
+    pauta: track.pauta?.trim() || undefined,
   };
 };
 
