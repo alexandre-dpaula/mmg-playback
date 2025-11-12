@@ -2,17 +2,7 @@
 
 import React from "react";
 
-const SAFE_AREA_TOP = "env(safe-area-inset-top, 0px)";
-const SAFE_AREA_BOTTOM = "env(safe-area-inset-bottom, 0px)";
-const SAFE_AREA_LEFT = "env(safe-area-inset-left, 0px)";
-const SAFE_AREA_RIGHT = "env(safe-area-inset-right, 0px)";
-const IMAGE_OVERSCAN = 20; // pixels extras para garantir cobertura total
-
-const expandWithSafeArea = (inset: string) =>
-  `calc(-${IMAGE_OVERSCAN}px - ${inset})`;
-
-const calcSizeWithSafeArea = (safeAreaA: string, safeAreaB: string) =>
-  `calc(100% + ${IMAGE_OVERSCAN * 2}px + ${safeAreaA} + ${safeAreaB})`;
+const IMAGE_SCALE = 1.1; // escala > 1 garante overscan sem distorcer
 
 type PreloaderProps = {
   isLoading: boolean;
@@ -59,14 +49,15 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
 
   const imageStyle: React.CSSProperties = {
     position: "absolute",
-    top: expandWithSafeArea(SAFE_AREA_TOP),
-    bottom: expandWithSafeArea(SAFE_AREA_BOTTOM),
-    left: expandWithSafeArea(SAFE_AREA_LEFT),
-    right: expandWithSafeArea(SAFE_AREA_RIGHT),
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    minWidth: `${IMAGE_SCALE * 100}%`,
+    minHeight: `${IMAGE_SCALE * 100}%`,
+    width: "auto",
+    height: "auto",
     objectFit: "cover",
     objectPosition: "center",
-    width: calcSizeWithSafeArea(SAFE_AREA_LEFT, SAFE_AREA_RIGHT),
-    height: calcSizeWithSafeArea(SAFE_AREA_TOP, SAFE_AREA_BOTTOM),
     margin: 0,
     padding: 0,
   };

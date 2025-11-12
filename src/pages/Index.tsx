@@ -18,6 +18,33 @@ const Index = () => {
     const hasVisited = sessionStorage.getItem('hasVisited');
     return !hasVisited;
   });
+  const [now, setNow] = React.useState(() => new Date());
+
+  React.useEffect(() => {
+    const interval = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const formattedNow = React.useMemo(() => {
+    const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(now);
+    const normalizedWeekday = weekday
+      .charAt(0)
+      .toUpperCase()
+      .concat(weekday.slice(1))
+      .replace("-feira", "-Feira");
+    const day = now.getDate().toString().padStart(2, "0");
+    const month = new Intl.DateTimeFormat("pt-BR", { month: "short" })
+      .format(now)
+      .replace(".", "")
+      .toUpperCase();
+    const time = new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(now);
+
+    return `${normalizedWeekday}, ${day} ${month} | ${time}h`;
+  }, [now]);
 
   // Marca que já visitou na primeira renderização
   React.useEffect(() => {
@@ -120,7 +147,7 @@ const Index = () => {
       >
         <header className="text-center space-y-2">
           <p className="text-sm sm:text-base text-white/70">
-            {description}
+            {formattedNow}
           </p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
             {title}

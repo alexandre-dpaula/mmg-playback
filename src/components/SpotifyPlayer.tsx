@@ -44,19 +44,29 @@ const FLAT_TO_SHARP_MAP: Record<string, string> = {
   Bb: "A#",
 };
 
-const NOTE_FREQUENCIES: Record<string, number> = {
-  C: 261.63,
-  "C#": 277.18,
-  D: 293.66,
-  "D#": 311.13,
-  E: 329.63,
-  F: 349.23,
-  "F#": 369.99,
-  G: 392.0,
-  "G#": 415.3,
-  A: 440.0,
-  "A#": 466.16,
-  B: 493.88,
+const SHARP_TO_FLAT_DISPLAY: Record<string, string> = {
+  "C#": "Db",
+  "D#": "Eb",
+  "F#": "Gb",
+  "G#": "Ab",
+  "A#": "Bb",
+};
+
+const padFile = (fileName: string) => `/pads/${encodeURIComponent(fileName)}`;
+
+const PAD_FILE_MAP: Record<string, string> = {
+  C: padFile("C Guitar Pads.wav"),
+  "C#": padFile("Db Guitar Pads.wav"),
+  D: padFile("D Guitar Pads.wav"),
+  "D#": padFile("Eb Guitar Pads.wav"),
+  E: padFile("E Guitar Pads.wav"),
+  F: padFile("F Guitar Pads.wav"),
+  "F#": padFile("Gb Guitar Pads.wav"),
+  G: padFile("G Guitar Pads.wav"),
+  "G#": padFile("Ab Guitar Pads.wav"),
+  A: padFile("A Guitar Pads.wav"),
+  "A#": padFile("Bb Guitar Pads.wav"),
+  B: padFile("B Guitar Pads.wav"),
 };
 
 const extractKeyToken = (value?: string) => {
@@ -75,20 +85,16 @@ const normalizeKeyForSelect = (value?: string) => {
   return AVAILABLE_KEYS.includes(normalized) ? normalized : "";
 };
 
-const getFrequencyForKey = (value?: string) => {
+const formatKeyLabel = (key: string) => SHARP_TO_FLAT_DISPLAY[key] ?? key;
+
+const getPadSourceForKey = (value?: string) => {
   const key = normalizeKeyForSelect(value);
-  if (!key) return undefined;
-  return NOTE_FREQUENCIES[key];
+  if (!key) return null;
+  return PAD_FILE_MAP[key] ?? null;
 };
 
 type SpotifyPlayerProps = {
   filter: "all" | "vocal" | "instrumental";
-};
-
-type PadNodes = {
-  oscillators: OscillatorNode[];
-  filter: BiquadFilterNode;
-  gain: GainNode;
 };
 
 const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
@@ -147,8 +153,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   const [selectedKey, setSelectedKey] = React.useState<string>("");
   const [isPadPlaying, setIsPadPlaying] = React.useState(false);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  const audioContextRef = React.useRef<AudioContext | null>(null);
-  const padNodesRef = React.useRef<PadNodes | null>(null);
+  const padAudioRef = React.useRef<HTMLAudioElement | null>(null);
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
@@ -197,127 +202,75 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     }
   }, [tracks, currentTrackId]);
 
-  const stopPadNodes = React.useCallback(() => {
-    if (padNodesRef.current && audioContextRef.current) {
-      const ctx = audioContextRef.current;
-      const previousNodes = padNodesRef.current;
-      const { oscillators, gain, filter } = previousNodes;
-      gain.gain.cancelScheduledValues(ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
-      oscillators.forEach((oscillator) => {
-        try {
-          oscillator.stop(ctx.currentTime + 0.5);
-        } catch {
-          // ignore stop errors if already stopped
-        }
-        oscillator.disconnect();
-      });
-      filter.disconnect();
-      setTimeout(() => {
-        gain.disconnect();
-        if (padNodesRef.current === previousNodes) {
-          padNodesRef.current = null;
-        }
-      }, 600);
+  const ensurePadAudio = React.useCallback(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    if (!padAudioRef.current) {
+      padAudioRef.current = new Audio();
+      padAudioRef.current.loop = true;
+      padAudioRef.current.preload = "auto";
+      padAudioRef.current.crossOrigin = "anonymous";
+      padAudioRef.current.volume = 0.45;
+    }
+    return padAudioRef.current;
+  }, []);
+
+  const stopPadAudio = React.useCallback(() => {
+    if (padAudioRef.current) {
+      padAudioRef.current.pause();
+      padAudioRef.current.currentTime = 0;
     }
   }, []);
 
-  const stopPad = React.useCallback(() => {
-    stopPadNodes();
-    setIsPadPlaying(false);
-  }, [stopPadNodes]);
-
   const startPad = React.useCallback(
     (keyValue?: string) => {
-      if (typeof window === "undefined") return;
+      const src = getPadSourceForKey(keyValue) ?? getPadSourceForKey(currentPadKey);
 
-      const normalizedSelection =
-        normalizeKeyForSelect(keyValue) || currentPadKey;
-
-      const frequency = getFrequencyForKey(normalizedSelection);
-
-      if (!frequency) {
-        console.warn("Não foi possível determinar o tom para o Pad.");
+      if (!src) {
+        console.warn("Nenhum arquivo de pad encontrado para o tom selecionado.");
+        setIsPadPlaying(false);
         return;
       }
 
-      const AudioContextClass =
-        window.AudioContext ||
-        (window as Window & { webkitAudioContext?: typeof AudioContext })
-          .webkitAudioContext;
+      const audio = ensurePadAudio();
+      if (!audio) return;
 
-      if (!AudioContextClass) {
-        console.warn("Web Audio API não suportada neste navegador.");
-        return;
+      const absoluteSrc = new URL(src, window.location.origin).toString();
+      if (audio.src !== absoluteSrc) {
+        audio.src = src;
+        audio.load();
       }
+      audio.currentTime = 0;
 
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContextClass();
-      }
-
-      if (audioContextRef.current.state === "suspended") {
-        void audioContextRef.current.resume();
-      }
-
-      const ctx = audioContextRef.current;
-      const outputGain = ctx.createGain();
-      outputGain.gain.value = 0;
-      outputGain.connect(ctx.destination);
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = "lowpass";
-      filter.Q.value = 0.8;
-      filter.frequency.value = 900;
-      filter.connect(outputGain);
-
-      const createOscillator = (
-        type: OscillatorType,
-        gainValue: number,
-        freqMultiplier = 1,
-        detune = 0
-      ) => {
-        const oscillator = ctx.createOscillator();
-        oscillator.type = type;
-        oscillator.frequency.value = frequency * freqMultiplier;
-        oscillator.detune.value = detune;
-        const gainNode = ctx.createGain();
-        gainNode.gain.value = gainValue;
-        oscillator.connect(gainNode).connect(filter);
-        oscillator.start();
-        return oscillator;
-      };
-
-      const oscillators = [
-        createOscillator("sawtooth", 0.18),
-        createOscillator("triangle", 0.08, 0.5),
-        createOscillator("sine", 0.05, 1.5, 700),
-      ];
-
-      outputGain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 1.2);
-      padNodesRef.current = { oscillators, filter, gain: outputGain };
+      audio.play().catch((error) => {
+        console.error("Erro ao reproduzir o pad:", error);
+        setIsPadPlaying(false);
+      });
     },
-    [currentPadKey]
+    [currentPadKey, ensurePadAudio]
   );
 
   // Atualiza o tom selecionado quando a faixa muda
   React.useEffect(() => {
     const normalizedKey = normalizeKeyForSelect(currentTrack?.tom);
     setSelectedKey(normalizedKey || "");
-    stopPad();
-  }, [currentTrack?.tom, stopPad]);
+    stopPadAudio();
+    setIsPadPlaying(false);
+  }, [currentTrack?.tom, stopPadAudio]);
 
   React.useEffect(() => {
     if (!isPadPlaying) {
-      stopPadNodes();
+      stopPadAudio();
       return;
     }
 
     startPad(currentPadKey);
 
     return () => {
-      stopPadNodes();
+      stopPadAudio();
     };
-  }, [isPadPlaying, currentPadKey, startPad, stopPadNodes]);
+  }, [isPadPlaying, currentPadKey, startPad, stopPadAudio]);
 
   // Atualiza o título da página quando a música muda (para PWA no iPhone)
   React.useEffect(() => {
@@ -370,12 +323,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   React.useEffect(() => {
     return () => {
-      stopPad();
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => undefined);
-      }
+      stopPadAudio();
     };
-  }, [stopPad]);
+  }, [stopPadAudio]);
 
   const handlePlayPause = () => {
     if (!tracks.length) {
@@ -441,7 +391,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   const handleTogglePad = () => {
     setIsPadPlaying((prev) => {
       if (prev) {
-        stopPadNodes();
+        stopPadAudio();
         return false;
       }
       return true;
@@ -526,7 +476,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                             value={key}
                             className="text-white hover:bg-white/10 focus:bg-white/20 text-sm"
                           >
-                            {key}
+                            {formatKeyLabel(key)}
                           </SelectItem>
                         ))}
                       </SelectContent>
