@@ -6,10 +6,42 @@ import { DEFAULT_PLAYLIST, useGooglePlaylist } from "@/hooks/useGooglePlaylist";
 import { Preloader } from "@/components/Preloader";
 
 const Index = () => {
-  const { data: playlistData, isLoading } = useGooglePlaylist();
+  const { data: playlistData, isLoading, refetch } = useGooglePlaylist();
   const title = playlistData?.title ?? DEFAULT_PLAYLIST.title;
   const description = playlistData?.description ?? DEFAULT_PLAYLIST.description;
   const [filter, setFilter] = React.useState<"all" | "vocal" | "instrumental">("all");
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [pullStartY, setPullStartY] = React.useState(0);
+  const [pullDistance, setPullDistance] = React.useState(0);
+
+  // Pull to refresh
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY === 0) {
+      setPullStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (pullStartY && window.scrollY === 0) {
+      const currentY = e.touches[0].clientY;
+      const distance = currentY - pullStartY;
+      if (distance > 0) {
+        setPullDistance(Math.min(distance, 100));
+      }
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullDistance > 60) {
+      setIsRefreshing(true);
+      await refetch();
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
+    setPullDistance(0);
+    setPullStartY(0);
+  };
 
   // Se está carregando, mostra apenas o preloader (página completa)
   if (isLoading) {
@@ -18,9 +50,57 @@ const Index = () => {
 
   // Quando terminar de carregar, mostra a página principal
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div
+      className="min-h-screen bg-[#121212] text-white"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <Navbar filter={filter} onFilterChange={setFilter} />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12" style={{ paddingTop: 'calc(80px + env(safe-area-inset-top) + 1.5rem)' }}>
+
+      {/* Pull to refresh indicator */}
+      {pullDistance > 0 && (
+        <div
+          className="fixed left-0 right-0 flex justify-center items-center transition-all z-40"
+          style={{
+            top: `calc(env(safe-area-inset-top) + ${Math.min(pullDistance, 80)}px)`,
+            opacity: Math.min(pullDistance / 60, 1)
+          }}
+        >
+          <div className="bg-white/10 backdrop-blur-sm rounded-full p-3">
+            <svg
+              className={`w-6 h-6 text-[#1DB954] ${isRefreshing || pullDistance > 60 ? 'animate-spin' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12"
+        style={{
+          paddingTop: 'calc(80px + env(safe-area-inset-top) + 1.5rem)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)',
+          transform: `translateY(${pullDistance * 0.5}px)`,
+          transition: pullDistance === 0 ? 'transform 0.3s ease-out' : 'none'
+        }}
+      >
         <header className="text-center space-y-2">
           <p className="text-sm sm:text-base text-white/70">
             {description}
