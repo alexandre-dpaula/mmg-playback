@@ -97,9 +97,19 @@
     @apply border-border;
   }
 
+  html {
+    background-color: #121212;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: "Neve Hass", "Neue Haas Grotesk Display", "Neue Haas Grotesk", sans-serif;
+    background-color: #121212;
+  }
+
+  #root {
+    background-color: #121212;
+    min-height: 100vh;
   }
 
 }
