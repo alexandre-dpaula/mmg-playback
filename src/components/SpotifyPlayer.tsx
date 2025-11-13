@@ -52,21 +52,22 @@ const SHARP_TO_FLAT_DISPLAY: Record<string, string> = {
   "A#": "Bb",
 };
 
-const padFile = (fileName: string) => `/pads/${encodeURIComponent(fileName)}`;
+const padFile = (fileName: string) =>
+  `/pads/${encodeURIComponent(fileName)}`;
 
 const PAD_FILE_MAP: Record<string, string> = {
-  C: padFile("C Guitar Pads.wav"),
-  "C#": padFile("Db Guitar Pads.wav"),
-  D: padFile("D Guitar Pads.wav"),
-  "D#": padFile("Eb Guitar Pads.wav"),
-  E: padFile("E Guitar Pads.wav"),
-  F: padFile("F Guitar Pads.wav"),
-  "F#": padFile("Gb Guitar Pads.wav"),
-  G: padFile("G Guitar Pads.wav"),
-  "G#": padFile("Ab Guitar Pads.wav"),
-  A: padFile("A Guitar Pads.wav"),
-  "A#": padFile("Bb Guitar Pads.wav"),
-  B: padFile("B Guitar Pads.wav"),
+  C: padFile("C Guitar Pads.m4a"),
+  "C#": padFile("Db Guitar Pads.m4a"),
+  D: padFile("D Guitar Pads.m4a"),
+  "D#": padFile("Eb Guitar Pads.m4a"),
+  E: padFile("E Guitar Pads.m4a"),
+  F: padFile("F Guitar Pads.m4a"),
+  "F#": padFile("Gb Guitar Pads.m4a"),
+  G: padFile("G Guitar Pads.m4a"),
+  "G#": padFile("Ab Guitar Pads.m4a"),
+  A: padFile("A Guitar Pads.m4a"),
+  "A#": padFile("Bb Guitar Pads.m4a"),
+  B: padFile("B Guitar Pads.m4a"),
 };
 
 const extractKeyToken = (value?: string) => {
@@ -482,15 +483,18 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button
+                  <button
+                    type="button"
                     onClick={handleTogglePad}
                     className={cn(
-                      "h-9 sm:h-10 w-20 sm:w-24 rounded-lg bg-white/10 border border-white/15 text-white text-xs sm:text-sm font-semibold transition hover:bg-white/15",
-                      isPadPlaying && "bg-[#1DB954] text-black border-[#1DB954]"
+                      "h-9 sm:h-10 w-24 sm:w-28 rounded-lg border text-xs sm:text-sm font-semibold uppercase tracking-wide transition-colors duration-200 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0",
+                      isPadPlaying
+                        ? "bg-[#1DB954] text-black border-[#1DB954]"
+                        : "bg-white/10 text-white border-white/15 hover:bg-white/15"
                     )}
                   >
-                    {isPadPlaying ? "Parar Pad" : "Pad"}
-                  </Button>
+                    Pad
+                  </button>
                 </div>
               )}
             </div>

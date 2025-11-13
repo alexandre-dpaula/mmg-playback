@@ -26,6 +26,10 @@ const normalizeNote = (note: string): string => {
   return FLAT_TO_SHARP[note] || note;
 };
 
+const formatNoteForDisplay = (note: string): string => {
+  return SHARP_TO_FLAT[note] || note;
+};
+
 /**
  * Obtém o índice de uma nota na escala cromática
  */
@@ -64,7 +68,8 @@ const extractBaseNote = (chord: string): { baseNote: string; suffix: string } =>
 export const transposeChord = (chord: string, semitones: number): string => {
   const { baseNote, suffix } = extractBaseNote(chord);
   const transposedNote = transposeNote(baseNote, semitones);
-  return transposedNote + suffix;
+  const formattedNote = formatNoteForDisplay(transposedNote);
+  return formattedNote + suffix;
 };
 
 /**
