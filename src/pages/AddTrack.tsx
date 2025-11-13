@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, File } from "lucide-react";
 import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
 import {
   Form,
@@ -65,6 +65,9 @@ const DEFAULT_VALUES: FormValues = {
 };
 
 const AddTrackPage: React.FC = () => {
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULT_VALUES,
@@ -74,10 +77,94 @@ const AddTrackPage: React.FC = () => {
     | string
     | undefined;
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tipo de arquivo (apenas áudio)
+      const validTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/m4a"];
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|m4a)$/i)) {
+        toast.error("Formato de áudio inválido. Use MP3, WAV, OGG ou M4A.");
+        return;
+      }
+
+      // Validar tamanho (max 50MB)
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        toast.error("Arquivo muito grande. Tamanho máximo: 50MB.");
+        return;
+      }
+
+      setAudioFile(file);
+      toast.success(`Arquivo selecionado: ${file.name}`);
+    }
+  };
+
+  const uploadAudioToGoogleDrive = async (file: File): Promise<string> => {
+    if (!scriptUrl) {
+      throw new Error("URL do Apps Script não configurada");
+    }
+
+    setIsUploading(true);
+
+    try {
+      // Converter arquivo para base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const base64 = reader.result as string;
+          // Remover o prefixo data:audio/...;base64,
+          const base64Data = base64.split(',')[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+      });
+
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+
+      // Enviar para Google Drive via Apps Script
+      const response = await fetch(scriptUrl, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify({
+          action: "uploadAudio",
+          fileName: file.name,
+          mimeType: file.type,
+          data: base64Data,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || "Erro ao fazer upload");
+      }
+
+      return result.fileUrl;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = async (values: FormValues) => {
     if (!scriptUrl) {
       toast.error("URL do Apps Script não configurada (.env).");
       return;
+    }
+
+    let audioUrl = values.url?.trim() || "";
+
+    // Se tem arquivo de áudio, fazer upload primeiro
+    if (audioFile && !audioUrl) {
+      try {
+        toast.info("Fazendo upload do áudio...");
+        audioUrl = await uploadAudioToGoogleDrive(audioFile);
+        toast.success("Áudio enviado com sucesso!");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Erro ao fazer upload do áudio";
+        toast.error(message);
+        return;
+      }
     }
 
     const payload = {
@@ -85,7 +172,7 @@ const AddTrackPage: React.FC = () => {
       title: values.title.trim(),
       versao: values.versao?.trim() || "",
       tom: values.tom?.trim() || "",
-      url: values.url?.trim() || "",
+      url: audioUrl,
       tag: values.tag?.trim() || "",
       pauta: values.pauta?.trim() || "",
     };
@@ -126,6 +213,8 @@ const AddTrackPage: React.FC = () => {
         tag: payload.tag,
         pauta: "",
       });
+
+      setAudioFile(null);
     } catch (error) {
       console.error("Erro ao enviar faixa:", error);
       const message =
@@ -287,24 +376,67 @@ const AddTrackPage: React.FC = () => {
               )}
             />
 
-            {/* Estudar - áudio (URL) - 1 coluna */}
-            <FormField
-              control={form.control}
-              name="url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Estudar</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Insira a Url do Audio"
-                      className="!text-black placeholder:text-gray-400"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Estudar - áudio (Upload ou URL) */}
+            <div className="space-y-3">
+              <FormLabel className="text-white">Estudar - Áudio</FormLabel>
+
+              {/* Botão de upload de arquivo */}
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="audio-upload"
+                  className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-white/20 transition"
+                >
+                  <Upload className="h-4 w-4" />
+                  {audioFile ? "Trocar arquivo" : "Escolher arquivo"}
+                </label>
+                <input
+                  id="audio-upload"
+                  type="file"
+                  accept="audio/*,.mp3,.wav,.ogg,.m4a"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                {audioFile && (
+                  <div className="flex items-center gap-2 text-sm text-white/70">
+                    <File className="h-4 w-4" />
+                    <span>{audioFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAudioFile(null)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* OU separador */}
+              <div className="flex items-center gap-3">
+                <div className="h-px bg-white/20 flex-1" />
+                <span className="text-white/40 text-xs uppercase">ou</span>
+                <div className="h-px bg-white/20 flex-1" />
+              </div>
+
+              {/* Campo de URL */}
+              <FormField
+                control={form.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="Insira a Url do Audio"
+                        className="!text-black placeholder:text-gray-400"
+                        disabled={!!audioFile}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Cifra / Pauta - 1 coluna */}
             <FormField
@@ -326,13 +458,13 @@ const AddTrackPage: React.FC = () => {
             />
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
               className="h-12 w-full bg-[#1DB954] text-black text-base font-semibold hover:bg-[#1ed760]"
             >
-              {isSubmitting && (
+              {(isSubmitting || isUploading) && (
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               )}
-              Adicionar Faixa
+              {isUploading ? "Enviando áudio..." : "Adicionar Faixa"}
             </Button>
           </form>
         </Form>

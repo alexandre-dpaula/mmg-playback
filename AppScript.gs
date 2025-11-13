@@ -102,6 +102,12 @@ function doPost(e) {
       throw new Error("Payload inválido ou ausente.");
     }
 
+    // Se for upload de áudio, processar separadamente
+    if (payload.action === "uploadAudio") {
+      return handleAudioUpload(payload);
+    }
+
+    // Caso contrário, adicionar faixa normalmente
     const spreadsheet = getSpreadsheet();
     const result = addTrackEntry(spreadsheet, payload);
 
@@ -559,4 +565,59 @@ function upsertConfigValue(sheet, key, value) {
   }
 
   sheet.appendRow([key, value]);
+}
+
+/**
+ * Faz upload de arquivo de áudio para o Google Drive
+ * @param {Object} payload - Contém fileName, mimeType e data (base64)
+ * @returns {Object} Resposta com URL do arquivo
+ */
+function handleAudioUpload(payload) {
+  try {
+    if (!payload.fileName || !payload.data) {
+      throw new Error("Nome do arquivo ou dados ausentes");
+    }
+
+    // Decodificar base64
+    const blob = Utilities.newBlob(
+      Utilities.base64Decode(payload.data),
+      payload.mimeType || "audio/mpeg",
+      payload.fileName
+    );
+
+    // Criar pasta "MMG - Áudios" no Drive (se não existir)
+    const folderName = "MMG - Áudios";
+    let folder;
+
+    const folders = DriveApp.getFoldersByName(folderName);
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+    }
+
+    // Fazer upload do arquivo
+    const file = folder.createFile(blob);
+
+    // Tornar o arquivo público (qualquer pessoa com o link pode visualizar)
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    // Obter URL de visualização
+    const fileUrl = file.getUrl();
+
+    Logger.log("Upload realizado: " + fileUrl);
+
+    return createJsonResponse({
+      success: true,
+      message: "Upload realizado com sucesso",
+      fileUrl: fileUrl,
+      fileId: file.getId(),
+    });
+  } catch (error) {
+    Logger.log("Erro no upload: " + error.toString());
+    return createJsonResponse({
+      success: false,
+      message: "Erro ao fazer upload: " + error.toString(),
+    });
+  }
 }
