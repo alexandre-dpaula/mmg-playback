@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Share2 } from "lucide-react";
+import { useGooglePlaylist } from "@/hooks/useGooglePlaylist";
 
 type NavbarProps = {
   filter: "all" | "vocal" | "instrumental";
@@ -15,6 +17,59 @@ type NavbarProps = {
 };
 
 export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
+  const { data: playlistData } = useGooglePlaylist();
+
+  const shareMessage = React.useMemo(() => {
+    const tracks = (playlistData?.tracks ?? []).filter((track) => {
+      const pauta = track.pauta?.trim();
+      return Boolean(pauta && /^https?:\/\//i.test(pauta));
+    });
+
+    if (!tracks.length) {
+      return "";
+    }
+
+    const trackLines = tracks
+      .map((track) => {
+        const title = track.title?.trim();
+        if (!title) return null;
+        const tom = track.tom?.trim();
+        return tom ? `• ${title} - ${tom}` : `• ${title}`;
+      })
+      .filter(Boolean) as string[];
+
+    if (!trackLines.length) {
+      return "";
+    }
+
+    return ["*REPERTÓRIO*", "_Culto Poder da Palavra_", "", ...trackLines].join("\n");
+  }, [playlistData]);
+
+  const handleShareClick = React.useCallback(() => {
+    if (!shareMessage) return;
+
+    const encodedText = encodeURIComponent(shareMessage);
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator
+        .share({ text: shareMessage })
+        .catch((error) => {
+          if (error?.name === "AbortError") {
+            return;
+          }
+          if (typeof window !== "undefined") {
+            window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+          }
+        });
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    }
+  }, [shareMessage]);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#121212] border-b border-white/10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-4 md:px-6 py-3 sm:py-4">
@@ -91,8 +146,18 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
             </Button>
           </div>
 
-          {/* Imagem de Perfil */}
-          <div className="flex items-center flex-shrink-0">
+          {/* Ações (Compartilhar + Perfil) */}
+          <div className="flex items-center flex-shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={handleShareClick}
+              disabled={!shareMessage}
+              className="h-11 w-11 sm:h-9 sm:w-9 md:h-10 md:w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/5 text-white transition hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Compartilhar repertório no WhatsApp"
+              title="Compartilhar no WhatsApp"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
             <img
               src="/perfil.jpg"
               alt="Perfil"
