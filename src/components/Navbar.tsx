@@ -8,7 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Share2 } from "lucide-react";
+import { Share2, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useGooglePlaylist } from "@/hooks/useGooglePlaylist";
 
 type NavbarProps = {
@@ -148,6 +149,20 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
 
           {/* Ações (Compartilhar + Perfil) */}
           <div className="flex items-center flex-shrink-0 gap-2">
+            <Link
+              to="/add"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#1DB954] text-black transition hover:bg-[#1ed760] sm:hidden"
+              aria-label="Adicionar faixa"
+            >
+              <Plus className="h-4 w-4" />
+            </Link>
+            <Link
+              to="/add"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-[#1DB954] px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-[#1ed760]"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Adicionar
+            </Link>
             <button
               type="button"
               onClick={handleShareClick}

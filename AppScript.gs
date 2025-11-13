@@ -51,13 +51,13 @@ function doGet(e) {
       thumbs: thumbMap
     };
 
-    return ContentService
+    return withCors(ContentService
       .createTextOutput(JSON.stringify(response))
-      .setMimeType(ContentService.MimeType.JSON);
+      .setMimeType(ContentService.MimeType.JSON));
 
   } catch (error) {
     Logger.log("Erro: " + error.toString());
-    return ContentService
+    return withCors(ContentService
       .createTextOutput(JSON.stringify({
         error: error.toString(),
         playlistTitle: "MMG - Festa dos Tabernáculos",
@@ -65,8 +65,99 @@ function doGet(e) {
         coverUrl: "",
         tracks: []
       }))
-      .setMimeType(ContentService.MimeType.JSON);
+      .setMimeType(ContentService.MimeType.JSON));
   }
+}
+
+/**
+ * Handler para requisições OPTIONS (preflight CORS).
+ */
+function doOptions() {
+  return withCors(
+    ContentService.createTextOutput("")
+      .setMimeType(ContentService.MimeType.TEXT)
+  );
+}
+
+/**
+ * Recebe dados via POST e adiciona uma nova faixa na aba "Tracks"
+ * Também atualiza o campo playlistTitle na aba "Config", se enviado.
+ *
+ * Formato esperado do payload JSON:
+ * {
+ *   "playlistTitle": "Evento MMG",
+ *   "title": "Hinei Ma Tov",
+ *   "versao": "Playback",
+ *   "tom": "E",
+ *   "url": "https://drive.google.com/...",
+ *   "tag": "Vocal",
+ *   "pauta": "https://docs.google.com/..."
+ * }
+ */
+function doPost(e) {
+  try {
+    const payload = parseRequestPayload(e);
+
+    if (!payload) {
+      throw new Error("Payload inválido ou ausente.");
+    }
+
+    const spreadsheet = getSpreadsheet();
+    const result = addTrackEntry(spreadsheet, payload);
+
+    return createJsonResponse({
+      success: true,
+      message: "Faixa adicionada com sucesso.",
+      rowNumber: result.rowNumber,
+    });
+  } catch (error) {
+    Logger.log("Erro no doPost: " + error.toString());
+    return createJsonResponse({
+      success: false,
+      message: error.toString(),
+    });
+  }
+}
+
+/**
+ * Lê o payload enviado no POST.
+ */
+function parseRequestPayload(e) {
+  if (e && e.postData && e.postData.contents) {
+    try {
+      return JSON.parse(e.postData.contents);
+    } catch (parseError) {
+      Logger.log("Erro ao parsear payload JSON: " + parseError);
+      throw new Error("Não foi possível ler o payload JSON enviado.");
+    }
+  }
+
+  if (e && e.parameter && e.parameter.payload) {
+    try {
+      return JSON.parse(e.parameter.payload);
+    } catch (parseError) {
+      Logger.log("Erro ao parsear payload (parameter): " + parseError);
+      throw new Error("Não foi possível ler o payload enviado via parâmetro.");
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Gera uma resposta JSON padronizada.
+ */
+function createJsonResponse(data) {
+  const output = ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+  return withCors(output);
+}
+
+function withCors(output) {
+  return output
+    .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
 /**
@@ -311,4 +402,161 @@ function getTracksData(sheet) {
 function testScript() {
   const result = doGet();
   Logger.log(result.getContent());
+}
+
+/**
+ * Adiciona uma nova faixa na aba "Tracks" e atualiza o título do evento se informado.
+ */
+function addTrackEntry(spreadsheet, payload) {
+  const cleaned = sanitizeIncomingPayload(payload);
+
+  if (!cleaned.title) {
+    throw new Error("Campo 'title' é obrigatório.");
+  }
+
+  if (!cleaned.url && !cleaned.pauta) {
+    throw new Error("Informe pelo menos uma URL de áudio ou cifra.");
+  }
+
+  const configSheet = spreadsheet.getSheetByName("Config") || spreadsheet.insertSheet("Config");
+  if (cleaned.playlistTitle) {
+    upsertConfigValue(configSheet, "playlistTitle", cleaned.playlistTitle);
+  }
+
+  const tracksSheet = spreadsheet.getSheetByName("Tracks") || spreadsheet.insertSheet("Tracks");
+  ensureTracksHeader(tracksSheet);
+
+  const headerRow = getHeaderRow(tracksSheet);
+  const newRow = buildTrackRow(tracksSheet, headerRow, cleaned);
+
+  const rowNumber = tracksSheet.getLastRow() + 1;
+  tracksSheet.getRange(rowNumber, 1, 1, newRow.length).setValues([newRow]);
+
+  return { rowNumber: rowNumber };
+}
+
+/**
+ * Garante que a aba "Tracks" tenha um cabeçalho básico.
+ */
+function ensureTracksHeader(sheet) {
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(["Título", "URL", "Tag", "Versão", "Tom", "Pauta"]);
+    return;
+  }
+
+  const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const hasAnyHeader = header.some(function(cell) {
+    return cell && cell.toString().trim().length > 0;
+  });
+
+  if (!hasAnyHeader) {
+    sheet.getRange(1, 1, 1, 6).setValues([["Título", "URL", "Tag", "Versão", "Tom", "Pauta"]]);
+  }
+}
+
+/**
+ * Retorna a primeira linha (cabeçalho) como array normalizado para lower-case.
+ */
+function getHeaderRow(sheet) {
+  const lastColumn = Math.max(sheet.getLastColumn(), 6);
+  const headerData = sheet.getRange(1, 1, 1, lastColumn).getValues();
+  if (!headerData || !headerData.length) {
+    return [];
+  }
+  return headerData[0].map(function(cell) {
+    return cell ? cell.toString() : "";
+  });
+}
+
+/**
+ * Constrói a linha que será inserida na planilha respeitando os cabeçalhos existentes.
+ */
+function buildTrackRow(sheet, headerRow, track) {
+  var headerLower = headerRow.map(function(cell) {
+    return cell.toLowerCase();
+  });
+
+  var row = new Array(headerRow.length || 6).fill("");
+
+  setValueForHeader(sheet, row, headerRow, headerLower, track.title, ["titulo", "título", "nome", "faixa"], "Título");
+  setValueForHeader(sheet, row, headerRow, headerLower, track.url, ["url", "link"], "URL");
+  setValueForHeader(sheet, row, headerRow, headerLower, track.tag, ["tag"], "Tag");
+  setValueForHeader(sheet, row, headerRow, headerLower, track.versao, ["versão", "versao", "version"], "Versão");
+  setValueForHeader(sheet, row, headerRow, headerLower, track.tom, ["tom"], "Tom");
+  setValueForHeader(sheet, row, headerRow, headerLower, track.pauta, ["pauta", "cifra"], "Pauta");
+
+  return row;
+}
+
+/**
+ * Adiciona o valor ao array conforme os possíveis nomes de cabeçalhos.
+ */
+function setValueForHeader(sheet, row, headerRow, headers, value, keywords, defaultLabel) {
+  if (!value) {
+    return;
+  }
+  var index = findHeaderIndex(headers, keywords);
+  if (index === -1) {
+    // Se o cabeçalho não existir, cria uma nova coluna com rótulo padrão
+    index = headers.length;
+    headers.push(keywords[0]);
+    headerRow.push(defaultLabel || keywords[0]);
+    sheet.getRange(1, index + 1).setValue(defaultLabel || keywords[0]);
+    row[index] = value;
+    return;
+  }
+  row[index] = value;
+}
+
+/**
+ * Procura o índice do cabeçalho baseado em possíveis palavras-chave.
+ */
+function findHeaderIndex(headers, keywords) {
+  for (var i = 0; i < headers.length; i++) {
+    var header = headers[i];
+    if (!header) continue;
+    for (var j = 0; j < keywords.length; j++) {
+      if (header.indexOf(keywords[j]) !== -1) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
+/**
+ * Normaliza dados recebidos do front-end.
+ */
+function sanitizeIncomingPayload(payload) {
+  return {
+    playlistTitle: (payload.playlistTitle || payload.event || "").toString().trim(),
+    title: (payload.title || "").toString().trim(),
+    versao: (payload.versao || "").toString().trim(),
+    tom: (payload.tom || "").toString().trim(),
+    url: (payload.url || "").toString().trim(),
+    tag: (payload.tag || "").toString().trim(),
+    pauta: (payload.pauta || payload.cifra || "").toString().trim(),
+  };
+}
+
+/**
+ * Atualiza ou cria um registro na aba "Config".
+ */
+function upsertConfigValue(sheet, key, value) {
+  if (!key || !value) {
+    return;
+  }
+
+  var dataRange = sheet.getDataRange();
+  var data = dataRange.getValues();
+
+  for (var i = 0; i < data.length; i++) {
+    var existingKey = data[i][0];
+    if (existingKey && existingKey.toString().trim() === key) {
+      sheet.getRange(i + 1, 2).setValue(value);
+      return;
+    }
+  }
+
+  sheet.appendRow([key, value]);
 }
