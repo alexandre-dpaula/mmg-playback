@@ -103,7 +103,7 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Neve Hass", "Neue Haas Grotesk Display", "Neue Haas Grotesk", sans-serif;
+    font-family: "Helvetica Neue", "Helvetica", "Neve Hass", "Neue Haas Grotesk Display", "Neue Haas Grotesk", sans-serif;
     background-color: #121212;
   }
 

@@ -2,7 +2,7 @@
 
 import React from "react";
 
-const IMAGE_SCALE = 1.1; // escala > 1 garante overscan sem distorcer
+const IMAGE_SCALE = 1.05; // leve overscan para garantir cobertura total
 
 type PreloaderProps = {
   isLoading: boolean;
@@ -49,15 +49,13 @@ export const Preloader: React.FC<PreloaderProps> = ({ isLoading }) => {
 
   const imageStyle: React.CSSProperties = {
     position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    minWidth: `${IMAGE_SCALE * 100}%`,
-    minHeight: `${IMAGE_SCALE * 100}%`,
-    width: "auto",
-    height: "auto",
+    inset: 0,
+    width: "100%",
+    height: "100%",
     objectFit: "cover",
     objectPosition: "center",
+    transform: `scale(${IMAGE_SCALE})`,
+    transformOrigin: "center",
     margin: 0,
     padding: 0,
   };

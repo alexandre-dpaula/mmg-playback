@@ -5,6 +5,8 @@ import { Navbar } from "@/components/Navbar";
 import { DEFAULT_PLAYLIST, useGooglePlaylist } from "@/hooks/useGooglePlaylist";
 import { Preloader } from "@/components/Preloader";
 
+const CLOCK_TEXT_COLOR = "rgb(255 255 255 / 16%)";
+
 const Index = () => {
   const { data: playlistData, isLoading, refetch } = useGooglePlaylist();
   const title = playlistData?.title ?? DEFAULT_PLAYLIST.title;
@@ -21,29 +23,31 @@ const Index = () => {
   const [now, setNow] = React.useState(() => new Date());
 
   React.useEffect(() => {
-    const interval = window.setInterval(() => setNow(new Date()), 60_000);
+    const interval = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(interval);
   }, []);
 
-  const formattedNow = React.useMemo(() => {
-    const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(now);
-    const normalizedWeekday = weekday
-      .charAt(0)
-      .toUpperCase()
-      .concat(weekday.slice(1))
-      .replace("-feira", "-Feira");
-    const day = now.getDate().toString().padStart(2, "0");
-    const month = new Intl.DateTimeFormat("pt-BR", { month: "short" })
-      .format(now)
-      .replace(".", "")
-      .toUpperCase();
-    const time = new Intl.DateTimeFormat("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(now);
+  const clockInfo = React.useMemo(() => {
+    const weekdayFormatter = new Intl.DateTimeFormat("pt-BR", { weekday: "long" });
+    const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
 
-    return `${normalizedWeekday}, ${day} ${month} | ${time}h`;
+    const weekdayRaw = weekdayFormatter.format(now);
+    const weekday =
+      weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1).replace("-feira", "-feira");
+
+    const day = now.getDate().toString().padStart(2, "0");
+    const month = monthFormatter.format(now).replace(".", "").toUpperCase();
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    const seconds = now.getSeconds().toString().padStart(2, "0");
+
+    return {
+      weekday,
+      day,
+      month,
+      time: `${hours}:${minutes}`,
+      seconds,
+    };
   }, [now]);
 
   // Marca que já visitou na primeira renderização
@@ -145,11 +149,24 @@ const Index = () => {
           transition: pullDistance === 0 ? 'transform 0.3s ease-out' : 'none'
         }}
       >
-        <header className="text-center space-y-2">
-          <p className="text-sm sm:text-base text-white/70">
-            {formattedNow}
-          </p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
+        <header className="text-center space-y-4">
+          <div
+            className="flex flex-wrap items-baseline justify-center gap-3 text-[14px] font-medium tracking-wide"
+            style={{ color: CLOCK_TEXT_COLOR }}
+          >
+            <div className="flex items-baseline gap-1">
+              <span>{clockInfo.weekday}</span>
+              <span>{clockInfo.day}</span>
+              <span className="uppercase">{clockInfo.month}</span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span>{clockInfo.time}</span>
+              <span className="text-[12px] font-medium self-start" style={{ color: CLOCK_TEXT_COLOR, opacity: 0.8 }}>
+                {clockInfo.seconds}
+              </span>
+            </div>
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium">
             {title}
           </h1>
         </header>
