@@ -94,7 +94,7 @@ const Index = () => {
   // Quando terminar de carregar, mostra a página principal
   return (
     <div
-      className="min-h-screen bg-[#121212] text-white"
+      className="min-h-screen bg-[#121212] text-white pb-24"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -171,39 +171,10 @@ const Index = () => {
           </h1>
         </header>
         <SpotifyPlayer filter={filter} />
-        <div className="text-center pb-4 sm:pb-0">
+        <div className="text-center pb-8">
           <MadeWithDyad />
         </div>
       </div>
-
-      {/* Botão de refresh fixo */}
-      <button
-        onClick={async () => {
-          setIsRefreshing(true);
-          await refetch();
-          setTimeout(() => setIsRefreshing(false), 500);
-        }}
-        disabled={isRefreshing}
-        className="fixed bottom-6 right-6 z-50 bg-[#1DB954] hover:bg-[#1ed760] text-black rounded-full p-4 shadow-2xl shadow-[#1DB954]/50 transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{
-          bottom: 'calc(1.5rem + env(safe-area-inset-bottom))'
-        }}
-        aria-label="Atualizar playlist"
-      >
-        <svg
-          className={`w-6 h-6 ${isRefreshing ? 'animate-spin' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          />
-        </svg>
-      </button>
     </div>
   );
 };

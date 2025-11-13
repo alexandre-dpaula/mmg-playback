@@ -4,8 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Loader2, Upload, File } from "lucide-react";
+import { ArrowLeft, Loader2, File } from "lucide-react";
 import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
+import { uploadAudioToSupabase } from "@/lib/supabase";
 import {
   Form,
   FormControl,
@@ -42,13 +43,15 @@ const formSchema = z
   })
   .refine(
     (data) => {
-      const url = data.url?.trim();
-      const pauta = data.pauta?.trim();
-      return Boolean(url || pauta);
+      // Se a tag for "Cifras", a pauta é obrigatória
+      if (data.tag === "Cifras") {
+        return Boolean(data.pauta?.trim());
+      }
+      return true;
     },
     {
-      message: "Adicione o link do áudio ou da cifra/pauta",
-      path: ["url"],
+      message: "Para tag Cifras, o link da cifra/pauta é obrigatório",
+      path: ["pauta"],
     }
   );
 
@@ -99,51 +102,16 @@ const AddTrackPage: React.FC = () => {
     }
   };
 
-  const uploadAudioToGoogleDrive = async (file: File): Promise<string> => {
-    if (!scriptUrl) {
-      throw new Error("URL do Apps Script não configurada");
-    }
-
+  const handleAudioUpload = async (file: File): Promise<string> => {
     setIsUploading(true);
 
     try {
-      // Converter arquivo para base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const base64 = reader.result as string;
-          // Remover o prefixo data:audio/...;base64,
-          const base64Data = base64.split(',')[1];
-          resolve(base64Data);
-        };
-        reader.onerror = reject;
-      });
-
-      reader.readAsDataURL(file);
-      const base64Data = await base64Promise;
-
-      // Enviar para Google Drive via Apps Script
-      const response = await fetch(scriptUrl, {
-        method: "POST",
-        redirect: "follow",
-        headers: {
-          "Content-Type": "text/plain",
-        },
-        body: JSON.stringify({
-          action: "uploadAudio",
-          fileName: file.name,
-          mimeType: file.type,
-          data: base64Data,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.message || "Erro ao fazer upload");
-      }
-
-      return result.fileUrl;
+      // Upload direto para Supabase Storage
+      const publicUrl = await uploadAudioToSupabase(file, 'audios');
+      return publicUrl;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro ao fazer upload do áudio";
+      throw new Error(message);
     } finally {
       setIsUploading(false);
     }
@@ -161,7 +129,7 @@ const AddTrackPage: React.FC = () => {
     if (audioFile && !audioUrl) {
       try {
         toast.info("Fazendo upload do áudio...");
-        audioUrl = await uploadAudioToGoogleDrive(audioFile);
+        audioUrl = await handleAudioUpload(audioFile);
         toast.success("Áudio enviado com sucesso!");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Erro ao fazer upload do áudio";
@@ -210,16 +178,8 @@ const AddTrackPage: React.FC = () => {
 
       toast.success("Faixa adicionada com sucesso!");
 
-      form.reset({
-        playlistTitle: payload.playlistTitle,
-        title: "",
-        versao: "",
-        tom: "",
-        url: "",
-        tag: payload.tag,
-        pauta: "",
-      });
-
+      // Limpar completamente todos os campos
+      form.reset(DEFAULT_VALUES);
       setAudioFile(null);
     } catch (error) {
       console.error("Erro ao enviar faixa:", error);
@@ -232,7 +192,7 @@ const AddTrackPage: React.FC = () => {
   const isSubmitting = form.formState.isSubmitting;
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="min-h-screen bg-[#121212] text-white pb-24">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10 sm:py-14">
         <div className="flex items-center gap-3">
           <Link
@@ -363,78 +323,19 @@ const AddTrackPage: React.FC = () => {
               />
             </div>
 
-            {/* Versão - 1 coluna */}
-            <FormField
-              control={form.control}
-              name="versao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Versão</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Diante do Trono"
-                      className="!text-black placeholder:text-gray-400"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Estudar - áudio (Upload ou URL) */}
-            <div className="space-y-3">
-              <FormLabel className="text-white">Estudar - Áudio</FormLabel>
-
-              {/* Botão de upload de arquivo */}
-              <div className="flex items-center gap-3">
-                <label
-                  htmlFor="audio-upload"
-                  className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-white/20 transition"
-                >
-                  <Upload className="h-4 w-4" />
-                  {audioFile ? "Trocar arquivo" : "Escolher arquivo"}
-                </label>
-                <input
-                  id="audio-upload"
-                  type="file"
-                  accept="audio/*,.mp3,.wav,.ogg,.m4a"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                {audioFile && (
-                  <div className="flex items-center gap-2 text-sm text-white/70">
-                    <File className="h-4 w-4" />
-                    <span>{audioFile.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => setAudioFile(null)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* OU separador */}
-              <div className="flex items-center gap-3">
-                <div className="h-px bg-white/20 flex-1" />
-                <span className="text-white/40 text-xs uppercase">ou</span>
-                <div className="h-px bg-white/20 flex-1" />
-              </div>
-
-              {/* Campo de URL */}
+            {/* Versão e Enviar Áudio - 2 colunas */}
+            <div className="grid gap-6 min-[360px]:grid-cols-2">
+              {/* Versão */}
               <FormField
                 control={form.control}
-                name="url"
+                name="versao"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel className="text-white">Versão</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Insira a Url do Audio"
+                        placeholder="Diante do Trono"
                         className="!text-black placeholder:text-gray-400"
-                        disabled={!!audioFile}
                         {...field}
                       />
                     </FormControl>
@@ -442,6 +343,41 @@ const AddTrackPage: React.FC = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Enviar Áudio */}
+              <div className="space-y-3">
+                <FormLabel className="text-white">Enviar Áudio</FormLabel>
+
+                {/* Botão de upload de arquivo */}
+                <div className="flex flex-col gap-3">
+                  <label
+                    htmlFor="audio-upload"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-white/20 transition"
+                  >
+                    {audioFile ? "Trocar arquivo" : "Escolher arquivo"}
+                  </label>
+                  <input
+                    id="audio-upload"
+                    type="file"
+                    accept="audio/*,.mp3,.wav,.ogg,.m4a"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  {audioFile && (
+                    <div className="flex items-center gap-2 text-sm text-white/70">
+                      <File className="h-4 w-4" />
+                      <span className="flex-1 truncate">{audioFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setAudioFile(null)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Cifra / Pauta - 1 coluna */}
