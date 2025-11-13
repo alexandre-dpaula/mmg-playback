@@ -11,6 +11,8 @@
  * 6. Copie a URL gerada e cole no arquivo .env do projeto
  */
 
+
+
 const SPREADSHEET_ID = "11vl4pBX-XOQCpRZdzbRPGwSR9xGP2ai4TS_14qtwYxc";
 
 function getSpreadsheet() {
@@ -51,13 +53,13 @@ function doGet(e) {
       thumbs: thumbMap
     };
 
-    return withCors(ContentService
+    return ContentService
       .createTextOutput(JSON.stringify(response))
-      .setMimeType(ContentService.MimeType.JSON));
+      .setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
     Logger.log("Erro: " + error.toString());
-    return withCors(ContentService
+    return ContentService
       .createTextOutput(JSON.stringify({
         error: error.toString(),
         playlistTitle: "MMG - Festa dos Tabernáculos",
@@ -65,7 +67,7 @@ function doGet(e) {
         coverUrl: "",
         tracks: []
       }))
-      .setMimeType(ContentService.MimeType.JSON));
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -73,10 +75,8 @@ function doGet(e) {
  * Handler para requisições OPTIONS (preflight CORS).
  */
 function doOptions() {
-  return withCors(
-    ContentService.createTextOutput("")
-      .setMimeType(ContentService.MimeType.TEXT)
-  );
+  return ContentService.createTextOutput("")
+    .setMimeType(ContentService.MimeType.TEXT);
 }
 
 /**
@@ -154,16 +154,8 @@ function parseRequestPayload(e) {
  * Gera uma resposta JSON padronizada.
  */
 function createJsonResponse(data) {
-  const output = ContentService.createTextOutput(JSON.stringify(data))
+  return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
-  return withCors(output);
-}
-
-function withCors(output) {
-  return output
-    .setHeader("Access-Control-Allow-Origin", "*")
-    .setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-    .setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
 /**
@@ -602,8 +594,9 @@ function handleAudioUpload(payload) {
     // Tornar o arquivo público (qualquer pessoa com o link pode visualizar)
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
-    // Obter URL de visualização
-    const fileUrl = file.getUrl();
+    // Obter URL de download direto
+    const fileId = file.getId();
+    const fileUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
 
     Logger.log("Upload realizado: " + fileUrl);
 

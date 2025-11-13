@@ -126,6 +126,9 @@ const AddTrackPage: React.FC = () => {
       const response = await fetch(scriptUrl, {
         method: "POST",
         redirect: "follow",
+        headers: {
+          "Content-Type": "text/plain",
+        },
         body: JSON.stringify({
           action: "uploadAudio",
           fileName: file.name,
@@ -182,6 +185,9 @@ const AddTrackPage: React.FC = () => {
       const response = await fetch(scriptUrl, {
         method: "POST",
         redirect: "follow",
+        headers: {
+          "Content-Type": "text/plain",
+        },
         body: JSON.stringify(payload),
       });
 
