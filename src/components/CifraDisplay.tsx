@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { useGoogleDoc, isGoogleDocsUrl } from "@/hooks/useGoogleDoc";
 import { Loader2 } from "lucide-react";
 import { transposeContent } from "@/utils/chordTransposer";
+import { CifraEditor } from "./CifraEditor";
 
 type CifraDisplayProps = {
   cifra?: string;
+  cifraContent?: string; // Conteúdo extraído do CifraClub
   originalKey?: string;
   selectedKey?: string;
+  onEditClick?: () => void;
 };
 
 // Regex para detectar acordes musicais
@@ -68,15 +71,24 @@ const renderCifraContent = (content: string, highlightTitle = false) => {
   return elements;
 };
 
-export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, originalKey, selectedKey }) => {
-  const isDocUrl = isGoogleDocsUrl(cifra);
-  const { data: docContent, isLoading, error } = useGoogleDoc(cifra);
+export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, cifraContent, originalKey, selectedKey }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState<string | undefined>();
 
-  // Aplica transposição se necessário (para Google Docs)
+  const isDocUrl = isGoogleDocsUrl(cifra);
+  const isCifraClub = cifra?.includes('cifraclub.com');
+
+  // Só busca do Google Docs se não for CifraClub e não tiver cifraContent
+  const { data: docContent, isLoading, error } = useGoogleDoc(!isCifraClub && !cifraContent ? cifra : undefined);
+
+  // Determina qual conteúdo usar (prioridade: editedContent > cifraContent > docContent)
+  const contentToUse = editedContent || cifraContent || docContent;
+
+  // Aplica transposição se necessário
   const transposedContent = React.useMemo(() => {
-    if (!docContent || !originalKey || !selectedKey) return docContent;
-    return transposeContent(docContent, originalKey, selectedKey);
-  }, [docContent, originalKey, selectedKey]);
+    if (!contentToUse || !originalKey || !selectedKey) return contentToUse;
+    return transposeContent(contentToUse, originalKey, selectedKey);
+  }, [contentToUse, originalKey, selectedKey]);
 
   // Aplica transposição para cifras simples
   const transposedCifra = React.useMemo(() => {
@@ -84,13 +96,13 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, originalKey, 
     return transposeContent(cifra, originalKey, selectedKey);
   }, [cifra, originalKey, selectedKey]);
 
-  if (!cifra) {
+  if (!cifra && !cifraContent) {
     return null;
   }
 
-  // Se for uma URL do Google Docs
-  if (isDocUrl) {
-    if (isLoading) {
+  // Se tiver conteúdo extraído do CifraClub ou do Google Docs
+  if (cifraContent || (isDocUrl && contentToUse)) {
+    if (isLoading && !cifraContent) {
       return (
         <div className="flex items-center gap-2 text-white/60">
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -99,7 +111,7 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, originalKey, 
       );
     }
 
-    if (error) {
+    if (error && !cifraContent) {
       return (
         <div className="text-red-400 text-sm">
           Erro ao carregar cifra. <a href={cifra} target="_blank" rel="noopener noreferrer" className="underline">Abrir documento</a>
@@ -107,31 +119,29 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, originalKey, 
       );
     }
 
-    if (transposedContent || docContent) {
+    if (transposedContent || contentToUse) {
       return (
-        <div className="mt-3 sm:mt-4 md:mt-5 w-full p-3 sm:p-4 md:p-5 bg-white/5 rounded-lg sm:rounded-xl border border-white/10">
-          <div className="flex items-center justify-end mb-2 sm:mb-2.5">
-            <a
-              href={cifra}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#1DB954] text-xs sm:text-sm hover:underline transition-colors"
-            >
-              Abrir no Google Docs
-            </a>
-          </div>
+        <>
           <div className="text-sm sm:text-base md:text-lg font-mono overflow-x-auto max-h-[500px] sm:max-h-[600px] md:max-h-[700px] overflow-y-auto leading-relaxed">
-            {renderCifraContent(transposedContent || docContent || '', true)}
+            {renderCifraContent(transposedContent || contentToUse || '', true)}
           </div>
-        </div>
+
+          {isEditing && cifra && cifraContent && (
+            <CifraEditor
+              cifraUrl={cifra}
+              initialContent={editedContent || cifraContent}
+              onClose={() => setIsEditing(false)}
+              onSave={(newContent) => {
+                setEditedContent(newContent);
+                setIsEditing(false);
+              }}
+            />
+          )}
+        </>
       );
     }
   }
 
-  // Se não for URL do Google Docs, exibe como texto normal (com transposição se aplicável)
-  return (
-    <p className="mt-2 sm:mt-3 md:mt-4 w-full font-semibold text-xs sm:text-sm" style={{ color: '#ff7700' }}>
-      {transposedCifra}
-    </p>
-  );
+  // Se não há conteúdo para exibir, não mostra nada
+  return null;
 };

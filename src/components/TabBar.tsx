@@ -1,63 +1,35 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Plus, Share2, Settings } from "lucide-react";
+import { Home, Search, Plus, Settings, Music2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGooglePlaylist } from "@/hooks/useGooglePlaylist";
+import {
+  getSelectedEventId,
+  onSelectedEventChange,
+  SELECTED_EVENT_STORAGE_KEY,
+} from "@/lib/preferences";
 
 export const TabBar: React.FC = () => {
   const location = useLocation();
-  const { data: playlistData } = useGooglePlaylist();
+  const [playlistPath, setPlaylistPath] = React.useState("/playlist/repertorio");
 
-  const shareMessage = React.useMemo(() => {
-    const tracks = (playlistData?.tracks ?? []).filter((track) => {
-      const pauta = track.pauta?.trim();
-      return Boolean(pauta && /^https?:\/\//i.test(pauta));
-    });
-
-    if (!tracks.length) {
-      return "";
-    }
-
-    const trackLines = tracks
-      .map((track) => {
-        const title = track.title?.trim();
-        if (!title) return null;
-        const tom = track.tom?.trim();
-        return tom ? `• ${title} - ${tom}` : `• ${title}`;
-      })
-      .filter(Boolean) as string[];
-
-    if (!trackLines.length) {
-      return "";
-    }
-
-    return ["*REPERTÓRIO*", "_Culto Poder da Palavra_", "", ...trackLines].join("\n");
-  }, [playlistData]);
-
-  const handleShareClick = React.useCallback(() => {
-    if (!shareMessage) return;
-
-    const encodedText = encodeURIComponent(shareMessage);
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
-
-    if (typeof navigator !== "undefined" && navigator.share) {
-      navigator
-        .share({ text: shareMessage })
-        .catch((error) => {
-          if (error?.name === "AbortError") {
-            return;
-          }
-          if (typeof window !== "undefined") {
-            window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-          }
-        });
-      return;
-    }
-
-    if (typeof window !== "undefined") {
-      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-    }
-  }, [shareMessage]);
+  React.useEffect(() => {
+    const updatePath = () => {
+      const stored = getSelectedEventId();
+      setPlaylistPath(stored ? `/playlist/${stored}` : "/playlist/repertorio");
+    };
+    updatePath();
+    const unsubscribe = onSelectedEventChange(updatePath);
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === SELECTED_EVENT_STORAGE_KEY) {
+        updatePath();
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   const tabs = [
     {
@@ -79,11 +51,10 @@ export const TabBar: React.FC = () => {
       isActive: location.pathname === "/add",
     },
     {
-      name: "Compartilhar",
-      icon: Share2,
-      onClick: handleShareClick,
-      disabled: !shareMessage,
-      isActive: false,
+      name: "Playlist",
+      icon: Music2,
+      path: playlistPath,
+      isActive: location.pathname.startsWith("/playlist"),
     },
     {
       name: "Config",
@@ -103,27 +74,6 @@ export const TabBar: React.FC = () => {
       <div className="flex items-center justify-around px-2 py-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
-
-          if (tab.onClick) {
-            return (
-              <button
-                key={tab.name}
-                onClick={tab.onClick}
-                disabled={tab.disabled}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[60px]",
-                  tab.disabled
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:bg-white/10 active:scale-95"
-                )}
-              >
-                <Icon className="h-5 w-5 text-white/70" />
-                <span className="text-[10px] font-medium text-white/70">
-                  {tab.name}
-                </span>
-              </button>
-            );
-          }
 
           return (
             <Link

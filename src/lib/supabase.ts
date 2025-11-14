@@ -1,13 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL e Anon Key devem estar configurados no arquivo .env');
+  throw new Error('⚠️ VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não foram carregados. Verifique seu arquivo .env');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/**
+ * Retorna a URL pública de um pad do Supabase Storage
+ * @param fileName - Nome do arquivo do pad
+ * @returns URL pública do arquivo
+ */
+export function getPadUrl(fileName: string): string {
+  const { data } = supabase.storage
+    .from('pads')
+    .getPublicUrl(fileName);
+
+  return data.publicUrl;
+}
 
 /**
  * Faz upload de arquivo de áudio para o Supabase Storage
@@ -64,6 +77,150 @@ export async function deleteAudioFromSupabase(filePath: string): Promise<void> {
     }
   } catch (error) {
     console.error('Erro ao deletar arquivo do Supabase:', error);
+    throw error;
+  }
+}
+
+/**
+ * Interface para dados de uma faixa musical
+ */
+export interface Track {
+  evento: string;
+  titulo: string;
+  tag: string;
+  tom: string;
+  versao: string;
+  cifra_url: string;
+  audio_url: string;
+}
+
+/**
+ * Adiciona uma nova faixa musical no banco de dados Supabase
+ * @param track - Dados da faixa a ser adicionada
+ * @returns ID da faixa criada
+ * @throws Error se houver falha ao salvar
+ */
+export async function addTrackToSupabase(track: Track): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from('tracks')
+      .insert({
+        evento: track.evento || '',
+        titulo: track.titulo,
+        tag: track.tag || '',
+        tom: track.tom || '',
+        versao: track.versao || '',
+        cifra_url: track.cifra_url || '',
+        audio_url: track.audio_url || '',
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Erro ao salvar faixa no Supabase:', error);
+      throw new Error(`Erro ao salvar faixa no banco: ${error.message}`);
+    }
+
+    return data.id;
+  } catch (error) {
+    console.error('Erro ao adicionar faixa:', error);
+    throw error;
+  }
+}
+
+/**
+ * Processa cifra do CifraClub via Edge Function
+ * @param trackId - ID da faixa
+ * @param cifraUrl - URL do CifraClub
+ */
+export async function processCifraClub(trackId: string, cifraUrl: string): Promise<void> {
+  try {
+    // Verificar se é URL do CifraClub
+    if (!cifraUrl.includes('cifraclub.com')) {
+      return; // Não é CifraClub, não faz nada
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const functionUrl = `${supabaseUrl}/functions/v1/process-cifraclub`;
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        trackId,
+        cifraUrl,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Erro ao processar cifra');
+    }
+
+    const result = await response.json();
+    console.log('Cifra processada:', result);
+  } catch (error) {
+    console.error('Erro ao processar cifra do CifraClub:', error);
+    // Não lança erro para não bloquear o fluxo principal
+    // A cifra será processada pelo webhook como fallback
+  }
+}
+
+/**
+ * Busca conteúdo de cifras extraídas do CifraClub
+ * @returns Map de cifra_url para { content, artistPhoto }
+ */
+export async function getCifraContents(): Promise<Map<string, { content: string; artistPhoto?: string }>> {
+  try {
+    const { data, error } = await supabase
+      .from('tracks')
+      .select('cifra_url, cifra_content, artist_photo')
+      .not('cifra_content', 'is', null)
+      .not('cifra_url', 'is', null);
+
+    if (error) {
+      console.error('Erro ao buscar cifras:', error);
+      return new Map();
+    }
+
+    const map = new Map<string, { content: string; artistPhoto?: string }>();
+    data?.forEach((row) => {
+      if (row.cifra_url && row.cifra_content) {
+        map.set(row.cifra_url, {
+          content: row.cifra_content,
+          artistPhoto: row.artist_photo || undefined,
+        });
+      }
+    });
+
+    return map;
+  } catch (error) {
+    console.error('Erro ao buscar cifras do Supabase:', error);
+    return new Map();
+  }
+}
+
+/**
+ * Atualiza o conteúdo da cifra no Supabase
+ * @param cifraUrl - URL da cifra (chave única)
+ * @param newContent - Novo conteúdo da cifra
+ */
+export async function updateCifraContent(cifraUrl: string, newContent: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('tracks')
+      .update({ cifra_content: newContent })
+      .eq('cifra_url', cifraUrl);
+
+    if (error) {
+      console.error('Erro ao atualizar cifra:', error);
+      throw new Error(`Erro ao atualizar cifra: ${error.message}`);
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar cifra no Supabase:', error);
     throw error;
   }
 }

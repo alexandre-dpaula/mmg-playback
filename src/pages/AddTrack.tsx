@@ -5,8 +5,8 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Loader2, File } from "lucide-react";
-import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
-import { uploadAudioToSupabase } from "@/lib/supabase";
+import { supabase, uploadAudioToSupabase, addTrackToSupabase, processCifraClub } from "@/lib/supabase";
+import { getSelectedEventId } from "@/lib/preferences";
 import {
   Form,
   FormControl,
@@ -24,12 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
 
 const TAG_OPTIONS = ["Cifras", "Vocal", "Instrumental"];
 
 const formSchema = z
   .object({
-    playlistTitle: z.string().min(3, "Informe o evento"),
     title: z.string().min(2, "Informe o título da música"),
     versao: z.string().optional(),
     tom: z.string().optional(),
@@ -58,7 +58,6 @@ const formSchema = z
 type FormValues = z.infer<typeof formSchema>;
 
 const DEFAULT_VALUES: FormValues = {
-  playlistTitle: "",
   title: "",
   versao: "",
   tom: "",
@@ -117,15 +116,51 @@ const AddTrackPage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (values: FormValues) => {
-    if (!scriptUrl) {
-      toast.error("URL do Apps Script não configurada (.env).");
+  const maybeAddTrackToCurrentEvent = async (trackId: string, trackTitle: string) => {
+    const selectedEventId = getSelectedEventId();
+    if (!selectedEventId) {
+      toast.info("Selecione um evento na aba Eventos para vincular novas faixas.");
       return;
     }
 
+    const confirmAdd = window.confirm(
+      `Deseja adicionar "${trackTitle}" na playlist selecionada agora?`
+    );
+
+    if (!confirmAdd) {
+      return;
+    }
+
+    try {
+      toast.info("Adicionando música à playlist atual...");
+      const { count, error } = await supabase
+        .from("event_tracks")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", selectedEventId);
+
+      if (error) throw error;
+
+      const orderIndex = count ?? 0;
+
+      const { error: linkError } = await supabase.from("event_tracks").insert({
+        event_id: selectedEventId,
+        track_id: trackId,
+        order_index: orderIndex,
+      });
+
+      if (linkError) throw linkError;
+
+      toast.success("Música adicionada à playlist atual!");
+    } catch (error) {
+      console.error("Erro ao vincular faixa ao evento:", error);
+      toast.error("Não foi possível adicionar a faixa na playlist atual.");
+    }
+  };
+
+  const handleSubmit = async (values: FormValues) => {
     let audioUrl = values.url?.trim() || "";
 
-    // Se tem arquivo de áudio, fazer upload primeiro
+    // 1. Upload do áudio se necessário
     if (audioFile && !audioUrl) {
       try {
         toast.info("Fazendo upload do áudio...");
@@ -138,44 +173,50 @@ const AddTrackPage: React.FC = () => {
       }
     }
 
-    const payload = {
-      playlistTitle: values.playlistTitle.trim(),
-      title: values.title.trim(),
+    const trackData = {
+      evento: "",
+      titulo: values.title.trim(),
       versao: values.versao?.trim() || "",
-      tom: values.tom?.trim() || "",
-      url: audioUrl,
+      tom: values.tom || "",
       tag: values.tag?.trim() || "",
-      pauta: values.pauta?.trim() || "",
+      cifra_url: values.pauta?.trim() || "",
+      audio_url: audioUrl,
     };
 
     try {
-      // Tenta enviar com redirect: 'follow' para seguir redirecionamentos do Google
-      const response = await fetch(scriptUrl, {
-        method: "POST",
-        redirect: "follow",
-        headers: {
-          "Content-Type": "text/plain",
-        },
-        body: JSON.stringify(payload),
-      });
+      // 2. Salvar no Supabase (principal)
+      toast.info("Salvando faixa no banco de dados...");
+      const trackId = await addTrackToSupabase(trackData);
 
-      // Tenta ler a resposta
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        // Se não conseguir ler JSON, assume sucesso baseado no status
-        if (response.ok || response.type === "opaque") {
-          data = { success: true };
-        } else {
-          throw new Error("Resposta inválida do servidor");
-        }
+      // 3. Processar cifra do CifraClub se necessário
+      if (trackData.cifra_url && trackData.cifra_url.includes('cifraclub.com')) {
+        toast.info("Processando cifra do CifraClub...");
+        await processCifraClub(trackId, trackData.cifra_url);
       }
 
-      if (!data?.success && response.ok === false) {
-        throw new Error(data?.message || "Não foi possível salvar a faixa.");
+      // 4. Backup no Google Sheets (em segundo plano)
+      if (scriptUrl) {
+        const payload = {
+          playlistTitle: trackData.evento,
+          title: trackData.titulo,
+          url: trackData.audio_url,
+          tag: trackData.tag,
+          pauta: trackData.cifra_url,
+        };
+
+        fetch(scriptUrl, {
+          method: "POST",
+          redirect: "follow",
+          headers: {
+            "Content-Type": "text/plain",
+          },
+          body: JSON.stringify(payload),
+        }).catch((err) => {
+          console.warn("Backup no Google Sheets falhou (não crítico):", err);
+        });
       }
 
+      await maybeAddTrackToCurrentEvent(trackId, trackData.titulo);
       toast.success("Faixa adicionada com sucesso!");
 
       // Limpar completamente todos os campos
@@ -219,25 +260,6 @@ const AddTrackPage: React.FC = () => {
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4 rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-6 shadow-2xl shadow-black/40 ring-1 ring-white/10"
           >
-            {/* Evento (playlistTitle) - 1 coluna */}
-            <FormField
-              control={form.control}
-              name="playlistTitle"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Evento</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Culto Poder da Palavra"
-                      className="!text-black placeholder:text-gray-400"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {/* Título da música - 1 coluna */}
             <FormField
               control={form.control}
@@ -257,126 +279,116 @@ const AddTrackPage: React.FC = () => {
               )}
             />
 
-            {/* Tag e Tom - 2 colunas */}
-            <div className="grid gap-6 min-[360px]:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="tag"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">Tag</FormLabel>
-                    <Select
-                      value={field.value || undefined}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full h-10 bg-white/10 border-white/20 text-white text-sm font-medium rounded-lg">
-                          <SelectValue placeholder="Selecionar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
-                        {TAG_OPTIONS.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className="text-sm py-3"
-                          >
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="tom"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">Tom</FormLabel>
-                    <Select
-                      value={field.value || undefined}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full h-10 bg-white/10 border-white/20 text-white text-sm font-medium rounded-lg">
-                          <SelectValue placeholder="Selecionar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
-                        {AVAILABLE_KEYS.map((key) => (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            className="text-sm py-3"
-                          >
-                            {key}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Versão */}
+            <FormField
+              control={form.control}
+              name="versao"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Versão</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Ex: Live, Studio, Acordes simples..."
+                      className="!text-black placeholder:text-gray-400"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            {/* Versão e Enviar Áudio - 2 colunas */}
-            <div className="grid gap-6 min-[360px]:grid-cols-2">
-              {/* Versão */}
-              <FormField
-                control={form.control}
-                name="versao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">Versão</FormLabel>
+            {/* Tom */}
+            <FormField
+              control={form.control}
+              name="tom"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Tom</FormLabel>
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
                     <FormControl>
-                      <Input
-                        placeholder="Diante do Trono"
-                        className="!text-black placeholder:text-gray-400"
-                        {...field}
-                      />
+                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/20 text-white text-sm font-medium rounded-lg">
+                        <SelectValue placeholder="Selecione o tom" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
+                      {AVAILABLE_KEYS.map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {key}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Enviar Áudio */}
-              <div className="space-y-3">
-                <FormLabel className="text-white">Enviar Áudio</FormLabel>
-
-                {/* Botão de upload de arquivo */}
-                <div className="flex flex-col gap-3">
-                  <label
-                    htmlFor="audio-upload"
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-white/20 transition"
+            {/* Tag */}
+            <FormField
+              control={form.control}
+              name="tag"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Tag</FormLabel>
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={field.onChange}
                   >
-                    {audioFile ? "Trocar arquivo" : "Escolher arquivo"}
-                  </label>
-                  <input
-                    id="audio-upload"
-                    type="file"
-                    accept="audio/*,.mp3,.wav,.ogg,.m4a"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  {audioFile && (
-                    <div className="flex items-center gap-2 text-sm text-white/70">
-                      <File className="h-4 w-4" />
-                      <span className="flex-1 truncate">{audioFile.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => setAudioFile(null)}
-                        className="text-red-400 hover:text-red-300"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    <FormControl>
+                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/20 text-white text-sm font-medium rounded-lg">
+                        <SelectValue placeholder="Selecionar" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
+                      {TAG_OPTIONS.map((option) => (
+                        <SelectItem
+                          key={option}
+                          value={option}
+                          className="text-sm py-3"
+                        >
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Enviar Áudio */}
+            <div className="space-y-3">
+              <FormLabel className="text-white">Enviar Áudio</FormLabel>
+
+              {/* Botão de upload de arquivo */}
+              <div className="flex flex-col gap-3">
+                <label
+                  htmlFor="audio-upload"
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-white/20 transition"
+                >
+                  {audioFile ? "Trocar arquivo" : "Escolher arquivo"}
+                </label>
+                <input
+                  id="audio-upload"
+                  type="file"
+                  accept="audio/*,.mp3,.wav,.ogg,.m4a"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                {audioFile && (
+                  <div className="flex items-center gap-2 text-sm text-white/70">
+                    <File className="h-4 w-4" />
+                    <span className="flex-1 truncate">{audioFile.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAudioFile(null)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -389,11 +401,14 @@ const AddTrackPage: React.FC = () => {
                   <FormLabel className="text-white">Cifra</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Insira a Url do Google Doc"
+                      placeholder="URL do Google Doc ou CifraClub"
                       className="!text-black placeholder:text-gray-400"
                       {...field}
                     />
                   </FormControl>
+                  <p className="text-xs text-white/60 mt-1">
+                    💡 URLs do CifraClub serão processadas automaticamente (cifra, foto, tom e versão)
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

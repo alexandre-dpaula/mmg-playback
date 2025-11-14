@@ -4,10 +4,9 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
-import { DEFAULT_PLAYLIST, useGooglePlaylist } from "@/hooks/useGooglePlaylist";
-import type { PlaylistTrack } from "@/hooks/useGooglePlaylist";
-import { CifraDisplay } from "@/components/CifraDisplay";
+import { Pause, Play, SkipBack, SkipForward, Music } from "lucide-react";
+import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
+import type { PlaylistTrack } from "@/hooks/useEventPlaylist";
 import {
   Select,
   SelectContent,
@@ -16,6 +15,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
+import { getPadUrl } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -30,11 +31,13 @@ const isGoogleDocsUrl = (url?: string): boolean => {
   return (
     lowerUrl.includes("docs.google.com/document") ||
     lowerUrl.includes("docs.google.com/d/") ||
-    (lowerUrl.includes("drive.google.com/file/d/") && lowerUrl.includes("/view"))
+    (lowerUrl.includes("drive.google.com/file/d/") &&
+      lowerUrl.includes("/view"))
   );
 };
 
-const normalizeFilterValue = (value?: string) => (value ? value.toLowerCase().trim() : "");
+const normalizeFilterValue = (value?: string) =>
+  value ? value.toLowerCase().trim() : "";
 
 const FLAT_TO_SHARP_MAP: Record<string, string> = {
   Db: "C#",
@@ -52,22 +55,19 @@ const SHARP_TO_FLAT_DISPLAY: Record<string, string> = {
   "A#": "Bb",
 };
 
-const padFile = (fileName: string) =>
-  `/pads/${encodeURIComponent(fileName)}`;
-
 const PAD_FILE_MAP: Record<string, string> = {
-  C: padFile("C Guitar Pads.m4a"),
-  "C#": padFile("Db Guitar Pads.m4a"),
-  D: padFile("D Guitar Pads.m4a"),
-  "D#": padFile("Eb Guitar Pads.m4a"),
-  E: padFile("E Guitar Pads.m4a"),
-  F: padFile("F Guitar Pads.m4a"),
-  "F#": padFile("Gb Guitar Pads.m4a"),
-  G: padFile("G Guitar Pads.m4a"),
-  "G#": padFile("Ab Guitar Pads.m4a"),
-  A: padFile("A Guitar Pads.m4a"),
-  "A#": padFile("Bb Guitar Pads.m4a"),
-  B: padFile("B Guitar Pads.m4a"),
+  C: getPadUrl("C Guitar Pads.m4a"),
+  "C#": getPadUrl("Db Guitar Pads.m4a"),
+  D: getPadUrl("D Guitar Pads.m4a"),
+  "D#": getPadUrl("Eb Guitar Pads.m4a"),
+  E: getPadUrl("E Guitar Pads.m4a"),
+  F: getPadUrl("F Guitar Pads.m4a"),
+  "F#": getPadUrl("Gb Guitar Pads.m4a"),
+  G: getPadUrl("G Guitar Pads.m4a"),
+  "G#": getPadUrl("Ab Guitar Pads.m4a"),
+  A: getPadUrl("A Guitar Pads.m4a"),
+  "A#": getPadUrl("Bb Guitar Pads.m4a"),
+  B: getPadUrl("B Guitar Pads.m4a"),
 };
 
 const extractKeyToken = (value?: string) => {
@@ -76,7 +76,10 @@ const extractKeyToken = (value?: string) => {
   const match = cleaned.match(/([A-Ga-g][#b]?)/);
   if (!match) return "";
   const [note] = match;
-  return note.charAt(0).toUpperCase() + (note.charAt(1) ? note.charAt(1).toLowerCase() : "");
+  return (
+    note.charAt(0).toUpperCase() +
+    (note.charAt(1) ? note.charAt(1).toLowerCase() : "")
+  );
 };
 
 const normalizeKeyForSelect = (value?: string) => {
@@ -96,16 +99,18 @@ const getPadSourceForKey = (value?: string) => {
 
 type SpotifyPlayerProps = {
   filter: "all" | "vocal" | "instrumental";
+  eventId: string;
 };
 
-const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
+const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
+  const navigate = useNavigate();
   const {
     data: playlistData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useGooglePlaylist();
+  } = useEventPlaylist(eventId);
 
   const allTracks: PlaylistTrack[] = React.useMemo(
     () => playlistData?.tracks ?? [],
@@ -116,7 +121,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     const filterByTag = (track: PlaylistTrack, ...tags: string[]) => {
       const normalizedTag = normalizeFilterValue(track.tag);
       const normalizedArtist = normalizeFilterValue(track.artist);
-      return tags.some((tag) => normalizedTag === tag || normalizedArtist.includes(tag));
+      return tags.some(
+        (tag) => normalizedTag === tag || normalizedArtist.includes(tag)
+      );
     };
 
     if (filter === "all") {
@@ -127,7 +134,8 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
         const hasPauta = track.pauta && track.pauta.trim().length > 0;
         const hasCifra = track.cifra && track.cifra.trim().length > 0;
         const isDocsUrl = track.url && isGoogleDocsUrl(track.url);
-        const matchesTag = normalizedTag === "cifra" || normalizedTag === "cifras";
+        const matchesTag =
+          normalizedTag === "cifra" || normalizedTag === "cifras";
         const matchesArtist =
           normalizedArtist === "cifras" || normalizedArtist.includes("cifra");
         return matchesTag || matchesArtist || hasPauta || hasCifra || isDocsUrl;
@@ -135,7 +143,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     }
 
     if (filter === "vocal") {
-      return allTracks.filter((track) => filterByTag(track, "vocal", "voz", "vozes"));
+      return allTracks.filter((track) =>
+        filterByTag(track, "vocal", "voz", "vozes")
+      );
     }
 
     if (filter === "instrumental") {
@@ -145,9 +155,13 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     return allTracks;
   }, [allTracks, filter]);
 
-  const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
-    null
-  );
+  const trackCountLabel = React.useMemo(() => {
+    const count = tracks.length;
+    const padded = count.toString().padStart(2, "0");
+    return `${padded} ${count === 1 ? "Faixa" : "Faixas"}`;
+  }, [tracks.length]);
+
+  const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
@@ -169,39 +183,60 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     [selectedKey, currentTrack?.tom]
   );
 
-  // Determina a imagem de capa baseada no filtro ativo
+  // Determina a imagem de capa (usa a foto do artista da track)
   const coverImage = React.useMemo(() => {
-    // Se há uma faixa atual com coverUrl própria, usa ela
+    // Usa a coverUrl da faixa (foto do artista do CifraClub ou da planilha)
     if (currentTrack?.coverUrl) {
       return currentTrack.coverUrl;
     }
 
-    // Usa a imagem do filtro ativo
-    if (filter === "all" && playlistData?.thumbs?.Cifras) {
-      return playlistData.thumbs.Cifras;
-    }
-    if (filter === "vocal" && playlistData?.thumbs?.Vocal) {
-      return playlistData.thumbs.Vocal;
-    }
-    if (filter === "instrumental" && playlistData?.thumbs?.Instrumental) {
-      return playlistData.thumbs.Instrumental;
-    }
-
     // Fallback para coverUrl da playlist
     return playlistData?.coverUrl || "";
-  }, [currentTrack, filter, playlistData]);
+  }, [currentTrack, playlistData]);
+
+  const trackStorageKey = React.useMemo(
+    () => `mmg-current-track-${eventId}`,
+    [eventId]
+  );
+
+  const persistCurrentTrack = React.useCallback(
+    (trackId: string | null) => {
+      if (typeof window === "undefined") return;
+      if (trackId) {
+        window.localStorage.setItem(trackStorageKey, trackId);
+      } else {
+        window.localStorage.removeItem(trackStorageKey);
+      }
+    },
+    [trackStorageKey]
+  );
 
   React.useEffect(() => {
     if (!tracks.length) {
       setCurrentTrackId(null);
       setIsPlaying(false);
-    } else if (
-      !currentTrackId ||
-      !tracks.some((track) => track.id === currentTrackId)
-    ) {
-      setCurrentTrackId(tracks[0].id);
+      persistCurrentTrack(null);
+      return;
     }
-  }, [tracks, currentTrackId]);
+
+    const currentExists = currentTrackId && tracks.some((track) => track.id === currentTrackId);
+    if (currentExists) {
+      return;
+    }
+
+    let storedId: string | null = null;
+    if (typeof window !== "undefined") {
+      storedId = window.localStorage.getItem(trackStorageKey);
+    }
+
+    const trackIdToUse =
+      storedId && tracks.some((track) => track.id === storedId)
+        ? storedId
+        : tracks[0].id;
+
+    setCurrentTrackId(trackIdToUse);
+    persistCurrentTrack(trackIdToUse);
+  }, [tracks, currentTrackId, trackStorageKey, persistCurrentTrack]);
 
   const ensurePadAudio = React.useCallback(() => {
     if (typeof window === "undefined") {
@@ -226,10 +261,13 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   const startPad = React.useCallback(
     (keyValue?: string) => {
-      const src = getPadSourceForKey(keyValue) ?? getPadSourceForKey(currentPadKey);
+      const src =
+        getPadSourceForKey(keyValue) ?? getPadSourceForKey(currentPadKey);
 
       if (!src) {
-        console.warn("Nenhum arquivo de pad encontrado para o tom selecionado.");
+        console.warn(
+          "Nenhum arquivo de pad encontrado para o tom selecionado."
+        );
         setIsPadPlaying(false);
         return;
       }
@@ -255,7 +293,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
   // Atualiza o tom selecionado quando a faixa muda
   React.useEffect(() => {
     const normalizedKey = normalizeKeyForSelect(currentTrack?.tom);
-    setSelectedKey(normalizedKey || "");
+    setSelectedKey(normalizedKey || "C");
     stopPadAudio();
     setIsPadPlaying(false);
   }, [currentTrack?.tom, stopPadAudio]);
@@ -334,6 +372,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     }
     if (!currentTrack) {
       setCurrentTrackId(tracks[0].id);
+      persistCurrentTrack(tracks[0].id);
       setIsPlaying(true);
       return;
     }
@@ -352,6 +391,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
     const prevTrack = tracks[prevIndex];
     setCurrentTrackId(prevTrack.id);
+    persistCurrentTrack(prevTrack.id);
     // Só toca automaticamente se tiver URL de áudio válida
     const hasAudioUrl = prevTrack.url && !isGoogleDocsUrl(prevTrack.url);
     setIsPlaying(hasAudioUrl);
@@ -365,6 +405,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
     const nextIndex = (currentIndex + 1) % tracks.length;
     const nextTrack = tracks[nextIndex];
     setCurrentTrackId(nextTrack.id);
+    persistCurrentTrack(nextTrack.id);
     // Só toca automaticamente se tiver URL de áudio válida
     const hasAudioUrl = nextTrack.url && !isGoogleDocsUrl(nextTrack.url);
     setIsPlaying(hasAudioUrl);
@@ -382,6 +423,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
       return;
     }
     setCurrentTrackId(id);
+    persistCurrentTrack(id);
     if (hasAudioUrl) {
       setIsPlaying(true);
     } else {
@@ -401,6 +443,10 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
 
   const playNextTrack = () => {
     handleNext();
+  };
+
+  const openCifraPage = (trackId: string) => {
+    navigate(`/playlist/${eventId}/track/${trackId}`);
   };
 
   const handleAudioError = () => {
@@ -460,7 +506,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                   )}
                 </div>
               </div>
-              {(currentTrack?.tom || selectedKey) && (
+              {currentTrack && (
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 pb-2 border-b border-white/10">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[#1DB954] text-xs sm:text-sm font-semibold uppercase tracking-wide">
@@ -468,7 +514,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
                     </span>
                     <Select value={selectedKey} onValueChange={setSelectedKey}>
                       <SelectTrigger className="w-20 sm:w-24 h-9 sm:h-10 bg-white/10 border-white/15 text-white text-xs sm:text-sm font-semibold">
-                        <SelectValue placeholder={currentTrack?.tom || "—"} />
+                        <SelectValue placeholder={currentTrack?.tom || "C"} />
                       </SelectTrigger>
                       <SelectContent className="bg-[#282828] border-white/20">
                         {AVAILABLE_KEYS.map((key) => (
@@ -499,15 +545,6 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
               )}
             </div>
           </div>
-          <CifraDisplay
-            cifra={
-              currentTrack?.pauta ||
-              currentTrack?.cifra ||
-              (currentTrack?.url && isGoogleDocsUrl(currentTrack.url) ? currentTrack.url : undefined)
-            }
-            originalKey={currentTrack?.tom}
-            selectedKey={selectedKey}
-          />
           {isError && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
               <p className="font-semibold">
@@ -527,49 +564,75 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter }) => {
           )}
         </div>
         <div className="w-full lg:max-w-sm rounded-xl sm:rounded-2xl bg-white/5 p-3 sm:p-4 md:p-6 backdrop-blur">
-          <div className="mb-3 sm:mb-4 flex flex-col gap-1.5 sm:gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-[12px] sm:text-sm uppercase text-white/50 tracking-[1px]">
-                Tocando:{" "}
-                {currentTrack ? (
-                  <strong className="truncate">{currentTrack.title}</strong>
-                ) : (
-                  "Nenhuma faixa selecionada"
-                )}
+          <div className="mb-4 space-y-1">
+            <p className="text-sm font-medium text-white/70">Playlist</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs sm:text-sm text-white/60">
+                <span className="font-semibold text-white">Tocando</span>{" "}
+                <span className="text-white">
+                  {currentTrack
+                    ? currentTrack.title
+                    : "Nenhuma faixa selecionada"}
+                </span>
               </p>
+              <span className="rounded-full bg-[#1DB954]/10 px-3 py-1 text-xs sm:text-sm font-semibold text-[#1DB954] whitespace-nowrap">
+                {trackCountLabel}
+              </span>
             </div>
-            <span className="rounded-full bg-[#1DB954]/10 px-2 py-0.5 sm:px-3 sm:py-1 text-[12px] sm:text-sm font-semibold text-[#1DB954] self-start sm:self-auto whitespace-nowrap">
-              {tracks.length} {tracks.length === 1 ? "faixa" : "faixas"}
-            </span>
           </div>
           <ScrollArea className="h-40 sm:h-48 md:h-56 pr-2 sm:pr-4">
-            <ul className="space-y-2">
-              {tracks.map((track, index) => (
-                <li
-                  key={track.id}
-                  className={cn(
-                    "flex cursor-pointer items-center justify-between rounded-lg sm:rounded-xl px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 text-[13px] sm:text-base transition",
-                    currentTrackId === track.id
-                      ? "bg-[#1DB954]/20 text-white"
-                      : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
-                  )}
-                >
-                  <div
-                    className="flex-1 min-w-0"
-                    onClick={() => handleSelectTrack(track.id)}
-                  >
-                    <p className="font-semibold truncate">{track.title}</p>
-                    <span className="text-[13px] sm:text-base text-white/50">
-                      Faixa {index + 1}
-                    </span>
-                  </div>
-                  {currentTrackId === track.id && (
-                    <span className="rounded-full bg-[#1DB954] px-1.5 py-0.5 sm:px-2 sm:py-1 md:px-3 md:py-1 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap ml-2">
-                      Tocando
-                    </span>
-                  )}
-                </li>
-              ))}
+            <ul className="space-y-3">
+              {tracks.map((track, index) => {
+                const isActive = currentTrackId === track.id;
+                return (
+                  <li key={track.id}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openCifraPage(track.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openCifraPage(track.id);
+                        }
+                      }}
+                      className={cn(
+                        "group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-3 sm:p-4 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f]",
+                        isActive && "border-[#1DB954]/40 bg-[#1DB954]/5"
+                      )}
+                    >
+                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectTrack(track.id);
+                        }}
+                        className={cn(
+                          "relative z-10 flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50 hover:bg-[#1DB954]/20 transition",
+                          isActive && "bg-[#1DB954]/20"
+                        )}
+                        aria-label={`Tocar ${track.title}`}
+                      >
+                        <Music className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </button>
+                      <div className="relative z-10 flex-1 min-w-0 text-left">
+                        <p className="font-semibold text-sm sm:text-base truncate text-white">
+                          {track.title}
+                        </p>
+                        <span className="text-xs sm:text-sm text-white/60">
+                          Faixa {index + 1}
+                        </span>
+                      </div>
+                      {isActive && (
+                        <span className="relative z-10 rounded-full bg-[#1DB954] px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap">
+                          Tocando
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
               {!tracks.length && (
                 <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
                   Nenhuma faixa encontrada na planilha. Verifique se os links do

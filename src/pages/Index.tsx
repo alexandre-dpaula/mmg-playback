@@ -2,13 +2,19 @@ import React from "react";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { Navbar } from "@/components/Navbar";
-import { DEFAULT_PLAYLIST, useGooglePlaylist } from "@/hooks/useGooglePlaylist";
+import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import { Preloader } from "@/components/Preloader";
+import { Link, useParams } from "react-router-dom";
 
 const CLOCK_TEXT_COLOR = "rgb(255 255 255 / 16%)";
 
 const Index = () => {
-  const { data: playlistData, isLoading, refetch } = useGooglePlaylist();
+  const { eventId: routeEventId } = useParams<{ eventId: string }>();
+  const playlistEventId =
+    routeEventId && routeEventId !== "repertorio" ? routeEventId : null;
+  const { data: playlistData, isLoading, refetch, error } = useEventPlaylist(
+    playlistEventId ?? undefined
+  );
   const title = playlistData?.title ?? DEFAULT_PLAYLIST.title;
   const description = playlistData?.description ?? DEFAULT_PLAYLIST.description;
   const [filter, setFilter] = React.useState<"all" | "vocal" | "instrumental">("all");
@@ -85,6 +91,44 @@ const Index = () => {
     setPullDistance(0);
     setPullStartY(0);
   };
+
+  const renderEmptyState = (title: string, subtitle: string) => (
+    <div
+      className="min-h-screen bg-[#121212] text-white pb-24"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <Navbar filter={filter} onFilterChange={setFilter} />
+      <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 py-16 text-center">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg shadow-black/30 space-y-3">
+          <p className="text-sm uppercase tracking-[0.2em] text-[#1DB954] font-semibold">
+            Nenhum evento disponível
+          </p>
+          <h1 className="text-2xl font-semibold">{title}</h1>
+          <p className="text-white/60">{subtitle}</p>
+        </div>
+        <Link
+          to="/"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-6 py-3 text-black font-semibold hover:bg-[#1ed760] transition"
+        >
+          Voltar para eventos
+        </Link>
+      </div>
+    </div>
+  );
+
+  if (!playlistEventId) {
+    return renderEmptyState(
+      "Selecione um evento para acessar o repertório",
+      "Abra a aba de eventos e escolha um evento com músicas cadastradas."
+    );
+  }
+
+  if (error && !isLoading) {
+    return renderEmptyState(
+      "Evento não encontrado",
+      "Talvez ele tenha sido removido. Selecione outro evento na aba principal."
+    );
+  }
 
   // Se está carregando E é a primeira visita, mostra o preloader
   if (isLoading && showPreloader) {
@@ -170,7 +214,7 @@ const Index = () => {
             {title}
           </h1>
         </header>
-        <SpotifyPlayer filter={filter} />
+        <SpotifyPlayer filter={filter} eventId={playlistEventId!} />
         <div className="text-center pb-8">
           <MadeWithDyad />
         </div>

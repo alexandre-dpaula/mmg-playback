@@ -1,61 +1,88 @@
 import React from "react";
-import { Settings as SettingsIcon, User, Bell, Shield, Info } from "lucide-react";
+import { User, Bell, Shield, Info, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+type SettingItem = {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  route: string;
+  iconBg: string;
+};
 
 const Settings: React.FC = () => {
+  const navigate = useNavigate();
+
+  const settingsItems: SettingItem[] = [
+    {
+      id: "profile",
+      title: "Perfil",
+      description: "Gerencie suas informações",
+      icon: <User className="w-6 h-6 text-[#1DB954]" />,
+      route: "/settings/profile",
+      iconBg: "bg-[#1DB954]/10",
+    },
+    {
+      id: "notifications",
+      title: "Notificações",
+      description: "Configure alertas e avisos",
+      icon: <Bell className="w-6 h-6 text-[#1DB954]" />,
+      route: "/settings/notifications",
+      iconBg: "bg-[#1DB954]/10",
+    },
+    {
+      id: "privacy",
+      title: "Privacidade",
+      description: "Controle seus dados",
+      icon: <Shield className="w-6 h-6 text-[#1DB954]" />,
+      route: "/settings/privacy",
+      iconBg: "bg-[#1DB954]/10",
+    },
+    {
+      id: "about",
+      title: "Sobre",
+      description: "Versão e informações do app",
+      icon: <Info className="w-6 h-6 text-[#1DB954]" />,
+      route: "/settings/about",
+      iconBg: "bg-[#1DB954]/10",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#121212] text-white pb-24">
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-        <header className="space-y-2 mb-8">
-          <p className="text-sm uppercase tracking-[0.3em] text-[#1DB954]">
-            Configurações
-          </p>
-          <h1 className="text-3xl font-semibold">Configurações</h1>
-          <p className="text-white/70">
-            Personalize sua experiência no aplicativo.
-          </p>
-        </header>
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pb-24">
+      {/* Header */}
+      <div className="px-6 pt-8 pb-6">
+        <p className="text-sm text-[#1DB954] font-semibold tracking-wider uppercase mb-2">
+          CONFIGURAÇÕES
+        </p>
+        <h1 className="text-3xl font-bold mb-2">Configurações</h1>
+        <p className="text-white/60">Personalize sua experiência no aplicativo.</p>
+      </div>
 
-        <div className="space-y-4">
-          <div className="rounded-xl bg-white/5 p-4 hover:bg-white/10 transition cursor-pointer">
-            <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-[#1DB954]" />
-              <div>
-                <p className="font-semibold">Perfil</p>
-                <p className="text-sm text-white/70">Gerencie suas informações</p>
-              </div>
+      {/* Settings List */}
+      <div className="px-6 space-y-3">
+        {settingsItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => navigate(item.route)}
+            className="w-full bg-white/5 hover:bg-white/10 rounded-xl p-4 flex items-center gap-4 transition-all border border-white/10 hover:border-white/20"
+          >
+            {/* Icon */}
+            <div className={`${item.iconBg} p-3 rounded-lg`}>
+              {item.icon}
             </div>
-          </div>
 
-          <div className="rounded-xl bg-white/5 p-4 hover:bg-white/10 transition cursor-pointer">
-            <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-[#1DB954]" />
-              <div>
-                <p className="font-semibold">Notificações</p>
-                <p className="text-sm text-white/70">Configure alertas e avisos</p>
-              </div>
+            {/* Text */}
+            <div className="flex-1 text-left">
+              <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+              <p className="text-sm text-white/60">{item.description}</p>
             </div>
-          </div>
 
-          <div className="rounded-xl bg-white/5 p-4 hover:bg-white/10 transition cursor-pointer">
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-[#1DB954]" />
-              <div>
-                <p className="font-semibold">Privacidade</p>
-                <p className="text-sm text-white/70">Controle seus dados</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-white/5 p-4 hover:bg-white/10 transition cursor-pointer">
-            <div className="flex items-center gap-3">
-              <Info className="h-5 w-5 text-[#1DB954]" />
-              <div>
-                <p className="font-semibold">Sobre</p>
-                <p className="text-sm text-white/70">Versão e informações do app</p>
-              </div>
-            </div>
-          </div>
-        </div>
+            {/* Arrow */}
+            <ChevronRight className="w-5 h-5 text-white/40" />
+          </button>
+        ))}
       </div>
     </div>
   );
