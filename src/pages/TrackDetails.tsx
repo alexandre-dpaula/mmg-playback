@@ -66,6 +66,7 @@ type TrackRecord = {
   tag?: string | null;
   versao?: string | null;
   tom?: string | null;
+  original_tom?: string | null; // Tom original da cifra (quando foi importada)
   cifra_url?: string | null;
   cifra_content?: string | null;
 };
@@ -97,7 +98,7 @@ const TrackDetails: React.FC = () => {
         const trackPromise = supabase
           .from("tracks")
           .select(
-            "id, titulo, tag, versao, tom, cifra_url, cifra_content"
+            "id, titulo, tag, versao, tom, original_tom, cifra_url, cifra_content"
           )
           .eq("id", trackId)
           .single<TrackRecord>();
@@ -119,26 +120,39 @@ const TrackDetails: React.FC = () => {
         }
 
         let resolvedKey = trackData.tom || "";
-        let shouldPersistGuess = false;
+        let originalKey = trackData.original_tom || "";
+        let shouldPersistKeys = false;
 
+        // Se não tem tom definido, tenta adivinhar do conteúdo
         if (!resolvedKey && trackData.cifra_content) {
           const guess = guessKeyFromContent(trackData.cifra_content);
           if (guess) {
             resolvedKey = guess;
-            shouldPersistGuess = true;
+            shouldPersistKeys = true;
           }
         }
 
-        const normalizedKey = normalizeKeyForSelect(resolvedKey) || "C";
+        // Se não tem original_tom, usa o tom atual como original
+        if (!originalKey) {
+          originalKey = resolvedKey || "D"; // D é comum no CifraClub
+          shouldPersistKeys = true;
+        }
 
-        if (shouldPersistGuess && trackId) {
+        const normalizedKey = normalizeKeyForSelect(resolvedKey) || normalizeKeyForSelect(originalKey) || "C";
+        const normalizedOriginalKey = normalizeKeyForSelect(originalKey) || normalizedKey;
+
+        // Salva tom e original_tom se necessário
+        if (shouldPersistKeys && trackId) {
           await supabase
             .from("tracks")
-            .update({ tom: normalizedKey })
+            .update({
+              tom: normalizedKey,
+              original_tom: normalizedOriginalKey
+            })
             .eq("id", trackId);
         }
 
-        setTrack({ ...trackData, tom: normalizedKey });
+        setTrack({ ...trackData, tom: normalizedKey, original_tom: normalizedOriginalKey });
         setSelectedKey(normalizedKey);
         if (eventData) {
           setEventInfo(eventData);
@@ -165,31 +179,24 @@ const TrackDetails: React.FC = () => {
     }
   }, [track?.tom]);
 
-  // Função para alterar o tom (salva no banco e atualiza UI)
+  // Função para alterar o tom (salva apenas o tom, não a cifra transposta)
   const handleKeyChange = async (newKey: string) => {
     if (!trackId || !track) return;
 
-    const previousKeyLabel = track.tom && track.tom.trim() ? track.tom : selectedKey;
-    const previousKey = normalizeKeyForSelect(previousKeyLabel) || selectedKey;
-
     setSelectedKey(newKey);
 
-    const transposedContent =
-      track.cifra_content && previousKey
-        ? transposeContent(track.cifra_content, previousKey, newKey)
-        : track.cifra_content || "";
-
     try {
+      // Salva apenas o tom selecionado, NÃO a cifra transposta
       const { error } = await supabase
         .from("tracks")
-        .update({ tom: newKey, cifra_content: transposedContent })
+        .update({ tom: newKey })
         .eq("id", trackId);
 
       if (error) {
         console.error("Erro ao salvar tom:", error);
       } else {
         setTrack((prev) =>
-          prev ? { ...prev, tom: newKey, cifra_content: transposedContent } : prev,
+          prev ? { ...prev, tom: newKey } : prev
         );
         if (eventId) {
           queryClient.invalidateQueries({ queryKey: ["playlist", eventId] });
@@ -420,7 +427,7 @@ const TrackDetails: React.FC = () => {
             <CifraDisplay
               cifra={track.cifra_url || undefined}
               cifraContent={track.cifra_content || undefined}
-              originalKey={selectedKey}
+              originalKey={track.original_tom || track.tom || "D"}
               selectedKey={selectedKey}
             />
           </div>
