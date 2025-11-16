@@ -161,9 +161,17 @@ export const transposeContent = (content: string, fromKey: string, toKey: string
     const trimmed = line.trim();
 
     // Se é a primeira linha não vazia (título), retorna sem modificar
-    if (!firstNonEmptyLineFound && trimmed.length > 0) {
+    // EXCETO se for uma seção como [Intro], [Verso], etc.
+    const isSectionLine = /^\[.+\]/.test(trimmed);
+
+    if (!firstNonEmptyLineFound && trimmed.length > 0 && !isSectionLine) {
       firstNonEmptyLineFound = true;
       return line; // Título não é transposto
+    }
+
+    // Marca que já encontramos conteúdo, mesmo que seja uma seção
+    if (!firstNonEmptyLineFound && trimmed.length > 0) {
+      firstNonEmptyLineFound = true;
     }
 
     // Para as demais linhas, transpõe normalmente
