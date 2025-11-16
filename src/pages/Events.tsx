@@ -371,16 +371,17 @@ export default function Events() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-8 md:pb-8">
-      <div className="px-6 pt-8 pb-6">
-        <p className="text-sm text-[#1DB954] font-semibold tracking-wide uppercase mb-2">
-          EVENTOS
-        </p>
-        <h1 className="text-3xl font-bold mb-2">Meus Eventos</h1>
-        <p className="text-white/60">Organize suas músicas por evento.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
+        <header className="space-y-2 mb-6 sm:mb-8">
+          <p className="text-sm uppercase tracking-[0.3em] text-[#1DB954] font-semibold">
+            EVENTOS
+          </p>
+          <h1 className="text-3xl font-bold">Meus Eventos</h1>
+          <p className="text-white/60">Organize suas músicas por evento.</p>
+        </header>
 
-      <div className="px-6 space-y-4">
+        <div className="space-y-4">
         <div className={highlightCardClasses}>
           <p className={highlightLabelClass}>{highlightLabel}</p>
           <div className="mt-2 flex flex-col gap-1">
@@ -407,24 +408,25 @@ export default function Events() {
             {events.map((event) => renderEventCard(event, activeEvent?.id === event.id))}
           </div>
         )}
-      </div>
 
-      <div className="px-6 mt-4">
-        <Button
-          onClick={openCreateModal}
-          className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
-        >
-          <Plus className="mr-2 h-5 w-5" />
-          Novo Evento
-        </Button>
-      </div>
+        <div className="mt-6">
+          <Button
+            onClick={openCreateModal}
+            className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Novo Evento
+          </Button>
+        </div>
 
-      <EventFormModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onSuccess={handleEventSaved}
-        eventId={editingEventId}
-      />
+        <EventFormModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSuccess={handleEventSaved}
+          eventId={editingEventId}
+        />
+        </div>
+      </div>
     </div>
   );
 }

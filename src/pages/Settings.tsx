@@ -51,38 +51,41 @@ const Settings: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      {/* Header */}
-      <div className="px-6 pt-8 pb-6">
-        <p className="text-sm text-[#1DB954] font-semibold tracking-wider uppercase mb-2">
-          CONFIGURAÇÕES
-        </p>
-        <h1 className="text-3xl font-bold mb-2">Configurações</h1>
-        <p className="text-white/60">Personalize sua experiência no aplicativo.</p>
-      </div>
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
+        <header className="space-y-2 mb-6 sm:mb-8">
+          <p className="text-sm uppercase tracking-[0.3em] text-[#1DB954] font-semibold">
+            CONFIGURAÇÕES
+          </p>
+          <h1 className="text-3xl font-bold">Configurações</h1>
+          <p className="text-white/60">Personalize sua experiência no aplicativo.</p>
+        </header>
 
-      {/* Settings List */}
-      <div className="px-6 space-y-3">
-        {settingsItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => navigate(item.route)}
-            className="w-full bg-white/5 hover:bg-white/10 rounded-xl p-4 flex items-center gap-4 transition-all border border-white/10 hover:border-white/20"
-          >
-            {/* Icon */}
-            <div className={`${item.iconBg} p-3 rounded-lg`}>
-              {item.icon}
-            </div>
+        {/* Settings List */}
+        <div className="space-y-4">
+          {settingsItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.route)}
+              className="group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-4 sm:p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f] cursor-pointer"
+            >
+              <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
 
-            {/* Text */}
-            <div className="flex-1 text-left">
-              <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-              <p className="text-sm text-white/60">{item.description}</p>
-            </div>
+              {/* Icon */}
+              <div className="relative z-10 flex-shrink-0 h-12 w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
+                {item.icon}
+              </div>
 
-            {/* Arrow */}
-            <ChevronRight className="w-5 h-5 text-white/40" />
-          </button>
-        ))}
+              {/* Text */}
+              <div className="relative z-10 flex-1 text-left min-w-0">
+                <h3 className="text-lg font-medium text-white mb-1">{item.title}</h3>
+                <p className="text-sm text-white/60">{item.description}</p>
+              </div>
+
+              {/* Arrow */}
+              <ChevronRight className="relative z-10 w-5 h-5 text-white/40 group-hover:text-[#1DB954] transition-colors flex-shrink-0" />
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
