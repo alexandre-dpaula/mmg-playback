@@ -298,15 +298,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw uploadError;
     }
 
-    // Obter URL pública
+    // Obter URL pública com cache busting
     const { data } = supabase.storage
       .from('profiles')
       .getPublicUrl(filePath);
 
-    const avatarUrl = data.publicUrl;
+    // Adicionar timestamp para forçar reload
+    const avatarUrl = `${data.publicUrl}?t=${Date.now()}`;
 
     // Atualizar perfil com nova URL
-    await updateProfile({ avatarUrl });
+    await updateProfile({ avatarUrl: data.publicUrl });
+
+    // Atualizar estado local com URL com cache busting
+    setProfile((prev) => ({
+      ...prev,
+      avatarUrl,
+    }));
 
     return avatarUrl;
   };

@@ -97,12 +97,17 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
           {/* Perfil */}
           <div className="flex items-center flex-shrink-0">
             <img
+              key={profile.avatarUrl}
               src={profile.avatarUrl}
               alt={profile.name}
               className="h-11 w-11 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full object-cover ring-2 ring-white/10"
+              crossOrigin="anonymous"
               onError={(e) => {
-                console.error('Erro ao carregar imagem de perfil:', e);
-                e.currentTarget.src = "/perfil.jpg";
+                const img = e.currentTarget as HTMLImageElement;
+                if (img.src !== "/perfil.jpg") {
+                  console.error('Erro ao carregar imagem de perfil, usando fallback');
+                  img.src = "/perfil.jpg";
+                }
               }}
             />
           </div>

@@ -59,11 +59,16 @@ const SettingsProfile: React.FC = () => {
         <div className="flex items-center gap-4 mb-6">
           <div className="relative">
             <img
+              key={profile.avatarUrl}
               src={profile.avatarUrl}
               alt={profile.name}
               className="h-20 w-20 rounded-full object-cover ring-2 ring-[#1DB954]/40"
+              crossOrigin="anonymous"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = "/perfil.jpg";
+                const img = e.currentTarget as HTMLImageElement;
+                if (img.src !== "/perfil.jpg") {
+                  img.src = "/perfil.jpg";
+                }
               }}
             />
             <button
