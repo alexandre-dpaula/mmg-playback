@@ -1,7 +1,6 @@
 import React from "react";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import { MadeWithDyad } from "@/components/made-with-dyad";
-import { Navbar } from "@/components/Navbar";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import { Preloader } from "@/components/Preloader";
 import { Link, useParams } from "react-router-dom";
@@ -25,8 +24,7 @@ const Index = () => {
     }
   }, [refreshKey, refetch]);
   const title = playlistData?.title ?? DEFAULT_PLAYLIST.title;
-  const description = playlistData?.description ?? DEFAULT_PLAYLIST.description;
-  const [filter, setFilter] = React.useState<"all" | "vocal" | "instrumental">("all");
+  const [filter] = React.useState<"all" | "vocal" | "instrumental">("all");
   const [showPreloader, setShowPreloader] = React.useState(() => {
     // Mostra preloader apenas na primeira visita da sessão
     const hasVisited = sessionStorage.getItem('hasVisited');
@@ -71,7 +69,6 @@ const Index = () => {
 
   const renderEmptyState = (title: string, subtitle: string) => (
     <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <Navbar filter={filter} onFilterChange={setFilter} />
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 py-16 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg shadow-black/30 space-y-3">
           <p className="text-sm uppercase tracking-[0.2em] text-[#1DB954] font-semibold">
@@ -111,9 +108,7 @@ const Index = () => {
 
   // Quando terminar de carregar, mostra a página principal
   return (
-    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <Navbar filter={filter} onFilterChange={setFilter} />
-
+    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-8 md:pb-8">
       {/* Indicador de loading discreto para refreshes */}
       {isLoading && !showPreloader && (
         <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />

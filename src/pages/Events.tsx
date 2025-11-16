@@ -3,7 +3,6 @@ import { Calendar, Plus, Music, Trash2, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EventFormModal } from "@/components/EventFormModal";
-import { Navbar } from "@/components/Navbar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +25,6 @@ export default function Events() {
   const navigate = useNavigate();
   const { refreshKey } = useRefresh();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [filter, setFilter] = useState<"all" | "vocal" | "instrumental">("all");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [activeEventId, setActiveEventId] = useState<string | null>(() => getSelectedEventId());
@@ -373,13 +371,8 @@ export default function Events() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-    >
-      <Navbar filter={filter} onFilterChange={setFilter} />
-
-      <div className="px-6 pt-8 pb-6 mt-[calc(90px+env(safe-area-inset-top))]">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-8 md:pb-8">
+      <div className="px-6 pt-8 pb-6">
         <p className="text-sm text-[#1DB954] font-semibold tracking-wide uppercase mb-2">
           EVENTOS
         </p>
