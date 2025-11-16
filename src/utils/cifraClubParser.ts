@@ -171,10 +171,16 @@ export function isChordLine(line: string): boolean {
   if (!trimmed) return false;
 
   // Muito longa para ser linha de acordes
-  if (trimmed.length > 80) return false;
+  if (trimmed.length > 120) return false;
 
-  // Verifica se contém principalmente acordes musicais
-  const chordPattern = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9]?(?:\/[A-G][#b]?)?)\b/g;
+  // Regex melhorado para capturar acordes complexos:
+  // - Nota base: A-G
+  // - Acidentes: # ou b (opcional)
+  // - Qualidade: m, maj, min, dim, aug, sus, add (opcional)
+  // - Extensões: números como 7, 9, 11, 13 (opcional)
+  // - Extensões complexas: (9), (11), (add9), etc (opcional)
+  // - Baixo invertido: /[A-G][#b]? (opcional)
+  const chordPattern = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9]*(?:\([^)]+\))?(?:\/[A-G][#b]?)?)\b/g;
   const chords = trimmed.match(chordPattern) || [];
 
   // Remove os acordes encontrados
@@ -183,11 +189,12 @@ export function isChordLine(line: string): boolean {
     withoutChords = withoutChords.replace(chord, '');
   });
 
-  // Após remover acordes, deve sobrar principalmente espaços
-  const remaining = withoutChords.replace(/\s/g, '');
+  // Após remover acordes, deve sobrar principalmente espaços e alguns símbolos (parênteses, etc)
+  const remaining = withoutChords.replace(/[\s\(\)\[\]]/g, '');
 
   // Se tem acordes e pouco texto restante, é linha de acordes
-  return chords.length > 0 && remaining.length < 5;
+  // Tolerância maior para linhas com acordes complexos
+  return chords.length > 0 && remaining.length < 10;
 }
 
 /**

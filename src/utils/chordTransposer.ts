@@ -42,9 +42,10 @@ const transposeNote = (note: string, semitones: number): string => {
 };
 
 /**
- * Extrai a nota base de um acorde (ex: "Am7" -> "A", "C#m" -> "C#")
+ * Extrai a nota base de um acorde (ex: "Am7" -> "A", "C#m" -> "C#", "D9(11)" -> "D")
  */
 const extractBaseNote = (chord: string): { baseNote: string; suffix: string } => {
+  // Captura nota base (A-G) + acidente opcional (# ou b)
   const match = chord.match(/^([A-G][#b]?)(.*)/);
   if (!match) return { baseNote: chord, suffix: '' };
 
@@ -80,8 +81,14 @@ export const getSemitoneDifference = (fromKey: string, toKey: string): number =>
  * Transpõe todas as cifras em uma linha de texto
  */
 export const transposeLine = (line: string, semitones: number): string => {
-  // Regex para encontrar acordes musicais
-  const chordRegex = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9]?(?:\/[A-G][#b]?)?)\b/g;
+  // Regex melhorado para capturar acordes complexos:
+  // - Nota base: A-G
+  // - Acidentes: # ou b (opcional)
+  // - Qualidade: m, maj, min, dim, aug, sus, add (opcional)
+  // - Extensões: números como 7, 9, 11, 13 (opcional)
+  // - Extensões complexas: (9), (11), (add9), etc (opcional)
+  // - Baixo invertido: /[A-G][#b]? (opcional)
+  const chordRegex = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9]*(?:\([^)]+\))?(?:\/[A-G][#b]?)?)\b/g;
 
   return line.replace(chordRegex, (match) => {
     // Se o acorde tem uma barra (ex: C/G), transpõe ambas as partes
