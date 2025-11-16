@@ -116,25 +116,27 @@ const Login: React.FC = () => {
         ))}
       </div>
 
-      {/* Logo no topo com fade in */}
-      <div className="flex justify-center pt-8 pb-4 animate-fade-in-down">
-        <img src="/logo.png" alt="MMG" className="h-10 object-contain brightness-110" />
-      </div>
-
       {/* Conteúdo principal */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20 relative z-10">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-0 relative z-10">
+        <div className="w-full max-w-md space-y-0">
           {/* Título com animação */}
-          <div className="text-center space-y-1">
-            <h1 className="font-bold tracking-tight leading-tight text-white/20 animate-fade-in-up" style={{ fontSize: '80px', animationDelay: '0s', animationFillMode: 'both' }}>
-              Milhões
-            </h1>
-            <h2 className="text-2xl sm:text-3xl font-normal tracking-tight leading-tight text-white/20 animate-fade-in-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
-              de Cifras para os seus
-            </h2>
-            <h3 className="font-bold tracking-tight leading-tight text-white/20 animate-fade-in-up" style={{ fontSize: '60px', animationDelay: '0.4s', animationFillMode: 'both' }}>
-              Repertórios
-            </h3>
+          <div className="text-center space-y-0">
+            <div className="space-y-0">
+              <p className="text-sm font-light text-white/50 tracking-[0.2em] uppercase animate-fade-in-up" style={{ animationDelay: '0s', animationFillMode: 'both' }}>
+                Bem-vindo a
+              </p>
+              <div className="flex justify-center mb-5 animate-fade-in-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+                <img src="/logo.png" alt="MMGPlayback" className="h-28 object-contain brightness-110 drop-shadow-2xl" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#1DB954]/10 to-transparent blur-xl"></div>
+              <p className="relative text-lg font-light text-white leading-[1.1] tracking-normal animate-fade-in-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+                Milhões de músicas e cifras<br />
+                <span className="text-white font-light">para os seus repertórios</span>
+              </p>
+            </div>
           </div>
 
           {/* Formulário / Botões de login com animação de entrada */}
