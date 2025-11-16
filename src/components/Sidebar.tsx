@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, Plus, Settings, Music2, LogOut, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Search, Plus, Settings, Music2, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getSelectedEventId,
@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [playlistPath, setPlaylistPath] = React.useState("/playlist/repertorio");
   const { triggerRefresh } = useRefresh();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
@@ -86,19 +86,43 @@ export const Sidebar: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         {!isCollapsed && (
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1DB954] to-[#1ed760] flex items-center justify-center">
-              <Music2 className="w-6 h-6 text-black" />
-            </div>
-            <div>
-              <h1 className="text-sm font-bold text-white">MMG</h1>
-              <p className="text-xs text-white/60">Ensaio Vocal</p>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <img
+              src={profile.avatarUrl}
+              alt={profile.name}
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-[#1DB954]/30 flex-shrink-0"
+              onError={(e) => {
+                const img = e.currentTarget as HTMLImageElement;
+                if (img.src !== "/perfil.jpg") {
+                  img.src = "/perfil.jpg";
+                }
+              }}
+            />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm font-bold text-white truncate">{profile.name}</h1>
+              <p className="text-xs text-white/60 capitalize">{profile.role}</p>
             </div>
           </div>
         )}
+        {isCollapsed && (
+          <img
+            src={profile.avatarUrl}
+            alt={profile.name}
+            className="w-10 h-10 rounded-full object-cover ring-2 ring-[#1DB954]/30"
+            onError={(e) => {
+              const img = e.currentTarget as HTMLImageElement;
+              if (img.src !== "/perfil.jpg") {
+                img.src = "/perfil.jpg";
+              }
+            }}
+          />
+        )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-lg hover:bg-white/10 transition text-white/70 hover:text-white"
+          className={cn(
+            "p-2 rounded-lg hover:bg-white/10 transition text-white/70 hover:text-white flex-shrink-0",
+            !isCollapsed && "ml-2"
+          )}
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -136,28 +160,8 @@ export const Sidebar: React.FC = () => {
         </div>
       </nav>
 
-      {/* User Section */}
+      {/* Logout Section */}
       <div className="border-t border-white/10 p-3">
-        {user && (
-          <div className={cn(
-            "flex items-center gap-3 px-3 py-3 rounded-lg bg-white/5 mb-2",
-            isCollapsed && "justify-center"
-          )}>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1DB954] to-[#1ed760] flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-black" />
-            </div>
-            {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-white truncate">
-                  {user.email?.split('@')[0] || 'Usuário'}
-                </p>
-                <p className="text-[10px] text-white/60 truncate">
-                  {user.email}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
         <button
           onClick={handleSignOut}
           className={cn(

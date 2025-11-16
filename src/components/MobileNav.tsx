@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, Plus, Settings, Music2, Menu, X, LogOut, User } from "lucide-react";
+import { Home, Search, Plus, Settings, Music2, Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getSelectedEventId,
@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 export const MobileNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [playlistPath, setPlaylistPath] = React.useState("/playlist/repertorio");
   const { triggerRefresh } = useRefresh();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -81,17 +81,26 @@ export const MobileNav: React.FC = () => {
       {/* Top Bar Mobile */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10">
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1DB954] to-[#1ed760] flex items-center justify-center">
-              <Music2 className="w-5 h-5 text-black" />
-            </div>
-            <div>
-              <h1 className="text-sm font-bold text-white">MMG Ensaio Vocal</h1>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <img
+              src={profile.avatarUrl}
+              alt={profile.name}
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-[#1DB954]/30 flex-shrink-0"
+              onError={(e) => {
+                const img = e.currentTarget as HTMLImageElement;
+                if (img.src !== "/perfil.jpg") {
+                  img.src = "/perfil.jpg";
+                }
+              }}
+            />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm font-bold text-white truncate">{profile.name}</h1>
+              <p className="text-xs text-white/60 capitalize truncate">{profile.role}</p>
             </div>
           </div>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-lg hover:bg-white/10 transition text-white"
+            className="p-2 rounded-lg hover:bg-white/10 transition text-white flex-shrink-0"
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -140,23 +149,8 @@ export const MobileNav: React.FC = () => {
               </Link>
             </nav>
 
-            {/* User Section */}
+            {/* Logout Section */}
             <div className="border-t border-white/10 p-4 mt-4">
-              {user && (
-                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-white/5 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1DB954] to-[#1ed760] flex items-center justify-center flex-shrink-0">
-                    <User className="w-5 h-5 text-black" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      {user.email?.split('@')[0] || 'Usuário'}
-                    </p>
-                    <p className="text-xs text-white/60 truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-              )}
               <button
                 onClick={handleSignOut}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition w-full"

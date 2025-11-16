@@ -2,10 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
+export type UserRole = 'lider' | 'vocal' | 'instrumental';
+
 type AuthProfile = {
   name: string;
   email: string;
   avatarUrl: string;
+  role: UserRole;
 };
 
 type AuthContextType = {
@@ -17,12 +20,14 @@ type AuthContextType = {
   signInFallback: () => void;
   updateProfile: (updates: Partial<AuthProfile>) => Promise<void>;
   uploadAvatar: (file: File) => Promise<string>;
+  hasRole: (minRole: UserRole) => boolean;
 };
 
 const DEFAULT_PROFILE: AuthProfile = {
   name: "Alexandre Dpaula",
   email: "contato.m2bstudio@gmail.com",
   avatarUrl: "/perfil.jpg",
+  role: "vocal",
 };
 
 const LOCAL_AUTH_KEY = "mmg_local_auth";
@@ -39,6 +44,7 @@ const getStoredProfile = (): AuthProfile => {
       name: parsed.name || DEFAULT_PROFILE.name,
       email: parsed.email || DEFAULT_PROFILE.email,
       avatarUrl: parsed.avatarUrl || DEFAULT_PROFILE.avatarUrl,
+      role: parsed.role || DEFAULT_PROFILE.role,
     };
   } catch {
     return DEFAULT_PROFILE;
@@ -92,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const profile: AuthProfile = {
         name:
+          profileData?.name ||
           profileData?.full_name ||
           session.user.user_metadata?.full_name ||
           session.user.user_metadata?.name ||
@@ -102,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           session.user.user_metadata?.avatar_url ||
           session.user.user_metadata?.picture ||
           DEFAULT_PROFILE.avatarUrl,
+        role: (profileData?.role as UserRole) || DEFAULT_PROFILE.role,
       };
 
       console.log('Profile criado:', profile);
@@ -170,12 +178,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: finalName,
           email: profile.email,
           avatarUrl: finalAvatar,
+          role: profile.role,
         });
       }
     } else {
       setUser(null);
       setProfile(DEFAULT_PROFILE);
     }
+  };
+
+  // Função para verificar hierarquia de roles
+  // lider > vocal > instrumental
+  const hasRole = (minRole: UserRole): boolean => {
+    const roleHierarchy: Record<UserRole, number> = {
+      lider: 3,
+      vocal: 2,
+      instrumental: 1,
+    };
+    return roleHierarchy[profile.role] >= roleHierarchy[minRole];
   };
 
   useEffect(() => {
@@ -338,6 +358,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInFallback,
         updateProfile,
         uploadAvatar,
+        hasRole,
       }}
     >
       {children}
