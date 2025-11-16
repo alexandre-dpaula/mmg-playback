@@ -163,32 +163,6 @@ export const MobileNav: React.FC = () => {
         </div>
       )}
 
-      {/* Bottom Quick Nav Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-lg border-t border-white/10"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="flex items-center justify-around px-2 py-2">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <Link
-                key={tab.name}
-                to={tab.path}
-                onClick={handleNavClick}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[64px]",
-                  tab.isActive
-                    ? "text-[#1DB954]"
-                    : "text-white/60 active:scale-95"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{tab.name}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
     </>
   );
 };
