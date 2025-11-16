@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,35 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
+
+const CounterAnimation: React.FC = () => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const duration = 2000; // 2 segundos para completar a animação
+    const targetValue = 1000;
+    const increment = targetValue / (duration / 16); // 60 FPS
+    let currentValue = 0;
+
+    const timer = setInterval(() => {
+      currentValue += increment;
+      if (currentValue >= targetValue) {
+        setCount(targetValue);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(currentValue));
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <span className="text-white font-bold">
+      {count}k
+    </span>
+  );
+};
 
 const Login: React.FC = () => {
   const { signInWithProvider, isLoading, user } = useAuth();
@@ -70,27 +99,46 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Logo Spotify no topo */}
-      <div className="flex justify-center pt-8 pb-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0a0a0a] to-black text-white flex flex-col relative overflow-hidden">
+      {/* Partículas de fundo animadas */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-[#1DB954]/20 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + Math.random() * 10}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Logo no topo com fade in */}
+      <div className="flex justify-center pt-8 pb-4 animate-fade-in-down">
         <img src="/logo.png" alt="MMG" className="h-10 object-contain brightness-110" />
       </div>
 
       {/* Conteúdo principal */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-20 relative z-10">
         <div className="w-full max-w-md space-y-8">
-          {/* Título */}
-          <div className="text-center space-y-2">
-            <h1 className="text-5xl font-bold tracking-tight">
-              Milhões de músicas.
+          {/* Título com animação */}
+          <div className="text-center space-y-1">
+            <h1 className="font-bold tracking-tight leading-tight text-white/20 animate-fade-in-up" style={{ fontSize: '80px', animationDelay: '0s', animationFillMode: 'both' }}>
+              Milhões
             </h1>
-            <h2 className="text-5xl font-bold tracking-tight">
-              Grátis no MMG.
+            <h2 className="text-2xl sm:text-3xl font-normal tracking-tight leading-tight text-white/20 animate-fade-in-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+              de Cifras para os seus
             </h2>
+            <h3 className="font-bold tracking-tight leading-tight text-white/20 animate-fade-in-up" style={{ fontSize: '60px', animationDelay: '0.4s', animationFillMode: 'both' }}>
+              Repertórios
+            </h3>
           </div>
 
-          {/* Formulário / Botões de login */}
-          <div className="space-y-4 pt-8">
+          {/* Formulário / Botões de login com animação de entrada */}
+          <div className="space-y-4 pt-8 animate-fade-in-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
             {showEmailLogin ? (
               /* Formulário de login com email/senha */
               <form onSubmit={handleEmailLogin} className="space-y-4">
@@ -186,8 +234,8 @@ const Login: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-8 pb-8">
+      {/* Footer com animação */}
+      <div className="px-8 pb-8 animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'both' }}>
         <p className="text-xs text-white/50 text-center leading-relaxed">
           Esta página usa cookies. Consulte nossa{" "}
           <a href="#" className="underline hover:text-white transition-colors">
