@@ -35,6 +35,7 @@ const extractKeyToken = (value?: string) => {
   const match = cleaned.match(/([A-Ga-g][#b]?)/);
   if (!match) return "";
   const [note] = match;
+  // Retorna primeira letra maiúscula + resto minúsculo (C, Db, D#, etc)
   return note.charAt(0).toUpperCase() + (note.charAt(1) ? note.charAt(1).toLowerCase() : "");
 };
 
@@ -43,8 +44,8 @@ const normalizeKeyForSelect = (value?: string) => {
   const sanitized = value.replace(/♯/g, "#").replace(/♭/g, "b");
   const token = extractKeyToken(sanitized);
   if (!token) return "";
-  const upperToken = token.toUpperCase();
-  return AVAILABLE_KEYS.includes(upperToken) ? upperToken : "";
+  // Não faz toUpperCase() - mantém o formato correto: C, Db, D#, etc
+  return AVAILABLE_KEYS.includes(token) ? token : "";
 };
 
 const getPadSourceForKey = (value?: string) => {
