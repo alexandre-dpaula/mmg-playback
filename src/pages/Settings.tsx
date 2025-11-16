@@ -50,7 +50,7 @@ const Settings: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
       {/* Header */}
       <div className="px-6 pt-8 pb-6">
         <p className="text-sm text-[#1DB954] font-semibold tracking-wider uppercase mb-2">

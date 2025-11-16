@@ -315,7 +315,7 @@ const AddTrackPage: React.FC = () => {
   const isSubmitting = form.formState.isSubmitting;
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white pb-24">
+    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-0 md:pb-0">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10 sm:py-14">
         <div className="flex items-center gap-3">
           <Link

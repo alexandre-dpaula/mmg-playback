@@ -349,92 +349,131 @@ const TrackDetails: React.FC = () => {
 
   return (
     <>
-
-      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pb-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6">
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-semibold"
+            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-semibold mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar para playlist
           </button>
 
-        <div className="bg-white/5 rounded-2xl border border-white/10 p-5 sm:p-6 shadow-lg shadow-black/30">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1 min-w-0">
-              <div className="space-y-1">
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] text-white/60">
-                  Cifras
-                </span>
-                <div className="flex flex-wrap items-baseline gap-1 text-balance">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold">
-                    {track.titulo}
-                  </h2>
-                  {track.versao?.trim() && (
-                    <span className="text-xs sm:text-sm text-white/70 font-semibold">
-                      • {track.versao.trim()}
-                    </span>
-                  )}
+          {/* Layout responsivo: mobile stacked, desktop grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+            {/* Área principal da cifra */}
+            <div className="lg:col-span-8 xl:col-span-9">
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-5 sm:p-6 lg:p-8 shadow-lg shadow-black/30">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="space-y-1">
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
+                        Cifras
+                      </span>
+                      <div className="flex flex-wrap items-baseline gap-2 text-balance">
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold">
+                          {track.titulo}
+                        </h2>
+                        {track.versao?.trim() && (
+                          <span className="text-sm sm:text-base text-white/70 font-semibold">
+                            • {track.versao.trim()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <CifraDisplay
+                    cifra={track.cifra_url || undefined}
+                    cifraContent={track.cifra_content || undefined}
+                    originalKey={track.original_tom || track.tom || "D"}
+                    selectedKey={selectedKey}
+                  />
                 </div>
               </div>
             </div>
-            <button
-              onClick={() => setIsEditingCifra(true)}
-              className="px-3 py-1.5 bg-[#1DB954] text-black text-xs font-semibold rounded-full hover:bg-[#1ed760] transition-colors flex-shrink-0 ml-4"
-            >
-              Editar Cifra
-            </button>
-          </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 pb-2 border-b border-white/10">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[#1DB954] text-xs sm:text-sm font-semibold uppercase tracking-wide">
-                  Tom
-                </span>
-                <Select value={selectedKey} onValueChange={handleKeyChange}>
-                  <SelectTrigger className="w-20 sm:w-24 h-9 sm:h-10 bg-white/10 border-white/15 text-white text-xs sm:text-sm font-semibold">
-                    <SelectValue placeholder={track.tom || "C"} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#282828] border-white/20">
-                    {AVAILABLE_KEYS.map((key) => (
-                      <SelectItem
-                        key={key}
-                        value={key}
-                        className="text-white hover:bg-white/10 focus:bg-white/20 text-sm"
+            {/* Painel de controle lateral */}
+            <div className="lg:col-span-4 xl:col-span-3">
+              <div className="sticky top-4 space-y-4">
+                {/* Card de controles */}
+                <div className="bg-white/5 rounded-2xl border border-white/10 p-5 shadow-lg shadow-black/30">
+                  <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wide mb-4">
+                    Controles
+                  </h3>
+
+                  <div className="space-y-4">
+                    {/* Tom */}
+                    <div>
+                      <label className="text-[#1DB954] text-sm font-semibold uppercase tracking-wide mb-2 block">
+                        Tom
+                      </label>
+                      <Select value={selectedKey} onValueChange={handleKeyChange}>
+                        <SelectTrigger className="w-full h-11 bg-white/10 border-white/15 text-white font-semibold">
+                          <SelectValue placeholder={track.tom || "C"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#282828] border-white/20">
+                          {AVAILABLE_KEYS.map((key) => (
+                            <SelectItem
+                              key={key}
+                              value={key}
+                              className="text-white hover:bg-white/10 focus:bg-white/20"
+                            >
+                              {key}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Pad */}
+                    <div>
+                      <label className="text-white/60 text-sm font-semibold uppercase tracking-wide mb-2 block">
+                        Áudio
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handlePadToggle}
+                        className={`w-full h-11 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 ${
+                          isPadPlaying
+                            ? "bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30"
+                            : "bg-white/10 text-white border-white/15 hover:bg-white/15"
+                        }`}
                       >
-                        {key}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <button
-                type="button"
-                onClick={handlePadToggle}
-                className={`h-9 sm:h-10 w-24 sm:w-28 rounded-lg border text-xs sm:text-sm font-semibold uppercase tracking-wide transition-colors duration-200 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 ${
-                  isPadPlaying
-                    ? "bg-[#1DB954] text-black border-[#1DB954]"
-                    : "bg-white/10 text-white border-white/15 hover:bg-white/15"
-                }`}
-              >
-                Pad
-              </button>
-            </div>
-          </div>
+                        {isPadPlaying ? "Tocando Pad" : "Tocar Pad"}
+                      </button>
+                    </div>
 
-          <div className="mt-6">
-            <CifraDisplay
-              cifra={track.cifra_url || undefined}
-              cifraContent={track.cifra_content || undefined}
-              originalKey={track.original_tom || track.tom || "D"}
-              selectedKey={selectedKey}
-            />
+                    {/* Editar Cifra */}
+                    <div className="pt-2 border-t border-white/10">
+                      <button
+                        onClick={() => setIsEditingCifra(true)}
+                        className="w-full px-4 py-3 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold rounded-lg transition-colors border border-white/15"
+                      >
+                        Editar Cifra
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info adicional */}
+                {track.tag && (
+                  <div className="bg-white/5 rounded-2xl border border-white/10 p-5 shadow-lg shadow-black/30">
+                    <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wide mb-2">
+                      Categoria
+                    </h3>
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#1DB954]/20 text-[#1DB954] text-xs font-semibold uppercase tracking-wide">
+                      {track.tag}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
       {isEditingCifra && (
         <CifraEditor
           initialContent={track.cifra_content || ""}

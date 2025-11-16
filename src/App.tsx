@@ -3,7 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { TabBar } from "@/components/TabBar";
+import { Sidebar } from "@/components/Sidebar";
+import { MobileNav } from "@/components/MobileNav";
 import Events from "./pages/Events";
 import Index from "./pages/Index";
 import AddTrackPage from "./pages/AddTrack";
@@ -24,29 +25,32 @@ const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const location = useLocation();
-  const hideTabBar = location.pathname === "/login" || location.pathname === "/register";
+  const showNav = location.pathname !== "/login" && location.pathname !== "/register";
 
   return (
-    <>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Events />} />
-          <Route path="/playlist/:eventId" element={<Index />} />
-          <Route path="/playlist/:eventId/track/:trackId" element={<TrackDetails />} />
-          <Route path="/add" element={<AddTrackPage />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/settings/profile" element={<SettingsProfile />} />
-          <Route path="/settings/about" element={<SettingsAbout />} />
-          <Route path="/settings/privacy" element={<SettingsPrivacy />} />
-          <Route path="/settings/notifications" element={<SettingsNotifications />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      {!hideTabBar && <TabBar />}
-    </>
+    <div className="flex h-screen overflow-hidden bg-[#121212]">
+      {showNav && <Sidebar />}
+      <div className="flex-1 overflow-y-auto">
+        {showNav && <MobileNav />}
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Events />} />
+            <Route path="/playlist/:eventId" element={<Index />} />
+            <Route path="/playlist/:eventId/track/:trackId" element={<TrackDetails />} />
+            <Route path="/add" element={<AddTrackPage />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/profile" element={<SettingsProfile />} />
+            <Route path="/settings/about" element={<SettingsAbout />} />
+            <Route path="/settings/privacy" element={<SettingsPrivacy />} />
+            <Route path="/settings/notifications" element={<SettingsNotifications />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </div>
   );
 };
 

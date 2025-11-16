@@ -374,7 +374,7 @@ export default function Events() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pb-24"
+      className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <Navbar filter={filter} onFilterChange={setFilter} />

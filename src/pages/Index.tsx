@@ -70,10 +70,7 @@ const Index = () => {
   }, []);
 
   const renderEmptyState = (title: string, subtitle: string) => (
-    <div
-      className="min-h-screen bg-[#121212] text-white pb-24"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
+    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-0 md:pb-0">
       <Navbar filter={filter} onFilterChange={setFilter} />
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 py-16 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg shadow-black/30 space-y-3">
@@ -114,10 +111,7 @@ const Index = () => {
 
   // Quando terminar de carregar, mostra a página principal
   return (
-    <div
-      className="min-h-screen bg-[#121212] text-white pb-24"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
+    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-0 md:pb-0">
       <Navbar filter={filter} onFilterChange={setFilter} />
 
       {/* Indicador de loading discreto para refreshes */}
@@ -125,13 +119,7 @@ const Index = () => {
         <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />
       )}
 
-      <div
-        className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12"
-        style={{
-          paddingTop: 'calc(80px + env(safe-area-inset-top) + 1.5rem)',
-          paddingBottom: 'calc(env(safe-area-inset-bottom) + 1.5rem)',
-        }}
-      >
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
         <header className="text-center space-y-1">
           <div
             className="flex flex-wrap items-baseline justify-center gap-3 text-[14px] font-medium tracking-wide"

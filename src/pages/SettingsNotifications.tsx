@@ -12,7 +12,7 @@ const SettingsNotifications: React.FC = () => {
   const [maintenanceAlerts, setMaintenanceAlerts] = React.useState(true);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pb-24">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
       <div className="px-6 pt-8 pb-6">
         <button
           onClick={() => navigate("/settings")}
