@@ -1,16 +1,24 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search as SearchIcon, Music, Loader2, Plus } from "lucide-react";
+import { Search as SearchIcon, Music, Loader2, MoreVertical, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { getSelectedEventId } from "@/lib/preferences";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { TrackFormModal } from "@/components/TrackFormModal";
 
 type Track = {
   id: string;
   titulo: string;
   tag?: string;
   versao?: string;
+  tom?: string;
 };
 
 const Search: React.FC = () => {
@@ -18,6 +26,9 @@ const Search: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
 
   useEffect(() => {
     loadTracks();
@@ -28,7 +39,7 @@ const Search: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from("tracks")
-        .select("id, titulo, tag, versao")
+        .select("id, titulo, tag, versao, tom")
         .order("titulo", { ascending: true });
 
       if (error) throw error;
@@ -103,11 +114,16 @@ const Search: React.FC = () => {
     }
   };
 
-  const formatTrackDetails = (track: Track) => {
-    const details: string[] = [];
-    if (track.versao?.trim()) details.push(track.versao.trim());
-    if (track.tag?.trim()) details.push(track.tag.trim());
-    return details.join(" • ") || "Detalhes não informados";
+
+  const handleTrackSaved = async () => {
+    setIsModalOpen(false);
+    setEditingTrackId(null);
+    await loadTracks();
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTrackId(null);
   };
 
   return (
@@ -167,54 +183,122 @@ const Search: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {filteredTracks.map((track) => (
-                  <div
-                    key={track.id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleTrackClick(track.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleTrackClick(track.id);
-                      }
-                    }}
-                    className="group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-4 sm:p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f] cursor-pointer"
-                  >
-                    <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
-                    {/* Icon */}
-                    <div className="relative z-10 flex-shrink-0 h-12 w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
-                      <Music className="w-6 h-6" />
-                    </div>
+                {filteredTracks.map((track) => {
+                  const isMenuEvent = (evt: React.SyntheticEvent) => {
+                    const target = evt.target as HTMLElement | null;
+                    return Boolean(target?.closest('[data-track-menu="true"]'));
+                  };
 
-                    {/* Content */}
-                    <div className="relative z-10 flex-1 min-w-0 text-left">
-                      <h3 className="text-lg font-semibold text-white mb-1 truncate">
-                        {track.titulo}
-                      </h3>
-                      <p className="text-sm text-white/60 truncate">
-                        {formatTrackDetails(track)}
-                      </p>
-                    </div>
+                  const handleCardClick = (evt: React.MouseEvent) => {
+                    if (isMenuEvent(evt) || openMenuId === track.id) {
+                      setOpenMenuId(null);
+                      return;
+                    }
+                    handleTrackClick(track.id);
+                  };
 
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCurrentEvent(track);
-                      }}
-                      className="relative z-10 p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/80 hover:text-white transition"
-                      aria-label={`Adicionar ${track.titulo} à playlist atual`}
+                  const handleCardKeyDown = (evt: React.KeyboardEvent) => {
+                    if (isMenuEvent(evt) || openMenuId === track.id) {
+                      setOpenMenuId(null);
+                      return;
+                    }
+                    if (evt.key === "Enter" || evt.key === " ") {
+                      evt.preventDefault();
+                      handleTrackClick(track.id);
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={track.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={handleCardClick}
+                      onKeyDown={handleCardKeyDown}
+                      className="group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-4 sm:p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f] cursor-pointer"
                     >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
+                      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
+                      {/* Icon */}
+                      <div className="relative z-10 flex-shrink-0 h-12 w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
+                        <Music className="w-6 h-6" />
+                      </div>
+
+                      {/* Content */}
+                      <div className="relative z-10 flex-1 min-w-0 text-left">
+                        <h3 className="text-lg font-medium text-white mb-2 truncate">
+                          {track.titulo}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {track.tom && (
+                            <span className="px-2 py-0.5 bg-[#1DB954]/20 text-[#1DB954] rounded-full text-xs font-semibold">
+                              {track.tom}
+                            </span>
+                          )}
+                          {track.versao && (
+                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white/5 text-white/30 border border-white/5">
+                              {track.versao}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="relative z-10" data-track-menu="true">
+                        <DropdownMenu
+                          open={openMenuId === track.id}
+                          onOpenChange={(open) => setOpenMenuId(open ? track.id : null)}
+                        >
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition"
+                              aria-label={`Mais opções para ${track.titulo}`}
+                            >
+                              <MoreVertical className="w-5 h-5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="bg-[#1c1c1c] border border-white/10 text-white text-sm"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <DropdownMenuItem
+                              onSelect={(e) => {
+                                e.preventDefault();
+                                setOpenMenuId(null);
+                                handleAddToCurrentEvent(track);
+                              }}
+                            >
+                              Adicionar à playlist
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={(e) => {
+                                e.preventDefault();
+                                setOpenMenuId(null);
+                                setEditingTrackId(track.id);
+                                setIsModalOpen(true);
+                              }}
+                            >
+                              Editar música
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         )}
       </div>
+
+      <TrackFormModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSuccess={handleTrackSaved}
+        trackId={editingTrackId}
+      />
     </div>
   );
 };

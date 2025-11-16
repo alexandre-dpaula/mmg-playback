@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Loader2, File } from "lucide-react";
-import { supabase, uploadAudioToSupabase, addTrackToSupabase, processCifraClub } from "@/lib/supabase";
+import { supabase, uploadAudioToSupabase, addTrackToSupabase, processCifraClub, fetchCifraPreview } from "@/lib/supabase";
 import { getSelectedEventId } from "@/lib/preferences";
 import {
   Form,
@@ -24,7 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
+import { AVAILABLE_KEYS, convertMinorToRelativeMajor, formatNoteForDisplay } from "@/utils/chordTransposer";
+import { isCifraClubUrl } from "@/utils/cifraClubParser";
 
 const TAG_OPTIONS = ["Cifras", "Vocal", "Instrumental"];
 
@@ -69,15 +70,98 @@ const DEFAULT_VALUES: FormValues = {
 const AddTrackPage: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isFetchingCifraMetadata, setIsFetchingCifraMetadata] = useState(false);
+  const [lastAutoFilledUrl, setLastAutoFilledUrl] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULT_VALUES,
   });
 
+  const cifraUrlValue = form.watch("pauta");
+
   const scriptUrl = import.meta.env.VITE_GOOGLE_APPS_SCRIPT_URL as
     | string
     | undefined;
+
+  useEffect(() => {
+    if (!cifraUrlValue?.trim()) {
+      setLastAutoFilledUrl(null);
+    }
+  }, [cifraUrlValue]);
+
+  useEffect(() => {
+    const trimmedUrl = cifraUrlValue?.trim();
+
+    if (!trimmedUrl || !isCifraClubUrl(trimmedUrl) || trimmedUrl === lastAutoFilledUrl) {
+      return;
+    }
+
+    let isActive = true;
+    const handler = setTimeout(() => {
+      setIsFetchingCifraMetadata(true);
+      fetchCifraPreview(trimmedUrl)
+        .then((metadata) => {
+          if (!isActive || !metadata) return;
+
+          let updated = false;
+          const currentTitle = form.getValues("title")?.trim();
+          const currentVersion = form.getValues("versao")?.trim();
+          const currentKey = form.getValues("tom")?.trim();
+
+          if (metadata.title && !currentTitle) {
+            form.setValue("title", metadata.title, { shouldDirty: true });
+            updated = true;
+          }
+          if (metadata.version && !currentVersion) {
+            form.setValue("versao", metadata.version, { shouldDirty: true });
+            updated = true;
+          }
+          if (metadata.key && !currentKey) {
+            const normalizedKey = normalizeKeyForForm(metadata.key);
+            if (normalizedKey) {
+              form.setValue("tom", normalizedKey, { shouldDirty: true });
+              updated = true;
+            }
+          }
+
+          if (updated) {
+            toast.success("Informações preenchidas automaticamente a partir da URL.");
+          }
+
+          setLastAutoFilledUrl(trimmedUrl);
+        })
+        .catch((error) => {
+          if (!isActive) return;
+          console.error("Erro ao buscar infos da cifra:", error);
+          toast.error("Não foi possível obter os dados da cifra automaticamente.");
+        })
+        .finally(() => {
+          if (isActive) {
+            setIsFetchingCifraMetadata(false);
+          }
+        });
+    }, 700);
+
+    return () => {
+      isActive = false;
+      clearTimeout(handler);
+      setIsFetchingCifraMetadata(false);
+    };
+  }, [cifraUrlValue, form, lastAutoFilledUrl]);
+
+  const trimmedCifraUrl = cifraUrlValue?.trim() || "";
+  const hasAutoFilledForCurrentUrl =
+    Boolean(trimmedCifraUrl) && trimmedCifraUrl === lastAutoFilledUrl;
+
+  const normalizeKeyForForm = (key?: string | null) => {
+    if (!key) return "";
+    const converted = convertMinorToRelativeMajor(key);
+    const sanitized = converted.replace(/♯/g, "#").replace(/♭/g, "b");
+    const formatted = formatNoteForDisplay(sanitized);
+    const finalKey = formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    return AVAILABLE_KEYS.includes(finalKey) ? finalKey : "";
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -163,9 +247,7 @@ const AddTrackPage: React.FC = () => {
     // 1. Upload do áudio se necessário
     if (audioFile && !audioUrl) {
       try {
-        toast.info("Fazendo upload do áudio...");
         audioUrl = await handleAudioUpload(audioFile);
-        toast.success("Áudio enviado com sucesso!");
       } catch (error) {
         const message = error instanceof Error ? error.message : "Erro ao fazer upload do áudio";
         toast.error(message);
@@ -183,14 +265,14 @@ const AddTrackPage: React.FC = () => {
       audio_url: audioUrl,
     };
 
+    const submissionToast = toast.loading("Adicionando faixa...");
+
     try {
       // 2. Salvar no Supabase (principal)
-      toast.info("Salvando faixa no banco de dados...");
       const trackId = await addTrackToSupabase(trackData);
 
       // 3. Processar cifra do CifraClub se necessário
       if (trackData.cifra_url && trackData.cifra_url.includes('cifraclub.com')) {
-        toast.info("Processando cifra do CifraClub...");
         await processCifraClub(trackId, trackData.cifra_url);
       }
 
@@ -217,7 +299,7 @@ const AddTrackPage: React.FC = () => {
       }
 
       await maybeAddTrackToCurrentEvent(trackId, trackData.titulo);
-      toast.success("Faixa adicionada com sucesso!");
+      toast.success("Faixa adicionada com sucesso!", { id: submissionToast });
 
       // Limpar completamente todos os campos
       form.reset(DEFAULT_VALUES);
@@ -226,7 +308,7 @@ const AddTrackPage: React.FC = () => {
       console.error("Erro ao enviar faixa:", error);
       const message =
         error instanceof Error ? error.message : "Erro ao enviar faixa.";
-      toast.error(message);
+      toast.error(message, { id: submissionToast });
     }
   };
 
@@ -260,6 +342,38 @@ const AddTrackPage: React.FC = () => {
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4 rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-6 shadow-2xl shadow-black/40 ring-1 ring-white/10"
           >
+            {/* Cifra / Pauta - PRIMEIRO campo */}
+            <FormField
+              control={form.control}
+              name="pauta"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-white">Cifra (URL)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Cole a URL do CifraClub ou Google Docs"
+                      className="!text-black placeholder:text-gray-400"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-white/60 mt-1">
+                    💡 URLs do CifraClub serão analisadas automaticamente (título, versão e tom).
+                  </p>
+                  {isFetchingCifraMetadata && (
+                    <p className="text-xs text-[#1DB954] mt-1 animate-pulse">
+                      Buscando informações no CifraClub...
+                    </p>
+                  )}
+                  {!isFetchingCifraMetadata && hasAutoFilledForCurrentUrl && (
+                    <p className="text-xs text-[#1DB954] mt-1">
+                      Informações preenchidas automaticamente.
+                    </p>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Título da música - 1 coluna */}
             <FormField
               control={form.control}
@@ -392,27 +506,6 @@ const AddTrackPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Cifra / Pauta - 1 coluna */}
-            <FormField
-              control={form.control}
-              name="pauta"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Cifra</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="URL do Google Doc ou CifraClub"
-                      className="!text-black placeholder:text-gray-400"
-                      {...field}
-                    />
-                  </FormControl>
-                  <p className="text-xs text-white/60 mt-1">
-                    💡 URLs do CifraClub serão processadas automaticamente (cifra, foto, tom e versão)
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <Button
               type="submit"
               disabled={isSubmitting || isUploading}

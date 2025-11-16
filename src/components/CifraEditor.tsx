@@ -5,10 +5,11 @@ import { updateCifraContent } from "@/lib/supabase";
 import { toast } from "sonner";
 
 type CifraEditorProps = {
-  cifraUrl: string;
+  cifraUrl?: string;
   initialContent: string;
   onClose: () => void;
-  onSave: (newContent: string) => void;
+  onSave?: (newContent: string) => void;
+  onSaveContent?: (newContent: string) => Promise<void> | void;
 };
 
 export const CifraEditor: React.FC<CifraEditorProps> = ({
@@ -16,6 +17,7 @@ export const CifraEditor: React.FC<CifraEditorProps> = ({
   initialContent,
   onClose,
   onSave,
+  onSaveContent,
 }) => {
   const [content, setContent] = useState(initialContent);
   const [isSaving, setIsSaving] = useState(false);
@@ -29,9 +31,15 @@ export const CifraEditor: React.FC<CifraEditorProps> = ({
     setIsSaving(true);
 
     try {
-      await updateCifraContent(cifraUrl, content);
+      if (onSaveContent) {
+        await onSaveContent(content);
+      } else if (cifraUrl) {
+        await updateCifraContent(cifraUrl, content);
+      } else {
+        throw new Error("Cifra sem referência para salvar");
+      }
       toast.success("Cifra atualizada com sucesso!");
-      onSave(content); // Atualiza o conteúdo no componente pai
+      onSave?.(content); // Atualiza o conteúdo no componente pai
       onClose();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao salvar cifra";

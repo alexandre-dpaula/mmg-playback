@@ -33,8 +33,8 @@ const Settings: React.FC = () => {
     },
     {
       id: "privacy",
-      title: "Privacidade",
-      description: "Controle seus dados",
+      title: "Termos e Privacidade",
+      description: "Regras de uso e proteção",
       icon: <Shield className="w-6 h-6 text-[#1DB954]" />,
       route: "/settings/privacy",
       iconBg: "bg-[#1DB954]/10",

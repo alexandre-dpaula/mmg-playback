@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase, getPadUrl } from "@/lib/supabase";
 import { CifraDisplay } from "@/components/CifraDisplay";
+import { CifraEditor } from "@/components/CifraEditor";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -10,29 +12,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
+import { AVAILABLE_KEYS, convertMinorToRelativeMajor, transposeContent } from "@/utils/chordTransposer";
 
 const PAD_FILE_MAP: Record<string, string> = {
   C: getPadUrl("C Guitar Pads.m4a"),
-  "C#": getPadUrl("Db Guitar Pads.m4a"),
+  Db: getPadUrl("Db Guitar Pads.m4a"),
   D: getPadUrl("D Guitar Pads.m4a"),
-  "D#": getPadUrl("Eb Guitar Pads.m4a"),
+  Eb: getPadUrl("Eb Guitar Pads.m4a"),
   E: getPadUrl("E Guitar Pads.m4a"),
   F: getPadUrl("F Guitar Pads.m4a"),
-  "F#": getPadUrl("Gb Guitar Pads.m4a"),
+  Gb: getPadUrl("Gb Guitar Pads.m4a"),
   G: getPadUrl("G Guitar Pads.m4a"),
-  "G#": getPadUrl("Ab Guitar Pads.m4a"),
+  Ab: getPadUrl("Ab Guitar Pads.m4a"),
   A: getPadUrl("A Guitar Pads.m4a"),
-  "A#": getPadUrl("Bb Guitar Pads.m4a"),
+  Bb: getPadUrl("Bb Guitar Pads.m4a"),
   B: getPadUrl("B Guitar Pads.m4a"),
-};
-
-const FLAT_TO_SHARP_MAP: Record<string, string> = {
-  Db: "C#",
-  Eb: "D#",
-  Gb: "F#",
-  Ab: "G#",
-  Bb: "A#",
 };
 
 const extractKeyToken = (value?: string) => {
@@ -45,16 +39,25 @@ const extractKeyToken = (value?: string) => {
 };
 
 const normalizeKeyForSelect = (value?: string) => {
-  const token = extractKeyToken(value);
+  if (!value) return "";
+  const sanitized = value.replace(/♯/g, "#").replace(/♭/g, "b");
+  const token = extractKeyToken(sanitized);
   if (!token) return "";
-  const normalized = FLAT_TO_SHARP_MAP[token] || token.toUpperCase();
-  return AVAILABLE_KEYS.includes(normalized) ? normalized : "";
+  const upperToken = token.toUpperCase();
+  return AVAILABLE_KEYS.includes(upperToken) ? upperToken : "";
 };
 
 const getPadSourceForKey = (value?: string) => {
   const key = normalizeKeyForSelect(value);
   if (!key) return null;
   return PAD_FILE_MAP[key] ?? null;
+};
+
+const guessKeyFromContent = (content?: string): string | null => {
+  if (!content) return null;
+  const match = content.match(/\b([A-G][#b]?m?)\b/);
+  if (!match) return null;
+  return normalizeKeyForSelect(match[1]);
 };
 
 type TrackRecord = {
@@ -83,6 +86,7 @@ const TrackDetails: React.FC = () => {
   const [isPadPlaying, setIsPadPlaying] = useState(false);
   const [isEditingCifra, setIsEditingCifra] = useState(false);
   const padAudioRef = useRef<HTMLAudioElement | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,7 +118,26 @@ const TrackDetails: React.FC = () => {
           throw trackError || new Error("Faixa não encontrada");
         }
 
-        const normalizedKey = normalizeKeyForSelect(trackData.tom) || "C";
+        let resolvedKey = trackData.tom || "";
+        let shouldPersistGuess = false;
+
+        if (!resolvedKey && trackData.cifra_content) {
+          const guess = guessKeyFromContent(trackData.cifra_content);
+          if (guess) {
+            resolvedKey = guess;
+            shouldPersistGuess = true;
+          }
+        }
+
+        const normalizedKey = normalizeKeyForSelect(resolvedKey) || "C";
+
+        if (shouldPersistGuess && trackId) {
+          await supabase
+            .from("tracks")
+            .update({ tom: normalizedKey })
+            .eq("id", trackId);
+        }
+
         setTrack({ ...trackData, tom: normalizedKey });
         setSelectedKey(normalizedKey);
         if (eventData) {
@@ -142,6 +165,41 @@ const TrackDetails: React.FC = () => {
     }
   }, [track?.tom]);
 
+  // Função para alterar o tom (salva no banco e atualiza UI)
+  const handleKeyChange = async (newKey: string) => {
+    if (!trackId || !track) return;
+
+    const previousKeyLabel = track.tom && track.tom.trim() ? track.tom : selectedKey;
+    const previousKey = normalizeKeyForSelect(previousKeyLabel) || selectedKey;
+
+    setSelectedKey(newKey);
+
+    const transposedContent =
+      track.cifra_content && previousKey
+        ? transposeContent(track.cifra_content, previousKey, newKey)
+        : track.cifra_content || "";
+
+    try {
+      const { error } = await supabase
+        .from("tracks")
+        .update({ tom: newKey, cifra_content: transposedContent })
+        .eq("id", trackId);
+
+      if (error) {
+        console.error("Erro ao salvar tom:", error);
+      } else {
+        setTrack((prev) =>
+          prev ? { ...prev, tom: newKey, cifra_content: transposedContent } : prev,
+        );
+        if (eventId) {
+          queryClient.invalidateQueries({ queryKey: ["playlist", eventId] });
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao salvar tom:", error);
+    }
+  };
+
   const formattedDate = React.useMemo(() => {
     if (!eventInfo?.date) return null;
     const date = new Date(eventInfo.date + "T00:00:00");
@@ -163,10 +221,11 @@ const TrackDetails: React.FC = () => {
     return items.join(" • ");
   }, [track?.tag, formattedDate]);
 
-  const currentPadKey = React.useMemo(
-    () => normalizeKeyForSelect(selectedKey) || AVAILABLE_KEYS[0],
-    [selectedKey]
-  );
+  const currentPadKey = React.useMemo(() => {
+    // Aplica regra dos relativos para o PAD: Em -> G, Bm -> D, etc.
+    const relativeMajor = convertMinorToRelativeMajor(selectedKey);
+    return normalizeKeyForSelect(relativeMajor) || AVAILABLE_KEYS[0];
+  }, [selectedKey]);
 
   const ensurePadAudio = React.useCallback(() => {
     if (typeof window === "undefined") return null;
@@ -237,6 +296,24 @@ const TrackDetails: React.FC = () => {
     setIsPadPlaying((prev) => !prev);
   };
 
+  const handleSaveCifra = async (newContent: string) => {
+    if (!trackId) {
+      throw new Error("Faixa inválida");
+    }
+
+    const { error } = await supabase
+      .from('tracks')
+      .update({ cifra_content: newContent })
+      .eq('id', trackId);
+
+    if (error) {
+      console.error('Erro ao salvar cifra:', error);
+      throw new Error('Não foi possível salvar a cifra.');
+    }
+
+    setTrack(prev => (prev ? { ...prev, cifra_content: newContent } : prev));
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
@@ -263,15 +340,17 @@ const TrackDetails: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pb-24">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-semibold"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Voltar para playlist
-        </button>
+    <>
+
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pb-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-semibold"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar para playlist
+          </button>
 
         <div className="bg-white/5 rounded-2xl border border-white/10 p-5 sm:p-6 shadow-lg shadow-black/30">
           <div className="flex items-start justify-between mb-4">
@@ -306,7 +385,7 @@ const TrackDetails: React.FC = () => {
                 <span className="text-[#1DB954] text-xs sm:text-sm font-semibold uppercase tracking-wide">
                   Tom
                 </span>
-                <Select value={selectedKey} onValueChange={setSelectedKey}>
+                <Select value={selectedKey} onValueChange={handleKeyChange}>
                   <SelectTrigger className="w-20 sm:w-24 h-9 sm:h-10 bg-white/10 border-white/15 text-white text-xs sm:text-sm font-semibold">
                     <SelectValue placeholder={track.tom || "C"} />
                   </SelectTrigger>
@@ -341,13 +420,21 @@ const TrackDetails: React.FC = () => {
             <CifraDisplay
               cifra={track.cifra_url || undefined}
               cifraContent={track.cifra_content || undefined}
-              originalKey={track.tom || undefined}
+              originalKey={selectedKey}
               selectedKey={selectedKey}
             />
           </div>
         </div>
       </div>
     </div>
+      {isEditingCifra && (
+        <CifraEditor
+          initialContent={track.cifra_content || ""}
+          onClose={() => setIsEditingCifra(false)}
+          onSaveContent={handleSaveCifra}
+        />
+      )}
+    </>
   );
 };
 

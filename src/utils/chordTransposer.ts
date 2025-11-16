@@ -3,14 +3,6 @@ const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
 // Mapa de conversão entre sustenidos e bemóis
-const SHARP_TO_FLAT: Record<string, string> = {
-  'C#': 'Db',
-  'D#': 'Eb',
-  'F#': 'Gb',
-  'G#': 'Ab',
-  'A#': 'Bb'
-};
-
 const FLAT_TO_SHARP: Record<string, string> = {
   'Db': 'C#',
   'Eb': 'D#',
@@ -26,8 +18,8 @@ const normalizeNote = (note: string): string => {
   return FLAT_TO_SHARP[note] || note;
 };
 
-const formatNoteForDisplay = (note: string): string => {
-  return SHARP_TO_FLAT[note] || note;
+export const formatNoteForDisplay = (note: string): string => {
+  return FLAT_TO_SHARP[note] || note;
 };
 
 /**
@@ -131,6 +123,44 @@ export const transposeContent = (content: string, fromKey: string, toKey: string
 };
 
 /**
+ * Mapa de conversão de tons menores para seus relativos maiores
+ */
+const MINOR_TO_RELATIVE_MAJOR: Record<string, string> = {
+  'Am': 'C',
+  'A#m': 'C#',
+  'Bbm': 'C#',
+  'Bm': 'D',
+  'Cm': 'D#',
+  'C#m': 'E',
+  'Dbm': 'E',
+  'Dm': 'F',
+  'D#m': 'F#',
+  'Ebm': 'F#',
+  'Em': 'G',
+  'Fm': 'G#',
+  'F#m': 'A',
+  'Gbm': 'A',
+  'Gm': 'A#',
+  'G#m': 'B',
+  'Abm': 'B'
+};
+
+/**
+ * Converte um tom menor para seu relativo maior
+ * Ex: Em -> G, Bm -> D
+ */
+export const convertMinorToRelativeMajor = (key: string): string => {
+  const normalized = key.trim();
+  if (!normalized.toLowerCase().includes('m')) return normalized;
+
+  const match = normalized.match(/^([A-G][#b]?)m/i);
+  if (!match) return normalized;
+
+  const minorKey = match[1].charAt(0).toUpperCase() + (match[1].charAt(1) || '') + 'm';
+  return MINOR_TO_RELATIVE_MAJOR[minorKey] || normalized;
+};
+
+/**
  * Lista de todos os tons disponíveis
  */
-export const AVAILABLE_KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const AVAILABLE_KEYS = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];

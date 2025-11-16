@@ -193,7 +193,7 @@ const Index = () => {
           transition: pullDistance === 0 ? 'transform 0.3s ease-out' : 'none'
         }}
       >
-        <header className="text-center space-y-4">
+        <header className="text-center space-y-1">
           <div
             className="flex flex-wrap items-baseline justify-center gap-3 text-[14px] font-medium tracking-wide"
             style={{ color: CLOCK_TEXT_COLOR }}
@@ -210,7 +210,7 @@ const Index = () => {
               </span>
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium mb-10">
             {title}
           </h1>
         </header>

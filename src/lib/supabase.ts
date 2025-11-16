@@ -169,6 +169,50 @@ export async function processCifraClub(trackId: string, cifraUrl: string): Promi
   }
 }
 
+interface CifraPreviewResponse {
+  title: string | null;
+  version: string | null;
+  key: string | null;
+}
+
+/**
+ * Busca título, versão e tom de uma URL do CifraClub sem salvar no banco
+ */
+export async function fetchCifraPreview(cifraUrl: string): Promise<CifraPreviewResponse | null> {
+  if (!cifraUrl || !cifraUrl.includes('cifraclub.com')) {
+    return null;
+  }
+
+  const functionUrl = `${supabaseUrl}/functions/v1/process-cifraclub`;
+
+  const response = await fetch(functionUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+    },
+    body: JSON.stringify({
+      // Mantém compatibilidade com versões antigas da function exigindo UUID
+      trackId: '00000000-0000-0000-0000-000000000000',
+      cifraUrl,
+      previewOnly: true,
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data?.success) {
+    const message = data?.error || 'Erro ao buscar prévia da cifra';
+    throw new Error(message);
+  }
+
+  return {
+    title: data.title ?? null,
+    version: data.version ?? null,
+    key: data.key ?? null,
+  };
+}
+
 /**
  * Busca conteúdo de cifras extraídas do CifraClub
  * @returns Map de cifra_url para { content, artistPhoto }

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useGoogleDoc, isGoogleDocsUrl } from "@/hooks/useGoogleDoc";
 import { Loader2 } from "lucide-react";
 import { transposeContent } from "@/utils/chordTransposer";
+import { isChordLine, parseCifraStructure } from "@/utils/cifraClubParser";
 import { CifraEditor } from "./CifraEditor";
 
 type CifraDisplayProps = {
@@ -9,22 +10,25 @@ type CifraDisplayProps = {
   cifraContent?: string; // Conteúdo extraído do CifraClub
   originalKey?: string;
   selectedKey?: string;
-  onEditClick?: () => void;
+  isEditing?: boolean;
+  onEditClose?: () => void;
 };
 
-// Regex para detectar acordes musicais
-const CHORD_REGEX = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9]?(?:\/[A-G][#b]?)?)\b/g;
-
-const renderCifraContent = (content: string, highlightTitle = false) => {
+const renderCifraContent = (content: string) => {
   const lines = content.split('\n');
   const elements: React.ReactNode[] = [];
 
-  let titleRendered = !highlightTitle;
-  let blankAfterTitleCount = 0;
-  let ensuredTitleSpacing = !highlightTitle;
-
-  const renderLine = (key: string | number, color: string, fontWeight: number | undefined, value: string) => (
-    <div key={key} style={{ color, fontWeight, whiteSpace: 'pre' }}>
+  const renderLine = (key: string | number, color: string, fontWeight: number | undefined, value: string, isSectionLabel = false) => (
+    <div
+      key={key}
+      style={{
+        color,
+        fontWeight,
+        whiteSpace: 'pre',
+        marginTop: isSectionLabel ? '1rem' : undefined,
+        marginBottom: isSectionLabel ? '0.5rem' : undefined,
+      }}
+    >
       {value || '\u00A0'}
     </div>
   );
@@ -33,46 +37,53 @@ const renderCifraContent = (content: string, highlightTitle = false) => {
     const line = lines[lineIndex];
     const trimmed = line.trim();
 
-    if (!titleRendered && trimmed.length > 0) {
-      elements.push(renderLine(`title-${lineIndex}`, 'white', 700, line));
-      titleRendered = true;
-      blankAfterTitleCount = 0;
-      ensuredTitleSpacing = false;
-      continue;
-    }
+    // Detecta padrão [Seção] Acordes na mesma linha
+    // Ex: [Intro] A D/F# E D2
+    const sectionWithChordsMatch = trimmed.match(/^(\[.+?\])\s+(.+)$/);
+    if (sectionWithChordsMatch) {
+      const sectionPart = sectionWithChordsMatch[1];
+      const chordsPart = sectionWithChordsMatch[2];
 
-    if (titleRendered && !ensuredTitleSpacing) {
-      if (trimmed.length === 0) {
-        blankAfterTitleCount++;
-        // Não adiciona linhas em branco, apenas conta
-        if (blankAfterTitleCount >= 0) {
-          ensuredTitleSpacing = true;
-        }
+      // Verifica se a parte após a seção contém acordes
+      if (isChordLine(chordsPart)) {
+        elements.push(
+          <div key={lineIndex} style={{ whiteSpace: 'pre', marginTop: '1rem', marginBottom: '0.5rem' }}>
+            <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontWeight: 600 }}>{sectionPart}</span>
+            <span style={{ color: '#ff7700', fontWeight: 600 }}> {chordsPart}</span>
+          </div>
+        );
         continue;
-      } else {
-        // Não adiciona linhas em branco forçadas
-        ensuredTitleSpacing = true;
       }
     }
 
-    // Se a linha contém apenas acordes (sem letras longas)
-    const hasOnlyChords = trimmed.length > 0 &&
-                          trimmed.length < 50 &&
-                          /^[A-G#b\s/m0-9]+$/.test(trimmed);
-
-    if (hasOnlyChords) {
-      elements.push(renderLine(lineIndex, '#ff7700', undefined, line));
+    // Detecta divisões/seções: [Intro], [Primeira Parte], etc.
+    const isSectionLabel = /^\[.+\]$/.test(trimmed);
+    if (isSectionLabel) {
+      elements.push(renderLine(lineIndex, 'rgba(255, 255, 255, 0.3)', 600, line, true));
       continue;
     }
 
+    // Identifica cifras musicais universais (linha laranja)
+    if (isChordLine(line)) {
+      elements.push(renderLine(lineIndex, '#ff7700', 600, line));
+      continue;
+    }
+
+    // Linha normal (letra da música)
     elements.push(renderLine(lineIndex, 'white', undefined, line));
   }
 
   return elements;
 };
 
-export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, cifraContent, originalKey, selectedKey }) => {
-  const [isEditing, setIsEditing] = useState(false);
+export const CifraDisplay: React.FC<CifraDisplayProps> = ({
+  cifra,
+  cifraContent,
+  originalKey,
+  selectedKey,
+  isEditing = false,
+  onEditClose
+}) => {
   const [editedContent, setEditedContent] = useState<string | undefined>();
 
   const isDocUrl = isGoogleDocsUrl(cifra);
@@ -123,17 +134,17 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({ cifra, cifraContent,
       return (
         <>
           <div className="text-sm sm:text-base md:text-lg font-mono overflow-x-auto max-h-[500px] sm:max-h-[600px] md:max-h-[700px] overflow-y-auto leading-relaxed">
-            {renderCifraContent(transposedContent || contentToUse || '', true)}
+            {renderCifraContent(transposedContent || contentToUse || '')}
           </div>
 
-          {isEditing && cifra && cifraContent && (
+          {isEditing && cifra && cifraContent && onEditClose && (
             <CifraEditor
               cifraUrl={cifra}
               initialContent={editedContent || cifraContent}
-              onClose={() => setIsEditing(false)}
+              onClose={onEditClose}
               onSave={(newContent) => {
                 setEditedContent(newContent);
-                setIsEditing(false);
+                onEditClose();
               }}
             />
           )}

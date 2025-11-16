@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/context/AuthContext";
 
 type NavbarProps = {
   filter: "all" | "vocal" | "instrumental";
@@ -15,6 +16,8 @@ type NavbarProps = {
 };
 
 export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
+  const { profile } = useAuth();
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#121212] border-b border-white/10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-4 md:px-6 py-3 sm:py-4">
@@ -94,12 +97,12 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
           {/* Perfil */}
           <div className="flex items-center flex-shrink-0">
             <img
-              src="/perfil.jpg"
-              alt="Perfil"
+              src={profile.avatarUrl}
+              alt={profile.name}
               className="h-11 w-11 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full object-cover ring-2 ring-white/10"
               onError={(e) => {
                 console.error('Erro ao carregar imagem de perfil:', e);
-                e.currentTarget.src = "https://ui-avatars.com/api/?name=MMG&background=1DB954&color=000&size=200";
+                e.currentTarget.src = "/perfil.jpg";
               }}
             />
           </div>

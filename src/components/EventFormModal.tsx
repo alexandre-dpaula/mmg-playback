@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { X, Calendar, Music, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,13 +16,15 @@ type Track = {
 type EventFormModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onEventCreated: (eventId: string) => void;
+  onSuccess: (eventId: string) => void;
+  eventId?: string | null;
 };
 
 export const EventFormModal: React.FC<EventFormModalProps> = ({
   isOpen,
   onClose,
-  onEventCreated,
+  onSuccess,
+  eventId,
 }) => {
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState("");
@@ -31,12 +33,24 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   const [isLoadingTracks, setIsLoadingTracks] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoadingEvent, setIsLoadingEvent] = useState(false);
+
+  const isEditing = Boolean(eventId);
+
+  const resetForm = useCallback(() => {
+    setEventName("");
+    setEventDate("");
+    setSelectedTracks([]);
+    setSearchQuery("");
+  }, []);
+
+  const isFormDisabled = isSaving || (isEditing && isLoadingEvent);
 
   React.useEffect(() => {
     if (isOpen && availableTracks.length === 0) {
       loadTracks();
     }
-  }, [isOpen]);
+  }, [isOpen, availableTracks.length]);
 
   const loadTracks = async () => {
     setIsLoadingTracks(true);
@@ -57,7 +71,76 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     }
   };
 
+  React.useEffect(() => {
+    if (!isOpen) {
+      resetForm();
+      setIsLoadingEvent(false);
+    }
+  }, [isOpen, resetForm]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    if (!eventId) {
+      resetForm();
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingEvent(true);
+
+    const fetchEventDetails = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select(
+            `
+              id,
+              name,
+              date,
+              event_tracks (
+                track_id,
+                order_index
+              )
+            `
+          )
+          .eq("id", eventId)
+          .single();
+
+        if (error) throw error;
+        if (!isMounted) return;
+
+        setEventName(data?.name ?? "");
+        setEventDate(data?.date ?? "");
+        const trackIds =
+          data?.event_tracks
+            ?.sort(
+              (a, b) =>
+                (a.order_index ?? 0) - (b.order_index ?? 0)
+            )
+            .map((item) => item.track_id)
+            .filter((id): id is string => Boolean(id)) ?? [];
+        setSelectedTracks(trackIds);
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Erro ao carregar evento:", error);
+        toast.error("Não foi possível carregar os dados do evento");
+        onClose();
+      } finally {
+        if (isMounted) {
+          setIsLoadingEvent(false);
+        }
+      }
+    };
+
+    fetchEventDetails();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, eventId, resetForm, onClose]);
+
   const handleTrackToggle = (trackId: string) => {
+    if (isFormDisabled) return;
     setSelectedTracks((prev) =>
       prev.includes(trackId)
         ? prev.filter((id) => id !== trackId)
@@ -65,18 +148,25 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     );
   };
 
+  const hasSearchQuery = searchQuery.trim().length >= 3;
+
+  const displayedTracks = useMemo(() => {
+    if (!isEditing) return availableTracks;
+    if (hasSearchQuery) return availableTracks;
+    return availableTracks.filter((track) => selectedTracks.includes(track.id));
+  }, [availableTracks, isEditing, selectedTracks, hasSearchQuery]);
+
   // Filtrar tracks com base na busca
   const filteredTracks = useMemo(() => {
-    if (!searchQuery.trim()) return availableTracks;
-
-    const query = searchQuery.toLowerCase();
-    return availableTracks.filter(
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return displayedTracks;
+    return displayedTracks.filter(
       (track) =>
         track.titulo.toLowerCase().includes(query) ||
         track.tag?.toLowerCase().includes(query) ||
         track.versao?.toLowerCase().includes(query)
     );
-  }, [availableTracks, searchQuery]);
+  }, [displayedTracks, searchQuery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,47 +187,90 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     }
 
     setIsSaving(true);
+    const savingToast = toast.loading(
+      isEditing ? "Atualizando evento..." : "Criando evento..."
+    );
 
     try {
-      // Criar evento no Supabase
-      const { data: eventData, error: eventError } = await supabase
-        .from("events")
-        .insert({
-          name: eventName.trim(),
-          date: eventDate,
-        })
-        .select()
-        .single();
+      let currentEventId = eventId ?? null;
 
-      if (eventError) throw eventError;
+      if (isEditing && currentEventId) {
+        const { error: eventError } = await supabase
+          .from("events")
+          .update({
+            name: eventName.trim(),
+            date: eventDate,
+          })
+          .eq("id", currentEventId);
 
-      // Associar músicas ao evento
-      const eventTracks = selectedTracks.map((trackId) => ({
-        event_id: eventData.id,
-        track_id: trackId,
-      }));
+        if (eventError) throw eventError;
 
-      const { error: tracksError } = await supabase
-        .from("event_tracks")
-        .insert(eventTracks);
+        const { error: deleteError } = await supabase
+          .from("event_tracks")
+          .delete()
+          .eq("event_id", currentEventId);
 
-      if (tracksError) throw tracksError;
+        if (deleteError) throw deleteError;
 
-      toast.success("Evento criado com sucesso!");
+        const eventTracks = selectedTracks.map((trackId, index) => ({
+          event_id: currentEventId!,
+          track_id: trackId,
+          order_index: index,
+        }));
 
-      // Retornar evento criado para lista
-      onEventCreated(eventData.id);
+        if (eventTracks.length > 0) {
+          const { error: tracksError } = await supabase
+            .from("event_tracks")
+            .insert(eventTracks);
 
-      // Limpar formulário
-      setEventName("");
-      setEventDate("");
-      setSelectedTracks([]);
-      setSearchQuery("");
+          if (tracksError) throw tracksError;
+        }
+      } else {
+        const { data: eventData, error: eventError } = await supabase
+          .from("events")
+          .insert({
+            name: eventName.trim(),
+            date: eventDate,
+          })
+          .select()
+          .single();
+
+        if (eventError) throw eventError;
+
+        currentEventId = eventData.id;
+
+        const eventTracks = selectedTracks.map((trackId, index) => ({
+          event_id: eventData.id,
+          track_id: trackId,
+          order_index: index,
+        }));
+
+        if (eventTracks.length > 0) {
+          const { error: tracksError } = await supabase
+            .from("event_tracks")
+            .insert(eventTracks);
+
+          if (tracksError) throw tracksError;
+        }
+      }
+
+      toast.success(
+        isEditing ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!",
+        { id: savingToast }
+      );
+
+      if (currentEventId) {
+        onSuccess(currentEventId);
+      }
+
+      if (!isEditing) {
+        resetForm();
+      }
     } catch (error) {
-      console.error("Erro ao criar evento:", error);
+      console.error("Erro ao salvar evento:", error);
       const message =
-        error instanceof Error ? error.message : "Erro ao criar evento";
-      toast.error(message);
+        error instanceof Error ? error.message : "Erro ao salvar evento";
+      toast.error(message, { id: savingToast });
     } finally {
       setIsSaving(false);
     }
@@ -150,7 +283,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
       <div className="w-full max-w-2xl max-h-[90vh] bg-[#121212] rounded-2xl flex flex-col shadow-2xl border border-white/10 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10">
-          <h2 className="text-2xl font-bold text-white">Novo Evento</h2>
+          <h2 className="text-2xl font-bold text-white">
+            {isEditing ? "Editar Evento" : "Novo Evento"}
+          </h2>
           <button
             onClick={onClose}
             disabled={isSaving}
@@ -163,6 +298,12 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         {/* Content */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-5 space-y-5">
+            {isEditing && isLoadingEvent && (
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <Loader2 className="h-4 w-4 animate-spin text-[#1DB954]" />
+                Carregando dados do evento...
+              </div>
+            )}
             {/* Nome do Evento */}
             <div className="space-y-2">
               <Label htmlFor="eventName" className="text-white flex items-center gap-2">
@@ -175,7 +316,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 onChange={(e) => setEventName(e.target.value)}
                 placeholder="Culto de Domingo"
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                disabled={isSaving}
+                disabled={isFormDisabled}
               />
             </div>
 
@@ -190,7 +331,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
                 className="bg-white/10 border-white/20 text-white"
-                disabled={isSaving}
+                disabled={isFormDisabled}
               />
             </div>
 
@@ -210,6 +351,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 h-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954]"
+                  disabled={isFormDisabled}
                 />
               </div>
 
@@ -221,9 +363,18 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                   </div>
                 ) : filteredTracks.length === 0 ? (
                   <div className="text-center py-8 text-white/60 text-sm">
-                    {searchQuery
-                      ? "Nenhuma música encontrada para sua busca"
-                      : "Nenhuma música cadastrada"}
+                    {(() => {
+                      const trimmed = searchQuery.trim();
+                      if (trimmed.length > 0 && trimmed.length < 3) {
+                        return "Digite pelo menos 3 letras para buscar em todas as músicas.";
+                      }
+                      if (trimmed.length >= 3) {
+                        return "Nenhuma música encontrada para sua busca.";
+                      }
+                      return isEditing
+                        ? "Nenhuma música selecionada para este evento."
+                        : "Nenhuma música cadastrada.";
+                    })()}
                   </div>
                 ) : (
                   <div className="p-2 space-y-2">
@@ -232,7 +383,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                         key={track.id}
                         type="button"
                         onClick={() => handleTrackToggle(track.id)}
-                        className={`w-full rounded-xl p-4 flex items-start gap-4 transition-all border text-left ${
+                        disabled={isFormDisabled}
+                        className={`w-full rounded-xl p-4 flex items-start gap-4 transition-all border text-left disabled:opacity-50 disabled:cursor-not-allowed ${
                           selectedTracks.includes(track.id)
                             ? "bg-[#1DB954]/20 border-[#1DB954] hover:bg-[#1DB954]/30"
                             : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
@@ -282,7 +434,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={isSaving}
+              disabled={isFormDisabled}
               className="bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold px-8"
             >
               {isSaving ? (
@@ -291,7 +443,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                   Salvando...
                 </>
               ) : (
-                "Salvar Evento"
+                (isEditing ? "Atualizar Evento" : "Salvar Evento")
               )}
             </Button>
           </div>

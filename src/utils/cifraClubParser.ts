@@ -2,6 +2,8 @@
  * Utilitários para extrair e processar cifras do CifraClub
  */
 
+import type { CifraMetadata, ParsedCifra, CifraSection } from '@/types/cifra';
+
 /**
  * Verifica se uma URL é do CifraClub
  */
@@ -106,30 +108,215 @@ export async function fetchCifraClubContent(url: string): Promise<string> {
 }
 
 /**
- * Extrai metadados da cifra (título, artista, tom)
+ * Extrai metadados da cifra (título, artista, tom, versão)
  */
-export function extractCifraMetadata(html: string): {
-  title?: string;
-  artist?: string;
-  originalKey?: string;
-} {
+export function extractCifraMetadata(html: string): CifraMetadata {
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
     const title = doc.querySelector('h1')?.textContent?.trim();
-    const artist = doc.querySelector('.artist-name')?.textContent?.trim();
+    const artist = doc.querySelector('.artist-name, .artist_name, [itemprop="byArtist"]')?.textContent?.trim();
 
     // Tentar extrair o tom original da cifra
-    const originalKey = doc.querySelector('.original-key')?.textContent?.trim();
+    let originalKey = doc.querySelector('.cifra_tom, .original-key, [data-cipher-key]')?.textContent?.trim();
+
+    // Se não encontrou, tenta extrair do conteúdo da página
+    if (!originalKey) {
+      const tomMatch = doc.body.textContent?.match(/Tom:\s*([A-G][#b]?[m]?)/i);
+      if (tomMatch) {
+        originalKey = tomMatch[1];
+      }
+    }
+
+    // Extrair versão (se houver)
+    const versionElement = doc.querySelector('.version, .cifra_versao');
+    const version = versionElement?.textContent?.trim();
 
     return {
       title,
       artist,
       originalKey,
+      version,
     };
   } catch (error) {
     console.error('Erro ao extrair metadados:', error);
     return {};
   }
+}
+
+/**
+ * Verifica se uma linha é uma tablatura (TAB)
+ * Tablaturas geralmente contêm sequências de números e símbolos |-E-B-G-D-A-E
+ */
+function isTabLine(line: string): boolean {
+  const trimmed = line.trim();
+
+  // Verifica se contém indicadores típicos de tablatura
+  if (/^\s*[EADGBe][\|\-\d\s]+/.test(trimmed)) return true;
+  if (/^[\|\-\d\s]{10,}/.test(trimmed)) return true;
+  if (/Parte\s+\d+\s+de\s+\d+/.test(trimmed)) return true;
+
+  return false;
+}
+
+/**
+ * Verifica se uma linha contém apenas acordes musicais
+ * Cifras universais: C, D, E, F, G, A, B com modificadores (#, b, m, maj, etc.)
+ */
+export function isChordLine(line: string): boolean {
+  const trimmed = line.trim();
+
+  // Linha vazia não é acorde
+  if (!trimmed) return false;
+
+  // Muito longa para ser linha de acordes
+  if (trimmed.length > 80) return false;
+
+  // Verifica se contém principalmente acordes musicais
+  const chordPattern = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9]?(?:\/[A-G][#b]?)?)\b/g;
+  const chords = trimmed.match(chordPattern) || [];
+
+  // Remove os acordes encontrados
+  let withoutChords = trimmed;
+  chords.forEach(chord => {
+    withoutChords = withoutChords.replace(chord, '');
+  });
+
+  // Após remover acordes, deve sobrar principalmente espaços
+  const remaining = withoutChords.replace(/\s/g, '');
+
+  // Se tem acordes e pouco texto restante, é linha de acordes
+  return chords.length > 0 && remaining.length < 5;
+}
+
+/**
+ * Verifica se uma seção é de tablatura/dedilhado (deve ser removida)
+ */
+function isTabSection(line: string): boolean {
+  const trimmed = line.trim().toLowerCase();
+
+  if (/^\[.*dedilhado/.test(trimmed)) return true;
+  if (/^\[.*tablatura/.test(trimmed)) return true;
+  if (/^\[.*\btab\b/.test(trimmed)) return true;
+  if (/^\[.*riff/.test(trimmed)) return true;
+  if (/^\[.*solo\s+\(tab/.test(trimmed)) return true;
+  if (/^dedilhado\b/.test(trimmed)) return true;
+  if (/^tab\b/.test(trimmed)) return true;
+
+  return false;
+}
+
+/**
+ * Detecta seções da música (Intro, Verso, Refrão, etc.)
+ * Retorna null se for seção de tab que deve ser removida
+ */
+function detectSection(line: string): { isSection: boolean; type: CifraSection['type']; label: string } | null {
+  const trimmed = line.trim();
+
+  // Se é seção de tab/dedilhado, retorna null para ser removida
+  if (isTabSection(trimmed)) {
+    return null;
+  }
+
+  const sectionPatterns: Array<{ pattern: RegExp; type: CifraSection['type'] }> = [
+    { pattern: /^\[?\s*intro/i, type: 'intro' },
+    { pattern: /^\[?\s*(primeira parte|segunda parte|terceira parte|parte \d+|verso|verse)/i, type: 'verse' },
+    { pattern: /^\[?\s*(refr[aã]o|chorus|coro)/i, type: 'chorus' },
+    { pattern: /^\[?\s*(ponte|bridge)/i, type: 'bridge' },
+    { pattern: /^\[?\s*(final|outro)/i, type: 'outro' },
+    { pattern: /^\[?\s*solo/i, type: 'solo' },
+  ];
+
+  for (const { pattern, type } of sectionPatterns) {
+    if (pattern.test(trimmed)) {
+      return { isSection: true, type, label: line.trim() };
+    }
+  }
+
+  // Verifica padrão genérico [Texto] - aceita qualquer seção que não seja tab
+  if (/^\[.+\]$/.test(trimmed)) {
+    return { isSection: true, type: 'other', label: line.trim() };
+  }
+
+  return { isSection: false, type: 'other', label: '' };
+}
+
+/**
+ * Processa o conteúdo da cifra e organiza em seções
+ * Ignora tablaturas e dedilhados conforme solicitado
+ */
+export function parseCifraStructure(content: string): ParsedCifra {
+  const lines = content.split('\n');
+  const sections: CifraSection[] = [];
+  let currentSection: CifraSection | null = null;
+  let insideTab = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Ignora linhas vazias no início
+    if (!currentSection && !trimmed) continue;
+
+    // Detecta seção
+    const sectionInfo = detectSection(line);
+
+    // Se retornou null, é uma seção de tab/dedilhado - marca para ignorar
+    if (sectionInfo === null) {
+      insideTab = true;
+      continue;
+    }
+
+    // Se é uma seção válida
+    if (sectionInfo.isSection) {
+      // Salva seção anterior se existir
+      if (currentSection) {
+        sections.push(currentSection);
+      }
+
+      // Cria nova seção
+      currentSection = {
+        type: sectionInfo.type,
+        label: sectionInfo.label,
+        content: []
+      };
+      insideTab = false;
+      continue;
+    }
+
+    // Ignora linhas de tab
+    if (insideTab || isTabLine(line)) {
+      insideTab = true;
+      // Se encontrar linha que não é tab, sai do modo tab
+      if (!isTabLine(line) && trimmed && !trimmed.startsWith('Parte')) {
+        insideTab = false;
+      } else {
+        continue;
+      }
+    }
+
+    // Adiciona linha à seção atual
+    if (!insideTab) {
+      if (!currentSection) {
+        currentSection = {
+          type: 'other',
+          label: '',
+          content: []
+        };
+      }
+      currentSection.content.push(line);
+    }
+  }
+
+  // Adiciona última seção
+  if (currentSection && currentSection.content.length > 0) {
+    sections.push(currentSection);
+  }
+
+  return {
+    metadata: {},
+    sections,
+    rawContent: content
+  };
 }

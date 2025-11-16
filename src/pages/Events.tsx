@@ -28,6 +28,8 @@ export default function Events() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [activeEventId, setActiveEventId] = useState<string | null>(() => getSelectedEventId());
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -84,34 +86,10 @@ export default function Events() {
     navigate(`/playlist/${event.id}`);
   };
 
-  const handleEditEvent = async (eventId: string) => {
-    const event = events.find((evt) => evt.id === eventId);
-    if (!event) return;
-
-    const newName = window.prompt("Editar nome do evento:", event.name)?.trim();
-    if (!newName) return;
-
-    const newDate =
-      window.prompt("Editar data do evento (YYYY-MM-DD):", event.date)?.trim() ||
-      event.date;
-
-    try {
-      const { error } = await supabase
-        .from("events")
-        .update({
-          name: newName,
-          date: newDate,
-        })
-        .eq("id", eventId);
-
-      if (error) throw error;
-
-      toast.success("Evento atualizado");
-      fetchEvents();
-    } catch (error) {
-      console.error("Erro ao editar evento:", error);
-      toast.error("Não foi possível atualizar o evento");
-    }
+  const handleEditEvent = (eventId: string) => {
+    setOpenMenuId(null);
+    setEditingEventId(eventId);
+    setIsModalOpen(true);
   };
 
   const handleDeleteEvent = async (eventId: string) => {
@@ -124,6 +102,7 @@ export default function Events() {
     if (!confirmed) return;
 
     try {
+      setOpenMenuId(null);
       const { error } = await supabase.from("events").delete().eq("id", eventId);
       if (error) throw error;
 
@@ -139,7 +118,14 @@ export default function Events() {
     }
   };
 
+  const openCreateModal = () => {
+    setOpenMenuId(null);
+    setEditingEventId(null);
+    setIsModalOpen(true);
+  };
+
   const handleShareEvent = async (event: EventItem) => {
+    setOpenMenuId(null);
     try {
       const { data, error } = await supabase
         .from("event_tracks")
@@ -192,12 +178,20 @@ export default function Events() {
     }
   };
 
-  const handleEventCreated = async (eventId: string) => {
+  const handleEventSaved = async (eventId: string) => {
     setIsModalOpen(false);
+    setEditingEventId(null);
+    setOpenMenuId(null);
     await fetchEvents();
     setActiveEventId(eventId);
     setSelectedEventId(eventId);
     navigate(`/playlist/${eventId}`);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingEventId(null);
+    setOpenMenuId(null);
   };
 
   const formatDate = (dateStr: string) => {
@@ -265,22 +259,42 @@ export default function Events() {
       ? "text-sm font-medium text-black/80"
       : "text-sm text-white/60";
 
-  const renderEventCard = (event: EventItem, isActive: boolean) => (
-    <div
-      key={event.id}
-      role="button"
-      tabIndex={0}
-      onClick={() => handleEventSelection(event)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleEventSelection(event);
-        }
-      }}
-      className={`group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-4 sm:p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f] cursor-pointer ${
-        isActive ? "border-[#1DB954]/50 bg-[#1DB954]/5" : ""
-      }`}
-    >
+  const renderEventCard = (event: EventItem, isActive: boolean) => {
+    const isMenuEvent = (evt: React.SyntheticEvent) => {
+      const target = evt.target as HTMLElement | null;
+      return Boolean(target?.closest('[data-event-menu="true"]'));
+    };
+
+    const handleCardClick = (evt: React.MouseEvent) => {
+      if (isMenuEvent(evt) || openMenuId === event.id) {
+        setOpenMenuId(null);
+        return;
+      }
+      handleEventSelection(event);
+    };
+
+    const handleCardKeyDown = (evt: React.KeyboardEvent) => {
+      if (isMenuEvent(evt) || openMenuId === event.id) {
+        setOpenMenuId(null);
+        return;
+      }
+      if (evt.key === "Enter" || evt.key === " ") {
+        evt.preventDefault();
+        handleEventSelection(event);
+      }
+    };
+
+    return (
+      <div
+        key={event.id}
+        role="button"
+        tabIndex={0}
+        onClick={handleCardClick}
+        onKeyDown={handleCardKeyDown}
+        className={`group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-4 sm:p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f] cursor-pointer ${
+          isActive ? "border-[#1DB954]/50 bg-[#1DB954]/5" : ""
+        }`}
+      >
       <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
       <div className="relative z-10 flex-shrink-0 h-12 w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
         <Music className="w-6 h-6" />
@@ -289,8 +303,11 @@ export default function Events() {
         <h3 className="text-lg font-semibold text-white mb-1 truncate">{event.name}</h3>
         <p className="text-sm text-white/60 truncate">{formatEventDetails(event)}</p>
       </div>
-      <div className="relative z-10">
-        <DropdownMenu>
+      <div className="relative z-10" data-event-menu="true">
+        <DropdownMenu
+          open={openMenuId === event.id}
+          onOpenChange={(open) => setOpenMenuId(open ? event.id : null)}
+        >
           <DropdownMenuTrigger asChild>
             <button
               type="button"
@@ -304,10 +321,12 @@ export default function Events() {
           <DropdownMenuContent
             align="end"
             className="bg-[#1c1c1c] border border-white/10 text-white text-sm"
+            onClick={(e) => e.stopPropagation()}
           >
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
+                setOpenMenuId(null);
                 navigate(`/playlist/${event.id}`);
               }}
             >
@@ -342,6 +361,7 @@ export default function Events() {
       </div>
     </div>
   );
+  };
 
   return (
     <div
@@ -389,7 +409,7 @@ export default function Events() {
 
       <div className="px-6 mt-4">
         <Button
-          onClick={() => setIsModalOpen(true)}
+          onClick={openCreateModal}
           className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
         >
           <Plus className="mr-2 h-5 w-5" />
@@ -399,8 +419,9 @@ export default function Events() {
 
       <EventFormModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onEventCreated={handleEventCreated}
+        onClose={handleCloseModal}
+        onSuccess={handleEventSaved}
+        eventId={editingEventId}
       />
     </div>
   );

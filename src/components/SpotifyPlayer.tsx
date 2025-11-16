@@ -4,10 +4,28 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Pause, Play, SkipBack, SkipForward, Music } from "lucide-react";
+import { Pause, Play, SkipBack, SkipForward, Music, GripVertical } from "lucide-react";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import type { PlaylistTrack } from "@/hooks/useEventPlaylist";
 import { useNavigate } from "react-router-dom";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { supabase } from "@/lib/supabase";
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -30,6 +48,112 @@ const isGoogleDocsUrl = (url?: string): boolean => {
 const normalizeFilterValue = (value?: string) =>
   value ? value.toLowerCase().trim() : "";
 
+type SortableTrackItemProps = {
+  track: PlaylistTrack;
+  index: number;
+  isActive: boolean;
+  onSelectTrack: (id: string) => void;
+  onOpenCifra: (id: string) => void;
+};
+
+const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
+  track,
+  index,
+  isActive,
+  onSelectTrack,
+  onOpenCifra,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: track.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] transition-all duration-200",
+        isActive && "border-[#1DB954]/40 bg-[#1DB954]/5",
+        !isDragging && "hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f]"
+      )}
+    >
+      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4">
+        {/* Número da faixa e Drag handle */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <span className="text-2xl sm:text-3xl font-bold text-white/30 w-10 sm:w-12 text-center">
+            {(index + 1).toString().padStart(2, "0")}
+          </span>
+          <button
+            type="button"
+            className="text-white/30 hover:text-white/60 transition cursor-grab active:cursor-grabbing touch-none"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+        </div>
+
+        {/* Informações da faixa */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onOpenCifra(track.id)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onOpenCifra(track.id);
+            }
+          }}
+          className="relative z-10 flex-1 min-w-0 text-left cursor-pointer"
+        >
+          <p className="font-medium text-base sm:text-lg md:text-xl text-white mb-1 line-clamp-1 max-w-[200px] sm:max-w-[300px] md:max-w-[400px]">
+            {track.title}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+            {track.tom && (
+              <span className="px-2 py-0.5 bg-[#1DB954]/20 text-[#1DB954] rounded-full font-semibold">
+                {track.tom}
+              </span>
+            )}
+            {track.versao && (
+              <span className="px-2 py-0.5 rounded-full font-semibold bg-white/5 text-white/30 border border-white/5">
+                {track.versao}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Botão de play */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectTrack(track.id);
+          }}
+          className={cn(
+            "relative z-10 flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50 hover:bg-[#1DB954]/20 transition",
+            isActive && "bg-[#1DB954]/20"
+          )}
+          aria-label={`Tocar ${track.title}`}
+        >
+          <Music className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+      </div>
+      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
+    </div>
+  );
+};
 
 type SpotifyPlayerProps = {
   filter: "all" | "vocal" | "instrumental";
@@ -62,19 +186,59 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
     );
   };
 
+  const [localTracks, setLocalTracks] = React.useState<PlaylistTrack[]>([]);
+  const [isSavingOrder, setIsSavingOrder] = React.useState(false);
+
   const tracks: PlaylistTrack[] = React.useMemo(() => {
-    if (filter === "vocal") {
-      return allTracks.filter((track) =>
-        filterByTag(track, "vocal", "voz", "vozes")
-      );
+    const filtered = (() => {
+      if (filter === "vocal") {
+        return allTracks.filter((track) =>
+          filterByTag(track, "vocal", "voz", "vozes")
+        );
+      }
+
+      if (filter === "instrumental") {
+        return allTracks.filter((track) => filterByTag(track, "instrumental"));
+      }
+
+      return allTracks;
+    })();
+
+    // Usa localTracks se disponível, senão usa filtered
+    if (localTracks.length > 0) {
+      // Filtra localTracks de acordo com o filtro atual
+      if (filter === "vocal") {
+        return localTracks.filter((track) =>
+          filterByTag(track, "vocal", "voz", "vozes")
+        );
+      }
+      if (filter === "instrumental") {
+        return localTracks.filter((track) => filterByTag(track, "instrumental"));
+      }
+      return localTracks;
     }
 
-    if (filter === "instrumental") {
-      return allTracks.filter((track) => filterByTag(track, "instrumental"));
-    }
+    return filtered;
+  }, [allTracks, filter, localTracks]);
 
-    return allTracks;
-  }, [allTracks, filter]);
+  // Sincroniza localTracks com allTracks quando allTracks muda
+  React.useEffect(() => {
+    if (allTracks.length > 0 && localTracks.length === 0) {
+      setLocalTracks(allTracks);
+    }
+  }, [allTracks, localTracks.length]);
+
+  // Configuração dos sensores para drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Precisa mover 8px antes de começar a arrastar
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const trackCountLabel = React.useMemo(() => {
     const count = tracks.length;
@@ -283,6 +447,55 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
     navigate(`/playlist/${eventId}/track/${trackId}`);
   };
 
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = tracks.findIndex((track) => track.id === active.id);
+    const newIndex = tracks.findIndex((track) => track.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    // Atualiza ordem localmente
+    const newTracks = arrayMove(tracks, oldIndex, newIndex);
+    setLocalTracks(newTracks);
+
+    // Salva ordem no banco de dados
+    setIsSavingOrder(true);
+    try {
+      // Atualiza order_index para cada faixa na tabela event_tracks
+      const updates = newTracks.map((track, index) => ({
+        trackId: track.id,
+        order_index: index,
+      }));
+
+      // Executa updates em paralelo
+      await Promise.all(
+        updates.map((update) =>
+          supabase
+            .from('event_tracks')
+            .update({ order_index: update.order_index })
+            .eq('event_id', eventId)
+            .eq('track_id', update.trackId)
+        )
+      );
+
+      console.log('Ordem salva com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar ordem:', error);
+      // Reverte para a ordem original em caso de erro
+      await refetch();
+      setLocalTracks([]);
+    } finally {
+      setIsSavingOrder(false);
+    }
+  };
+
   if (isError) {
     return (
       <section className="overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-3 sm:p-6 md:p-8 pb-4 sm:pb-6 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
@@ -309,82 +522,66 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
   return (
     <section className="overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-3 sm:p-6 md:p-8 pb-4 sm:pb-6 text-white shadow-xl shadow-black/40 ring-1 ring-white/10">
       <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:gap-8">
-        <div className="mb-4 space-y-1">
-          <p className="text-sm font-medium text-white/70">Playlist</p>
+        <div className="mb-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs sm:text-sm text-white/60">
-              <span className="font-semibold text-white">Tocando</span>{" "}
-              <span className="text-white">
-                {currentTrack
-                  ? currentTrack.title
-                  : "Nenhuma faixa selecionada"}
+            <p className="font-medium text-white/30" style={{ fontSize: '30px' }}>Playlist</p>
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-[#1DB954]/10 px-3 py-1 text-xs sm:text-sm font-semibold text-[#1DB954] whitespace-nowrap">
+                {trackCountLabel}
               </span>
-            </p>
-            <span className="rounded-full bg-[#1DB954]/10 px-3 py-1 text-xs sm:text-sm font-semibold text-[#1DB954] whitespace-nowrap">
-              {trackCountLabel}
-            </span>
+              {isSavingOrder && (
+                <span className="text-xs text-white/50 animate-pulse">
+                  Salvando ordem...
+                </span>
+              )}
+            </div>
           </div>
+          <p className="text-xs text-white/40 mt-1">
+            Dica: arraste as faixas para organizar a ordem desejada.
+          </p>
         </div>
-        <ScrollArea className="h-96 sm:h-[500px] md:h-[600px] lg:h-[700px] pr-2 sm:pr-4">
-          <ul className="space-y-3">
-            {tracks.map((track, index) => {
-              const isActive = currentTrackId === track.id;
-              return (
-                <li key={track.id}>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => openCifraPage(track.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        openCifraPage(track.id);
-                      }
-                    }}
-                    className={cn(
-                      "group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-3 sm:p-4 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f]",
-                      isActive && "border-[#1DB954]/40 bg-[#1DB954]/5"
-                    )}
-                  >
-                    <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectTrack(track.id);
-                      }}
-                      className={cn(
-                        "relative z-10 flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50 hover:bg-[#1DB954]/20 transition",
-                        isActive && "bg-[#1DB954]/20"
-                      )}
-                      aria-label={`Tocar ${track.title}`}
-                    >
-                      <Music className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </button>
-                    <div className="relative z-10 flex-1 min-w-0 text-left">
-                      <p className="font-semibold text-sm sm:text-base truncate text-white">
-                        {track.title}
-                      </p>
-                      <span className="text-xs sm:text-sm text-white/60">
-                        Faixa {index + 1}
-                      </span>
-                    </div>
-                    {isActive && (
-                      <span className="relative z-10 rounded-full bg-[#1DB954] px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap">
-                        Tocando
-                      </span>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-            {!tracks.length && (
-              <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
-                Nenhuma faixa encontrada na planilha. Verifique se os links do
-                Google Drive estão publicados.
-              </li>
-            )}
-          </ul>
+        <ScrollArea
+          className="pr-2 sm:pr-4"
+          style={{
+            maxHeight: Math.min(
+              Math.max(tracks.length * 110, 320),
+              760
+            ),
+          }}
+        >
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={tracks.map((t) => t.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <ul className="space-y-3">
+                {tracks.map((track, index) => {
+                  const isActive = currentTrackId === track.id;
+                  return (
+                    <li key={track.id}>
+                      <SortableTrackItem
+                        track={track}
+                        index={index}
+                        isActive={isActive}
+                        onSelectTrack={handleSelectTrack}
+                        onOpenCifra={openCifraPage}
+                      />
+                    </li>
+                  );
+                })}
+                {!tracks.length && (
+                  <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
+                    Nenhuma faixa encontrada na planilha. Verifique se os links do
+                    Google Drive estão publicados.
+                  </li>
+                )}
+              </ul>
+            </SortableContext>
+          </DndContext>
         </ScrollArea>
       </div>
       {hasAudioFile && (
