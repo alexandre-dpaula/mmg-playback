@@ -2,6 +2,9 @@
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
+// Tons que preferem bemóis (flat) em vez de sustenidos (sharp)
+const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb'];
+
 // Mapa de conversão entre sustenidos e bemóis
 const FLAT_TO_SHARP: Record<string, string> = {
   'Db': 'C#',
@@ -9,6 +12,14 @@ const FLAT_TO_SHARP: Record<string, string> = {
   'Gb': 'F#',
   'Ab': 'G#',
   'Bb': 'A#'
+};
+
+const SHARP_TO_FLAT: Record<string, string> = {
+  'C#': 'Db',
+  'D#': 'Eb',
+  'F#': 'Gb',
+  'G#': 'Ab',
+  'A#': 'Bb'
 };
 
 /**
@@ -31,14 +42,19 @@ const getNoteIndex = (note: string): number => {
 };
 
 /**
- * Transpõe uma nota individual
+ * Transpõe uma nota individual, escolhendo entre bemol e sustenido baseado no tom de destino
  */
-const transposeNote = (note: string, semitones: number): string => {
+const transposeNote = (note: string, semitones: number, targetKey?: string): string => {
   const noteIndex = getNoteIndex(note);
   if (noteIndex === -1) return note;
 
   const newIndex = (noteIndex + semitones + 12) % 12;
-  return NOTES[newIndex];
+
+  // Escolhe entre bemol e sustenido baseado no tom de destino
+  const useFlats = targetKey && FLAT_KEYS.includes(targetKey);
+  const newNote = useFlats ? NOTES_FLAT[newIndex] : NOTES[newIndex];
+
+  return newNote;
 };
 
 /**
@@ -58,11 +74,10 @@ const extractBaseNote = (chord: string): { baseNote: string; suffix: string } =>
 /**
  * Transpõe um acorde completo
  */
-export const transposeChord = (chord: string, semitones: number): string => {
+export const transposeChord = (chord: string, semitones: number, targetKey?: string): string => {
   const { baseNote, suffix } = extractBaseNote(chord);
-  const transposedNote = transposeNote(baseNote, semitones);
-  const formattedNote = formatNoteForDisplay(transposedNote);
-  return formattedNote + suffix;
+  const transposedNote = transposeNote(baseNote, semitones, targetKey);
+  return transposedNote + suffix;
 };
 
 /**
@@ -80,7 +95,7 @@ export const getSemitoneDifference = (fromKey: string, toKey: string): number =>
 /**
  * Transpõe todas as cifras em uma linha de texto
  */
-export const transposeLine = (line: string, semitones: number): string => {
+export const transposeLine = (line: string, semitones: number, targetKey?: string): string => {
   // Regex melhorado para capturar acordes complexos:
   // - Nota base: A-G
   // - Acidentes: # ou b (opcional)
@@ -94,12 +109,12 @@ export const transposeLine = (line: string, semitones: number): string => {
     // Se o acorde tem uma barra (ex: C/G), transpõe ambas as partes
     if (match.includes('/')) {
       const [chord, bass] = match.split('/');
-      const transposedChord = transposeChord(chord, semitones);
-      const transposedBass = transposeChord(bass, semitones);
+      const transposedChord = transposeChord(chord, semitones, targetKey);
+      const transposedBass = transposeChord(bass, semitones, targetKey);
       return `${transposedChord}/${transposedBass}`;
     }
 
-    return transposeChord(match, semitones);
+    return transposeChord(match, semitones, targetKey);
   });
 };
 
@@ -124,8 +139,8 @@ export const transposeContent = (content: string, fromKey: string, toKey: string
       return line; // Título não é transposto
     }
 
-    // Para as demais linhas, transpõe normalmente
-    return transposeLine(line, semitones);
+    // Para as demais linhas, transpõe normalmente passando o tom de destino
+    return transposeLine(line, semitones, toKey);
   }).join('\n');
 };
 
