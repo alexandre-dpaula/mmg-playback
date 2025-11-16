@@ -207,14 +207,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signInWithProvider = async (provider: "google" | "apple") => {
+    // Usar URL de produção para redirect ou localhost em desenvolvimento
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const redirectUrl = isLocalhost
+      ? window.location.origin
+      : 'https://mmg-playback.vercel.app';
+
+    console.log('Tentando fazer login com redirect para:', redirectUrl);
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}`,
+        redirectTo: redirectUrl,
       },
     });
 
     if (error) {
+      console.error('Erro ao fazer login:', error);
       // Se o provider não está habilitado, mostrar mensagem específica
       if (error.message?.includes("provider is not enabled")) {
         throw new Error("Autenticação do Google não está configurada. Configure no painel do Supabase.");
