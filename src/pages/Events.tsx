@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { getSelectedEventId, setSelectedEventId } from "@/lib/preferences";
+import { useRefresh } from "@/context/RefreshContext";
 
 type EventItem = {
   id: string;
@@ -23,6 +24,7 @@ type EventItem = {
 
 export default function Events() {
   const navigate = useNavigate();
+  const { refreshKey } = useRefresh();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "vocal" | "instrumental">("all");
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -34,6 +36,13 @@ export default function Events() {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  // Atualiza quando refreshKey mudar
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchEvents();
+    }
+  }, [refreshKey]);
 
   const fetchEvents = async () => {
     setIsLoadingEvents(true);

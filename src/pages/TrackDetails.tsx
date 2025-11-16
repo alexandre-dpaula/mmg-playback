@@ -16,16 +16,16 @@ import { AVAILABLE_KEYS, convertMinorToRelativeMajor, transposeContent } from "@
 
 const PAD_FILE_MAP: Record<string, string> = {
   C: getPadUrl("C Guitar Pads.m4a"),
-  Db: getPadUrl("Db Guitar Pads.m4a"),
+  "C#": getPadUrl("Db Guitar Pads.m4a"),
   D: getPadUrl("D Guitar Pads.m4a"),
-  Eb: getPadUrl("Eb Guitar Pads.m4a"),
+  "D#": getPadUrl("Eb Guitar Pads.m4a"),
   E: getPadUrl("E Guitar Pads.m4a"),
   F: getPadUrl("F Guitar Pads.m4a"),
-  Gb: getPadUrl("Gb Guitar Pads.m4a"),
+  "F#": getPadUrl("Gb Guitar Pads.m4a"),
   G: getPadUrl("G Guitar Pads.m4a"),
-  Ab: getPadUrl("Ab Guitar Pads.m4a"),
+  "G#": getPadUrl("Ab Guitar Pads.m4a"),
   A: getPadUrl("A Guitar Pads.m4a"),
-  Bb: getPadUrl("Bb Guitar Pads.m4a"),
+  "A#": getPadUrl("Bb Guitar Pads.m4a"),
   B: getPadUrl("B Guitar Pads.m4a"),
 };
 

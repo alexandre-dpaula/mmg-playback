@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { AVAILABLE_KEYS } from "@/utils/chordTransposer";
+import { useRefresh } from "@/context/RefreshContext";
 
 const TAG_OPTIONS = ["Cifras", "Vocal", "Instrumental"];
 
@@ -29,6 +30,7 @@ export const TrackFormModal: React.FC<TrackFormModalProps> = ({
   onSuccess,
   trackId,
 }) => {
+  const { triggerRefresh } = useRefresh();
   const [titulo, setTitulo] = useState("");
   const [versao, setVersao] = useState("");
   const [tom, setTom] = useState("");
@@ -147,6 +149,9 @@ export const TrackFormModal: React.FC<TrackFormModalProps> = ({
         isEditing ? "Música atualizada com sucesso!" : "Música criada com sucesso!",
         { id: savingToast }
       );
+
+      // Trigger refresh para atualizar as listas
+      triggerRefresh();
 
       onSuccess();
 

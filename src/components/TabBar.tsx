@@ -7,10 +7,12 @@ import {
   onSelectedEventChange,
   SELECTED_EVENT_STORAGE_KEY,
 } from "@/lib/preferences";
+import { useRefresh } from "@/context/RefreshContext";
 
 export const TabBar: React.FC = () => {
   const location = useLocation();
   const [playlistPath, setPlaylistPath] = React.useState("/playlist/repertorio");
+  const { triggerRefresh } = useRefresh();
 
   React.useEffect(() => {
     const updatePath = () => {
@@ -79,6 +81,7 @@ export const TabBar: React.FC = () => {
             <Link
               key={tab.name}
               to={tab.path!}
+              onClick={() => triggerRefresh()}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[60px]",
                 tab.isActive

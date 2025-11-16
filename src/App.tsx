@@ -18,6 +18,7 @@ import Register from "./pages/Register";
 import SettingsProfile from "./pages/SettingsProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
+import { RefreshProvider } from "./context/RefreshContext";
 
 const queryClient = new QueryClient();
 
@@ -53,11 +54,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <RefreshProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </RefreshProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

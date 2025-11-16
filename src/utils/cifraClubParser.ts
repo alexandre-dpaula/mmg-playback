@@ -175,12 +175,12 @@ export function isChordLine(line: string): boolean {
 
   // Regex melhorado para capturar acordes complexos:
   // - Nota base: A-G
-  // - Acidentes: # ou b (opcional)
+  // - Acidentes: ##, #, bb, b (opcional) - captura também inválidos para normalizar
   // - Qualidade: m, maj, min, dim, aug, sus, add (opcional)
   // - Extensões: números como 7, 9, 11, 13 (opcional)
   // - Extensões complexas: (9), (11), (add9), etc (opcional)
-  // - Baixo invertido: /[A-G][#b]? (opcional)
-  const chordPattern = /\b([A-G][#b]?(?:m|maj|min|dim|aug|sus|add)?[0-9]*(?:\([^)]+\))?(?:\/[A-G][#b]?)?)\b/g;
+  // - Baixo invertido: /[A-G][acidentes]? (opcional)
+  const chordPattern = /\b([A-G](?:##|bb|#|b)?(?:m|maj|min|dim|aug|sus|add)?[0-9]*(?:\([^)]+\))?(?:\/[A-G](?:##|bb|#|b)?)?)\b/g;
   const chords = trimmed.match(chordPattern) || [];
 
   // Remove os acordes encontrados

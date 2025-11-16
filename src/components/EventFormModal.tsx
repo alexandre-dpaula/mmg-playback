@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { useRefresh } from "@/context/RefreshContext";
 
 type Track = {
   id: string;
@@ -26,6 +27,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   onSuccess,
   eventId,
 }) => {
+  const { triggerRefresh } = useRefresh();
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
@@ -258,6 +260,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
         isEditing ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!",
         { id: savingToast }
       );
+
+      // Trigger refresh para atualizar as listas
+      triggerRefresh();
 
       if (currentEventId) {
         onSuccess(currentEventId);
