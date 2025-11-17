@@ -74,8 +74,8 @@ const Index = () => {
   }, []);
 
   const renderEmptyState = (title: string, subtitle: string) => (
-    <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-8 md:pb-0 px-0">
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 py-12 md:py-16 text-center">
+    <div className="min-h-screen bg-[#121212] text-white pt-4 sm:pt-6 md:pt-0 pb-8 md:pb-0 overflow-x-hidden">
+      <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 sm:px-6 md:px-8 py-12 md:py-16 text-center">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8 shadow-lg shadow-black/30 space-y-3 w-full max-w-sm">
           <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-[#1DB954] font-semibold">
             Nenhum evento disponível
@@ -114,13 +114,13 @@ const Index = () => {
 
   // Quando terminar de carregar, mostra a página principal
   return (
-    <div className="min-h-screen bg-[#121212] text-white pt-4 sm:pt-6 md:pt-0 pb-8 md:pb-8 px-0">
+    <div className="min-h-screen bg-[#121212] text-white pt-4 sm:pt-6 md:pt-0 pb-8 md:pb-8 overflow-x-hidden">
       {/* Indicador de loading discreto para refreshes */}
       {isLoading && !showPreloader && (
         <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />
       )}
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:gap-6 md:gap-8 px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:gap-6 md:gap-8 px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4">
         <header className="text-center space-y-2 sm:space-y-3">
           <div
             className="flex flex-wrap items-baseline justify-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium tracking-wide"

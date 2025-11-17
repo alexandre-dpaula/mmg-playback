@@ -373,8 +373,8 @@ const TrackDetails: React.FC = () => {
       [Badge: Vocal] │ ├─────────────────────────────────┤ │ Áudio: [Tocar Pad]
       (Full) │ ├─────────────────────────────────┤ │ [Editar Cifra] (Full) │
       └─────────────────────────────────┘{" "}
-      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-4 sm:pt-6 md:pt-0 pb-8 md:pb-8 px-0">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-3 md:py-4 lg:py-6">
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-4 sm:pt-6 md:pt-0 pb-8 md:pb-8 overflow-x-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8 py-2 sm:py-3 md:py-4 lg:py-6">
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-xs sm:text-sm font-semibold mb-4 sm:mb-6"
@@ -384,9 +384,9 @@ const TrackDetails: React.FC = () => {
           </button>
 
           {/* Layout responsivo: controles no topo (mobile) ou lateral (desktop/tablet) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full">
             {/* Painel de controle - No topo em mobile, lateral em desktop */}
-            <div className="lg:col-span-4 xl:col-span-3 min-w-0 lg:order-2">
+            <div className="lg:col-span-4 xl:col-span-3 w-full lg:order-2">
               <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
                 <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-3 sm:mb-4">
                   Controles
@@ -463,8 +463,8 @@ const TrackDetails: React.FC = () => {
             </div>
 
             {/* Área principal da cifra */}
-            <div className="lg:col-span-8 xl:col-span-9 min-w-0 lg:order-1">
-              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30">
+            <div className="lg:col-span-8 xl:col-span-9 w-full lg:order-1">
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30 w-full overflow-x-hidden">
                 <div className="flex items-start justify-between mb-4 gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="space-y-1">
