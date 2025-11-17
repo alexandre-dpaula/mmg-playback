@@ -4,7 +4,14 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Pause, Play, SkipBack, SkipForward, Music, GripVertical } from "lucide-react";
+import {
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Music,
+  GripVertical,
+} from "lucide-react";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import type { PlaylistTrack } from "@/hooks/useEventPlaylist";
 import { useNavigate } from "react-router-dom";
@@ -16,15 +23,15 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/lib/supabase";
 
 const formatTime = (seconds: number) => {
@@ -85,7 +92,8 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
       className={cn(
         "group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] transition-all duration-200",
         isActive && "border-[#1DB954]/40 bg-[#1DB954]/5",
-        !isDragging && "hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f]"
+        !isDragging &&
+          "hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f]"
       )}
     >
       <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4">
@@ -213,7 +221,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
         );
       }
       if (filter === "instrumental") {
-        return localTracks.filter((track) => filterByTag(track, "instrumental"));
+        return localTracks.filter((track) =>
+          filterByTag(track, "instrumental")
+        );
       }
       return localTracks;
     }
@@ -246,7 +256,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
     return `${padded} ${count === 1 ? "Faixa" : "Faixas"}`;
   }, [tracks.length]);
 
-  const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(null);
+  const [currentTrackId, setCurrentTrackId] = React.useState<string | null>(
+    null
+  );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
@@ -478,16 +490,16 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
       await Promise.all(
         updates.map((update) =>
           supabase
-            .from('event_tracks')
+            .from("event_tracks")
             .update({ order_index: update.order_index })
-            .eq('event_id', eventId)
-            .eq('track_id', update.trackId)
+            .eq("event_id", eventId)
+            .eq("track_id", update.trackId)
         )
       );
 
-      console.log('Ordem salva com sucesso!');
+      console.log("Ordem salva com sucesso!");
     } catch (error) {
-      console.error('Erro ao salvar ordem:', error);
+      console.error("Erro ao salvar ordem:", error);
       // Reverte para a ordem original em caso de erro
       await refetch();
       setLocalTracks([]);
@@ -524,7 +536,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
       <div className="flex flex-col gap-3 sm:gap-4 md:gap-6 lg:flex-row lg:gap-8">
         <div className="mb-2 sm:mb-4 w-full lg:w-auto">
           <div className="flex items-center justify-between gap-2 sm:gap-3">
-            <p className="font-medium text-white/30 text-2xl sm:text-3xl md:text-4xl">Playlist</p>
+            <p className="font-medium text-white/30 text-2xl sm:text-3xl md:text-4xl">
+              Playlist
+            </p>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
               <span className="rounded-full bg-[#1DB954]/10 px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-semibold text-[#1DB954] whitespace-nowrap">
                 {trackCountLabel}
@@ -543,10 +557,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
         <ScrollArea
           className="w-full pr-2 sm:pr-3 md:pr-4"
           style={{
-            maxHeight: Math.min(
-              Math.max(tracks.length * 110, 320),
-              760
-            ),
+            maxHeight: Math.min(Math.max(tracks.length * 110, 320), 760),
           }}
         >
           <DndContext
@@ -575,8 +586,8 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
                 })}
                 {!tracks.length && (
                   <li className="rounded-xl bg-white/5 px-3 py-6 sm:px-4 sm:py-8 text-center text-sm text-white/50">
-                    Nenhuma faixa encontrada na planilha. Verifique se os links do
-                    Google Drive estão publicados.
+                    Nenhuma faixa encontrada na planilha. Verifique se os links
+                    do Google Drive estão publicados.
                   </li>
                 )}
               </ul>
@@ -595,7 +606,9 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
                 <div
                   className="progress-thumb h-full bg-[#1DB954] rounded-full transition-all group-hover:bg-[#1ed760] relative"
                   style={{
-                    width: duration ? `${(currentTime / duration) * 100}%` : "0%",
+                    width: duration
+                      ? `${(currentTime / duration) * 100}%`
+                      : "0%",
                   }}
                 >
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 sm:w-3 md:w-4 sm:h-3 md:h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>

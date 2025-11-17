@@ -1,6 +1,15 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, Plus, Settings, Music2, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Home,
+  Search,
+  Plus,
+  Settings,
+  Music2,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getSelectedEventId,
@@ -15,7 +24,9 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [playlistPath, setPlaylistPath] = React.useState("/playlist/repertorio");
+  const [playlistPath, setPlaylistPath] = React.useState(
+    "/playlist/repertorio"
+  );
   const { triggerRefresh } = useRefresh();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
 
@@ -99,8 +110,12 @@ export const Sidebar: React.FC = () => {
               }}
             />
             <div className="flex-1 min-w-0">
-              <h1 className="text-xs sm:text-sm font-bold text-white truncate">{profile.name}</h1>
-              <p className="text-xs text-white/60 capitalize truncate">{profile.role}</p>
+              <h1 className="text-xs sm:text-sm font-bold text-white truncate">
+                {profile.name}
+              </h1>
+              <p className="text-xs text-white/60 capitalize truncate">
+                {profile.role}
+              </p>
             </div>
           </div>
         )}
@@ -124,7 +139,11 @@ export const Sidebar: React.FC = () => {
             !isCollapsed && "ml-2"
           )}
         >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {isCollapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
         </button>
       </div>
 
@@ -148,11 +167,15 @@ export const Sidebar: React.FC = () => {
                 <Icon
                   className={cn(
                     "w-5 h-5 flex-shrink-0",
-                    tab.isActive ? "text-[#1DB954]" : "text-white/70 group-hover:text-white"
+                    tab.isActive
+                      ? "text-[#1DB954]"
+                      : "text-white/70 group-hover:text-white"
                   )}
                 />
                 {!isCollapsed && (
-                  <span className="text-sm font-medium truncate">{tab.name}</span>
+                  <span className="text-sm font-medium truncate">
+                    {tab.name}
+                  </span>
                 )}
               </Link>
             );

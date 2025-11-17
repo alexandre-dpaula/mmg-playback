@@ -27,7 +27,9 @@ export default function Events() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
-  const [activeEventId, setActiveEventId] = useState<string | null>(() => getSelectedEventId());
+  const [activeEventId, setActiveEventId] = useState<string | null>(() =>
+    getSelectedEventId()
+  );
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
@@ -55,7 +57,7 @@ export default function Events() {
             event_tracks (
               track_id
             )
-          `,
+          `
         )
         .order("date", { ascending: false });
 
@@ -110,7 +112,10 @@ export default function Events() {
 
     try {
       setOpenMenuId(null);
-      const { error } = await supabase.from("events").delete().eq("id", eventId);
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId);
       if (error) throw error;
 
       toast.success("Evento removido");
@@ -143,7 +148,7 @@ export default function Events() {
               titulo,
               tom
             )
-          `,
+          `
         )
         .eq("event_id", event.id)
         .order("order_index", { ascending: true });
@@ -166,7 +171,12 @@ export default function Events() {
         return;
       }
 
-      const shareMessage = ["*REPERTÓRIO*", `_${event.name}_`, "", ...trackLines].join("\n");
+      const shareMessage = [
+        "*REPERTÓRIO*",
+        `_${event.name}_`,
+        "",
+        ...trackLines,
+      ].join("\n");
       const encodedText = encodeURIComponent(shareMessage);
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
 
@@ -229,42 +239,42 @@ export default function Events() {
   const highlightLabel = activeEvent
     ? "Evento selecionado"
     : events.length
-      ? "Selecione um evento"
-      : "Nenhum evento cadastrado";
+    ? "Selecione um evento"
+    : "Nenhum evento cadastrado";
   const highlightTitle = activeEvent
     ? activeEvent.name
     : events.length
-      ? "Escolha um evento abaixo"
-      : "Adicione seu primeiro evento";
+    ? "Escolha um evento abaixo"
+    : "Adicione seu primeiro evento";
   const highlightSubtitle = activeEvent
     ? formatEventDetails(activeEvent)
     : events.length
-      ? "Toque em um card para abrir o repertório na aba Playlist."
-      : "Use o botão abaixo para criar e organizar suas músicas.";
+    ? "Toque em um card para abrir o repertório na aba Playlist."
+    : "Use o botão abaixo para criar e organizar suas músicas.";
 
   const highlightCardClasses = activeEvent
     ? "rounded-2xl bg-white/5 border border-white/10 text-white p-4 sm:p-5 shadow-lg shadow-black/30"
     : events.length
-      ? "rounded-2xl bg-gradient-to-br from-[#1DB954] to-[#169347] text-black p-4 sm:p-5 shadow-lg shadow-[#1DB954]/20 border border-[#1DB954]/40"
-      : "rounded-2xl bg-white/5 border border-white/10 text-white p-4 sm:p-5 shadow-lg shadow-black/30";
+    ? "rounded-2xl bg-gradient-to-br from-[#1DB954] to-[#169347] text-black p-4 sm:p-5 shadow-lg shadow-[#1DB954]/20 border border-[#1DB954]/40"
+    : "rounded-2xl bg-white/5 border border-white/10 text-white p-4 sm:p-5 shadow-lg shadow-black/30";
 
   const highlightLabelClass = activeEvent
     ? "text-xs uppercase font-semibold tracking-[0.12em] text-white/70"
     : events.length
-      ? "text-xs uppercase font-semibold tracking-[0.12em] text-black/70"
-      : "text-xs uppercase font-semibold tracking-[0.12em] text-white/70";
+    ? "text-xs uppercase font-semibold tracking-[0.12em] text-black/70"
+    : "text-xs uppercase font-semibold tracking-[0.12em] text-white/70";
 
   const highlightTitleClass = activeEvent
     ? "text-2xl font-semibold text-[#1DB954]"
     : events.length
-      ? "text-2xl font-semibold"
-      : "text-2xl font-semibold text-white";
+    ? "text-2xl font-semibold"
+    : "text-2xl font-semibold text-white";
 
   const highlightSubtitleClass = activeEvent
     ? "text-sm text-white/70"
     : events.length
-      ? "text-sm font-medium text-black/80"
-      : "text-sm text-white/60";
+    ? "text-sm font-medium text-black/80"
+    : "text-sm text-white/60";
 
   const renderEventCard = (event: EventItem, isActive: boolean) => {
     const isMenuEvent = (evt: React.SyntheticEvent) => {
@@ -302,72 +312,76 @@ export default function Events() {
           isActive ? "border-[#1DB954]/50 bg-[#1DB954]/5" : ""
         }`}
       >
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
-      <div className="relative z-10 flex-shrink-0 h-12 w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
-        <Music className="w-6 h-6" />
-      </div>
-      <div className="relative z-10 flex-1 text-left min-w-0">
-        <h3 className="text-lg font-semibold text-white mb-1 truncate">{event.name}</h3>
-        <p className="text-sm text-white/60 truncate">{formatEventDetails(event)}</p>
-      </div>
-      <div className="relative z-10" data-event-menu="true">
-        <DropdownMenu
-          open={openMenuId === event.id}
-          onOpenChange={(open) => setOpenMenuId(open ? event.id : null)}
-        >
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              onClick={(e) => e.stopPropagation()}
-              className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition"
-              aria-label={`Mais opções para ${event.name}`}
-            >
-              <MoreVertical className="w-5 h-5" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="bg-[#1c1c1c] border border-white/10 text-white text-sm"
-            onClick={(e) => e.stopPropagation()}
+        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
+        <div className="relative z-10 flex-shrink-0 h-12 w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
+          <Music className="w-6 h-6" />
+        </div>
+        <div className="relative z-10 flex-1 text-left min-w-0">
+          <h3 className="text-lg font-semibold text-white mb-1 truncate">
+            {event.name}
+          </h3>
+          <p className="text-sm text-white/60 truncate">
+            {formatEventDetails(event)}
+          </p>
+        </div>
+        <div className="relative z-10" data-event-menu="true">
+          <DropdownMenu
+            open={openMenuId === event.id}
+            onOpenChange={(open) => setOpenMenuId(open ? event.id : null)}
           >
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                setOpenMenuId(null);
-                navigate(`/playlist/${event.id}`);
-              }}
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => e.stopPropagation()}
+                className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition"
+                aria-label={`Mais opções para ${event.name}`}
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="bg-[#1c1c1c] border border-white/10 text-white text-sm"
+              onClick={(e) => e.stopPropagation()}
             >
-              Abrir playlist
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                handleEditEvent(event.id);
-              }}
-            >
-              Editar evento
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                handleShareEvent(event);
-              }}
-            >
-              Compartilhar
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                handleDeleteEvent(event.id);
-              }}
-            >
-              <span className="text-[#1DB954]">Apagar evento</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setOpenMenuId(null);
+                  navigate(`/playlist/${event.id}`);
+                }}
+              >
+                Abrir playlist
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleEditEvent(event.id);
+                }}
+              >
+                Editar evento
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleShareEvent(event);
+                }}
+              >
+                Compartilhar
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleDeleteEvent(event.id);
+                }}
+              >
+                <span className="text-[#1DB954]">Apagar evento</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
-    </div>
-  );
+    );
   };
 
   return (
@@ -382,49 +396,53 @@ export default function Events() {
         </header>
 
         <div className="space-y-4">
-        <div className={highlightCardClasses}>
-          <p className={highlightLabelClass}>{highlightLabel}</p>
-          <div className="mt-2 flex flex-col gap-1">
-            <h3 className={highlightTitleClass}>{highlightTitle}</h3>
-            <p className={highlightSubtitleClass}>{highlightSubtitle}</p>
+          <div className={highlightCardClasses}>
+            <p className={highlightLabelClass}>{highlightLabel}</p>
+            <div className="mt-2 flex flex-col gap-1">
+              <h3 className={highlightTitleClass}>{highlightTitle}</h3>
+              <p className={highlightSubtitleClass}>{highlightSubtitle}</p>
+            </div>
           </div>
-        </div>
 
-        {isLoadingEvents ? (
-          <div className="space-y-3">
-            <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
-            <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
-          </div>
-        ) : events.length === 0 ? (
-          <div className="bg-white/5 rounded-2xl p-8 text-center border border-white/10">
-            <Calendar className="w-12 h-12 mx-auto mb-4 text-white/40" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum evento ainda</h3>
-            <p className="text-white/60 text-sm">
-              Crie seu primeiro evento para começar a organizar suas músicas.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {events.map((event) => renderEventCard(event, activeEvent?.id === event.id))}
-          </div>
-        )}
+          {isLoadingEvents ? (
+            <div className="space-y-3">
+              <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
+              <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
+            </div>
+          ) : events.length === 0 ? (
+            <div className="bg-white/5 rounded-2xl p-8 text-center border border-white/10">
+              <Calendar className="w-12 h-12 mx-auto mb-4 text-white/40" />
+              <h3 className="text-lg font-semibold mb-2">
+                Nenhum evento ainda
+              </h3>
+              <p className="text-white/60 text-sm">
+                Crie seu primeiro evento para começar a organizar suas músicas.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {events.map((event) =>
+                renderEventCard(event, activeEvent?.id === event.id)
+              )}
+            </div>
+          )}
 
-        <div className="mt-6">
-          <Button
-            onClick={openCreateModal}
-            className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Novo Evento
-          </Button>
-        </div>
+          <div className="mt-6">
+            <Button
+              onClick={openCreateModal}
+              className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Novo Evento
+            </Button>
+          </div>
 
-        <EventFormModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onSuccess={handleEventSaved}
-          eventId={editingEventId}
-        />
+          <EventFormModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            onSuccess={handleEventSaved}
+            eventId={editingEventId}
+          />
         </div>
       </div>
     </div>

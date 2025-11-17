@@ -1,6 +1,15 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, Plus, Settings, Music2, Menu, X, LogOut } from "lucide-react";
+import {
+  Home,
+  Search,
+  Plus,
+  Settings,
+  Music2,
+  Menu,
+  X,
+  LogOut,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getSelectedEventId,
@@ -15,7 +24,9 @@ export const MobileNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
-  const [playlistPath, setPlaylistPath] = React.useState("/playlist/repertorio");
+  const [playlistPath, setPlaylistPath] = React.useState(
+    "/playlist/repertorio"
+  );
   const { triggerRefresh } = useRefresh();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
@@ -94,22 +105,33 @@ export const MobileNav: React.FC = () => {
               }}
             />
             <div className="flex-1 min-w-0">
-              <h1 className="text-xs sm:text-sm font-bold text-white truncate">{profile.name}</h1>
-              <p className="text-xs text-white/60 capitalize truncate">{profile.role}</p>
+              <h1 className="text-xs sm:text-sm font-bold text-white truncate">
+                {profile.name}
+              </h1>
+              <p className="text-xs text-white/60 capitalize truncate">
+                {profile.role}
+              </p>
             </div>
           </div>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition text-white flex-shrink-0 ml-2"
           >
-            {isMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
+            {isMenuOpen ? (
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+            ) : (
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+            )}
           </button>
         </div>
       </div>
 
       {/* Menu Overlay Mobile - Começa abaixo do top bar */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm top-[60px]" onClick={() => setIsMenuOpen(false)}>
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm top-[60px]"
+          onClick={() => setIsMenuOpen(false)}
+        >
           <div
             className="absolute top-0 right-0 w-full sm:w-64 max-w-xs h-[calc(100vh-60px)] bg-[#0a0a0a] border-l border-white/10 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
@@ -162,7 +184,6 @@ export const MobileNav: React.FC = () => {
           </div>
         </div>
       )}
-
     </>
   );
 };

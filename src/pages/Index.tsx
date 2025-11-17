@@ -13,9 +13,12 @@ const Index = () => {
   const { refreshKey } = useRefresh();
   const playlistEventId =
     routeEventId && routeEventId !== "repertorio" ? routeEventId : null;
-  const { data: playlistData, isLoading, refetch, error } = useEventPlaylist(
-    playlistEventId ?? undefined
-  );
+  const {
+    data: playlistData,
+    isLoading,
+    refetch,
+    error,
+  } = useEventPlaylist(playlistEventId ?? undefined);
 
   // Atualiza quando refreshKey mudar
   React.useEffect(() => {
@@ -27,7 +30,7 @@ const Index = () => {
   const [filter] = React.useState<"all" | "vocal" | "instrumental">("all");
   const [showPreloader, setShowPreloader] = React.useState(() => {
     // Mostra preloader apenas na primeira visita da sessão
-    const hasVisited = sessionStorage.getItem('hasVisited');
+    const hasVisited = sessionStorage.getItem("hasVisited");
     return !hasVisited;
   });
   const [now, setNow] = React.useState(() => new Date());
@@ -38,12 +41,15 @@ const Index = () => {
   }, []);
 
   const clockInfo = React.useMemo(() => {
-    const weekdayFormatter = new Intl.DateTimeFormat("pt-BR", { weekday: "long" });
+    const weekdayFormatter = new Intl.DateTimeFormat("pt-BR", {
+      weekday: "long",
+    });
     const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
 
     const weekdayRaw = weekdayFormatter.format(now);
     const weekday =
-      weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1).replace("-feira", "-feira");
+      weekdayRaw.charAt(0).toUpperCase() +
+      weekdayRaw.slice(1).replace("-feira", "-feira");
 
     const day = now.getDate().toString().padStart(2, "0");
     const month = monthFormatter.format(now).replace(".", "").toUpperCase();
@@ -62,8 +68,8 @@ const Index = () => {
 
   // Marca que já visitou na primeira renderização
   React.useEffect(() => {
-    if (!sessionStorage.getItem('hasVisited')) {
-      sessionStorage.setItem('hasVisited', 'true');
+    if (!sessionStorage.getItem("hasVisited")) {
+      sessionStorage.setItem("hasVisited", "true");
     }
   }, []);
 
@@ -127,7 +133,10 @@ const Index = () => {
             </div>
             <div className="flex items-baseline gap-1">
               <span>{clockInfo.time}</span>
-              <span className="text-xs font-medium self-start" style={{ color: CLOCK_TEXT_COLOR, opacity: 0.8 }}>
+              <span
+                className="text-xs font-medium self-start"
+                style={{ color: CLOCK_TEXT_COLOR, opacity: 0.8 }}
+              >
                 {clockInfo.seconds}
               </span>
             </div>

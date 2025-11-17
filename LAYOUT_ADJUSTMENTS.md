@@ -1,6 +1,7 @@
 # 📱 Ajustes de Layout Responsivo - MMG Ensaio Vocal
 
 ## 🎯 Objetivo
+
 Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminando erros de overflow e garantindo visibilidade perfeita em todas as resoluções.
 
 ---
@@ -8,6 +9,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ## ✅ Alterações Realizadas
 
 ### 1. **App.tsx** - Estrutura Principal
+
 - ✅ Alterado layout principal de `flex h-screen overflow-hidden` para `flex flex-col md:flex-row h-screen w-screen max-w-screen overflow-x-hidden`
 - ✅ Adicionado `<main>` wrapper com `overflow-y-auto` para garantir scroll vertical correto
 - ✅ Melhorado controle de altura: `min-h-screen md:min-h-0`
@@ -18,6 +20,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ---
 
 ### 2. **MobileNav.tsx** - Navegação Mobile
+
 - ✅ Top bar agora com altura fixa: `h-[60px]`
 - ✅ Menu overlay começa abaixo do top bar: `top-[60px]` ao invés de `top-[57px]`
 - ✅ Altura do overlay ajustada: `h-[calc(100vh-60px)]`
@@ -30,6 +33,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ---
 
 ### 3. **Sidebar.tsx** - Navegação Desktop
+
 - ✅ Adicionado `h-screen` e `overflow-hidden` para garantir altura fixa
 - ✅ Adicionado `flex-shrink-0` em header e logout para não comprimir
 - ✅ Melhorados espaçamentos: `p-3 sm:p-4` (mais responsivo)
@@ -42,6 +46,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ---
 
 ### 4. **Events.tsx** - Página de Eventos
+
 - ✅ Adicionado padding superior mobile: `pt-20 md:pt-0` (60px do mobile nav + margem)
 - ✅ Melhor controle de padding: `px-0` no container externo para evitar overflow
 - ✅ Espaçamento vertical responsivo: `py-6 sm:py-8 md:py-10` (de `py-8 sm:py-10`)
@@ -52,6 +57,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ---
 
 ### 5. **Index.tsx** - Página do Player
+
 - ✅ Espaçamento superior mobile: `pt-20 md:pt-0`
 - ✅ Gap responsivo: `gap-4 sm:gap-6 md:gap-8` (mais compacto em mobile)
 - ✅ Padding interno reduzido: `py-4 sm:py-6 md:py-8`
@@ -64,6 +70,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ---
 
 ### 6. **TrackDetails.tsx** - Página de Detalhes
+
 - ✅ Espaçamento superior mobile: `pt-20 md:pt-0`
 - ✅ Padding geral reduzido: `p-4 sm:p-5 md:p-6 lg:p-8` (de `p-5 sm:p-6 lg:p-8`)
 - ✅ Gap entre elementos: `gap-4 sm:gap-6 lg:gap-8` (mais compacto)
@@ -78,6 +85,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ---
 
 ### 7. **SpotifyPlayer.tsx** - Componente de Player
+
 - ✅ Container responsivo: `w-full` com `max-w-2xl` para conteúdo
 - ✅ Rounded buttons: `rounded-xl sm:rounded-2xl md:rounded-3xl`
 - ✅ Padding otimizado: `p-3 sm:p-4 md:p-6 lg:p-8`
@@ -92,6 +100,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ---
 
 ### 8. **globals.css** - Estilos Globais
+
 - ✅ Adicionado `overflow-x: hidden` em `html` e `body`
 - ✅ Adicionado `width: 100%` e `max-width: 100vw` em `body` e `#root`
 - ✅ Previne scroll horizontal em qualquer circunstância
@@ -102,15 +111,15 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 
 ## 📊 Resumo das Melhorias
 
-| Aspecto | Antes | Depois |
-|--------|-------|--------|
-| **Overflow Horizontal** | ❌ Presente | ✅ Eliminado |
-| **Mobile Nav** | ❌ Sobrepõe conteúdo | ✅ Respeitado |
-| **Responsividade** | ⚠️ Parcial | ✅ Completa |
-| **Tamanho Texto** | ❌ Fixo | ✅ Responsivo (xs/sm/md) |
-| **Padding** | ❌ Inconsistente | ✅ Escalado por breakpoint |
-| **Visibilidade Mobile** | ❌ Cortado/Overflow | ✅ Perfeito |
-| **Tabela** | ⚠️ Parcial | ✅ Totalmente responsivo |
+| Aspecto                 | Antes                | Depois                     |
+| ----------------------- | -------------------- | -------------------------- |
+| **Overflow Horizontal** | ❌ Presente          | ✅ Eliminado               |
+| **Mobile Nav**          | ❌ Sobrepõe conteúdo | ✅ Respeitado              |
+| **Responsividade**      | ⚠️ Parcial           | ✅ Completa                |
+| **Tamanho Texto**       | ❌ Fixo              | ✅ Responsivo (xs/sm/md)   |
+| **Padding**             | ❌ Inconsistente     | ✅ Escalado por breakpoint |
+| **Visibilidade Mobile** | ❌ Cortado/Overflow  | ✅ Perfeito                |
+| **Tabela**              | ⚠️ Parcial           | ✅ Totalmente responsivo   |
 
 ---
 
@@ -127,6 +136,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ## 🚀 Como Testar
 
 ### Mobile (iPhone)
+
 ```
 - Viewport: 375px x 667px
 - Verificar: Top nav, conteúdo, botões
@@ -134,6 +144,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ```
 
 ### Tablet (iPad)
+
 ```
 - Viewport: 768px x 1024px
 - Verificar: Sidebar, player, layout 2 colunas
@@ -141,6 +152,7 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 ```
 
 ### Desktop (1920px)
+
 ```
 - Viewport: 1920px x 1080px
 - Verificar: Sidebar fixo, conteúdo, spacing
@@ -178,4 +190,3 @@ Otimizar o layout para todos os dispositivos (mobile, tablet, desktop), eliminan
 2. Implementar media queries mais granulares (375px, 425px)
 3. Otimizar imagens por tamanho de tela
 4. Adicionar dark mode selector (já existente via Tailwind)
-

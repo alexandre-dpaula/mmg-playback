@@ -3,7 +3,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { clearOldCaches } from "@/lib/preferences";
@@ -27,7 +33,8 @@ const queryClient = new QueryClient();
 
 const AppRoutes = () => {
   const location = useLocation();
-  const showNav = location.pathname !== "/login" && location.pathname !== "/register";
+  const showNav =
+    location.pathname !== "/login" && location.pathname !== "/register";
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-screen max-w-screen overflow-x-hidden bg-[#121212]">
@@ -41,14 +48,20 @@ const AppRoutes = () => {
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Events />} />
               <Route path="/playlist/:eventId" element={<Index />} />
-              <Route path="/playlist/:eventId/track/:trackId" element={<TrackDetails />} />
+              <Route
+                path="/playlist/:eventId/track/:trackId"
+                element={<TrackDetails />}
+              />
               <Route path="/add" element={<AddTrackPage />} />
               <Route path="/search" element={<Search />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/profile" element={<SettingsProfile />} />
               <Route path="/settings/about" element={<SettingsAbout />} />
               <Route path="/settings/privacy" element={<SettingsPrivacy />} />
-              <Route path="/settings/notifications" element={<SettingsNotifications />} />
+              <Route
+                path="/settings/notifications"
+                element={<SettingsNotifications />}
+              />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
