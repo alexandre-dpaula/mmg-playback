@@ -37,7 +37,7 @@ const AppRoutes = () => {
     location.pathname !== "/login" && location.pathname !== "/register";
 
   const mobileNavOffsetClass = showNav
-    ? "pt-[calc(60px+env(safe-area-inset-top,0px))] md:pt-0"
+    ? "pt-[calc(60px+1rem+env(safe-area-inset-top,0px))] md:pt-0"
     : "";
 
   return (
