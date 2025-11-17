@@ -368,16 +368,12 @@ const TrackDetails: React.FC = () => {
 
   return (
     <>
-      ┌─────────────────────────────────┐
-      │      CONTROLES                  │
-      ├──────────────┬──────────────────┤
-      │   Tom        │   Categoria      │
-      │  [Selector]  │   [Badge: Vocal] │
-      ├─────────────────────────────────┤
-      │  Áudio: [Tocar Pad] (Full)      │
-      ├─────────────────────────────────┤
-      │  [Editar Cifra] (Full)          │
-      └─────────────────────────────────┘      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-24 md:pb-8 px-0">
+      ┌─────────────────────────────────┐ │ CONTROLES │
+      ├──────────────┬──────────────────┤ │ Tom │ Categoria │ │ [Selector] │
+      [Badge: Vocal] │ ├─────────────────────────────────┤ │ Áudio: [Tocar Pad]
+      (Full) │ ├─────────────────────────────────┤ │ [Editar Cifra] (Full) │
+      └─────────────────────────────────┘{" "}
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-24 md:pb-8 px-0">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-12">
           <button
             onClick={() => navigate(-1)}
@@ -387,10 +383,10 @@ const TrackDetails: React.FC = () => {
             <span>Voltar para playlist</span>
           </button>
 
-          {/* Layout responsivo: controles no topo, cifra embaixo */}
-          <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8">
-            {/* Painel de controle - No topo */}
-            <div className="min-w-0">
+          {/* Layout responsivo: controles no topo (mobile) ou lateral (desktop/tablet) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
+            {/* Painel de controle - No topo em mobile, lateral em desktop */}
+            <div className="lg:col-span-4 xl:col-span-3 min-w-0 lg:order-2">
               <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
                 <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-3 sm:mb-4">
                   Controles
@@ -403,10 +399,7 @@ const TrackDetails: React.FC = () => {
                     <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
                       Tom
                     </label>
-                    <Select
-                      value={selectedKey}
-                      onValueChange={handleKeyChange}
-                    >
+                    <Select value={selectedKey} onValueChange={handleKeyChange}>
                       <SelectTrigger className="w-full h-10 bg-white/10 border-white/15 text-white font-semibold text-xs">
                         <SelectValue placeholder={track.tom || "C"} />
                       </SelectTrigger>
@@ -469,8 +462,8 @@ const TrackDetails: React.FC = () => {
               </div>
             </div>
 
-            {/* Área principal da cifra - Abaixo dos controles */}
-            <div className="min-w-0">
+            {/* Área principal da cifra */}
+            <div className="lg:col-span-8 xl:col-span-9 min-w-0 lg:order-1">
               <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30">
                 <div className="flex items-start justify-between mb-4 gap-3">
                   <div className="flex-1 min-w-0">
