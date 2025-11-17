@@ -181,4 +181,9 @@
   .animate-float {
     animation: float linear infinite;
   }
+
+  /* Override para garantir que .pt-20 respeite 1rem em PWAs */
+  .pt-20 {
+    padding-top: 1rem !important;
+  }
 }
