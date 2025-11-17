@@ -79,12 +79,12 @@ export const Sidebar: React.FC = () => {
   return (
     <div
       className={cn(
-        "hidden md:flex flex-col bg-[#0a0a0a] border-r border-white/10 transition-all duration-300",
+        "hidden md:flex flex-col h-screen bg-[#0a0a0a] border-r border-white/10 transition-all duration-300 overflow-hidden",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 flex-shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <img
@@ -99,8 +99,8 @@ export const Sidebar: React.FC = () => {
               }}
             />
             <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-bold text-white truncate">{profile.name}</h1>
-              <p className="text-xs text-white/60 capitalize">{profile.role}</p>
+              <h1 className="text-xs sm:text-sm font-bold text-white truncate">{profile.name}</h1>
+              <p className="text-xs text-white/60 capitalize truncate">{profile.role}</p>
             </div>
           </div>
         )}
@@ -120,7 +120,7 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(
-            "p-2 rounded-lg hover:bg-white/10 transition text-white/70 hover:text-white flex-shrink-0",
+            "p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition text-white/70 hover:text-white flex-shrink-0",
             !isCollapsed && "ml-2"
           )}
         >
@@ -129,8 +129,8 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4">
-        <div className="space-y-1 px-3">
+      <nav className="flex-1 overflow-y-auto py-3 sm:py-4 min-w-0">
+        <div className="space-y-1 px-2 sm:px-3">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -139,7 +139,7 @@ export const Sidebar: React.FC = () => {
                 to={tab.path}
                 onClick={() => triggerRefresh()}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group",
+                  "flex items-center gap-3 px-3 py-2 sm:py-3 rounded-lg transition-all group",
                   tab.isActive
                     ? "bg-[#1DB954]/20 text-[#1DB954]"
                     : "text-white/70 hover:text-white hover:bg-white/10"
@@ -161,11 +161,11 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       {/* Logout Section */}
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-white/10 p-2 sm:p-3 flex-shrink-0">
         <button
           onClick={handleSignOut}
           className={cn(
-            "flex items-center gap-3 px-3 py-3 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition w-full",
+            "flex items-center gap-3 px-3 py-2 sm:py-3 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition w-full",
             isCollapsed && "justify-center"
           )}
         >

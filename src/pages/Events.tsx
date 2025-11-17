@@ -371,8 +371,8 @@ export default function Events() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-8 md:pb-0 px-0">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-6 sm:py-8 md:py-10">
         <header className="space-y-2 mb-6 sm:mb-8">
           <p className="text-sm uppercase tracking-[0.3em] text-[#1DB954] font-semibold">
             EVENTOS

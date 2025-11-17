@@ -78,10 +78,10 @@ export const MobileNav: React.FC = () => {
 
   return (
     <>
-      {/* Top Bar Mobile */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+      {/* Top Bar Mobile - Fixed positioning com altura fixa */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10 h-[60px]">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 h-full">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <img
               src={profile.avatarUrl}
               alt={profile.name}
@@ -94,24 +94,24 @@ export const MobileNav: React.FC = () => {
               }}
             />
             <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-bold text-white truncate">{profile.name}</h1>
+              <h1 className="text-xs sm:text-sm font-bold text-white truncate">{profile.name}</h1>
               <p className="text-xs text-white/60 capitalize truncate">{profile.role}</p>
             </div>
           </div>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-lg hover:bg-white/10 transition text-white flex-shrink-0"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition text-white flex-shrink-0 ml-2"
           >
-            {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {isMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
           </button>
         </div>
       </div>
 
-      {/* Menu Overlay Mobile */}
+      {/* Menu Overlay Mobile - Começa abaixo do top bar */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)}>
+        <div className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm top-[60px]" onClick={() => setIsMenuOpen(false)}>
           <div
-            className="absolute top-[57px] right-0 w-64 h-[calc(100vh-57px)] bg-[#0a0a0a] border-l border-white/10 overflow-y-auto"
+            className="absolute top-0 right-0 w-full sm:w-64 max-w-xs h-[calc(100vh-60px)] bg-[#0a0a0a] border-l border-white/10 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <nav className="p-4 space-y-1">

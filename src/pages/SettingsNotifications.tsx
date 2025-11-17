@@ -12,8 +12,8 @@ const SettingsNotifications: React.FC = () => {
   const [maintenanceAlerts, setMaintenanceAlerts] = React.useState(true);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <div className="px-6 pt-8 pb-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-8 md:pt-0 md:pb-0">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
         <button
           onClick={() => navigate("/settings")}
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-4"
@@ -35,7 +35,7 @@ const SettingsNotifications: React.FC = () => {
       </div>
 
       <div className="px-6 space-y-4">
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-4">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-4">
           <h2 className="text-xl font-semibold">Alertas de eventos</h2>
           <p className="text-white/60 text-sm">
             Informe quando novos eventos ou ensaios forem criados, garantindo que todos saibam o repertório com antecedência.
@@ -56,7 +56,7 @@ const SettingsNotifications: React.FC = () => {
           </div>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-4">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-4">
           <h2 className="text-xl font-semibold">Cifras e importações</h2>
           <p className="text-white/60 text-sm">
             Saiba quando novos materiais foram importados do CifraClub ou quando uma cifra foi corrigida manualmente.
@@ -70,7 +70,7 @@ const SettingsNotifications: React.FC = () => {
           </div>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-4">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-4">
           <h2 className="text-xl font-semibold">Sistema</h2>
           <p className="text-white/60 text-sm">Alertas técnicos ajudam o time a manter o app estável.</p>
           <div className="flex items-center justify-between">
@@ -82,7 +82,7 @@ const SettingsNotifications: React.FC = () => {
           </div>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
           <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
             <CheckCircle className="w-5 h-5 text-[#1DB954]" />
             Como as notificações funcionam?

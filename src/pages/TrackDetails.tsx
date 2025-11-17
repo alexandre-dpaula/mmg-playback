@@ -349,33 +349,33 @@ const TrackDetails: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-24 md:pb-8 px-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-12">
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-sm font-semibold mb-6"
+            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-xs sm:text-sm font-semibold mb-4 sm:mb-6"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Voltar para playlist
+            <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+            <span>Voltar para playlist</span>
           </button>
 
           {/* Layout responsivo: mobile stacked, desktop grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
             {/* Área principal da cifra */}
-            <div className="lg:col-span-8 xl:col-span-9">
-              <div className="bg-white/5 rounded-2xl border border-white/10 p-5 sm:p-6 lg:p-8 shadow-lg shadow-black/30">
-                <div className="flex items-start justify-between mb-4">
+            <div className="lg:col-span-8 xl:col-span-9 min-w-0">
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30 min-h-screen lg:min-h-0">
+                <div className="flex items-start justify-between mb-4 gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="space-y-1">
                       <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
                         Cifras
                       </span>
-                      <div className="flex flex-wrap items-baseline gap-2 text-balance">
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold">
+                      <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
+                        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold break-words">
                           {track.titulo}
                         </h2>
                         {track.versao?.trim() && (
-                          <span className="text-sm sm:text-base text-white/70 font-semibold">
+                          <span className="text-xs sm:text-sm text-white/70 font-semibold flex-shrink-0">
                             • {track.versao.trim()}
                           </span>
                         )}
@@ -384,7 +384,7 @@ const TrackDetails: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-6 sm:mt-8">
                   <CifraDisplay
                     cifra={track.cifra_url || undefined}
                     cifraContent={track.cifra_content || undefined}
@@ -396,22 +396,22 @@ const TrackDetails: React.FC = () => {
             </div>
 
             {/* Painel de controle lateral */}
-            <div className="lg:col-span-4 xl:col-span-3">
-              <div className="sticky top-4 space-y-4">
+            <div className="lg:col-span-4 xl:col-span-3 min-w-0">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Card de controles */}
-                <div className="bg-white/5 rounded-2xl border border-white/10 p-5 shadow-lg shadow-black/30">
-                  <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wide mb-4">
+                <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
+                  <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-3 sm:mb-4">
                     Controles
                   </h3>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {/* Tom */}
                     <div>
-                      <label className="text-[#1DB954] text-sm font-semibold uppercase tracking-wide mb-2 block">
+                      <label className="text-[#1DB954] text-xs sm:text-sm font-semibold uppercase tracking-wide mb-2 block">
                         Tom
                       </label>
                       <Select value={selectedKey} onValueChange={handleKeyChange}>
-                        <SelectTrigger className="w-full h-11 bg-white/10 border-white/15 text-white font-semibold">
+                        <SelectTrigger className="w-full h-10 sm:h-11 bg-white/10 border-white/15 text-white font-semibold text-sm">
                           <SelectValue placeholder={track.tom || "C"} />
                         </SelectTrigger>
                         <SelectContent className="bg-[#282828] border-white/20">
@@ -419,7 +419,7 @@ const TrackDetails: React.FC = () => {
                             <SelectItem
                               key={key}
                               value={key}
-                              className="text-white hover:bg-white/10 focus:bg-white/20"
+                              className="text-white hover:bg-white/10 focus:bg-white/20 text-sm"
                             >
                               {key}
                             </SelectItem>
@@ -430,13 +430,13 @@ const TrackDetails: React.FC = () => {
 
                     {/* Pad */}
                     <div>
-                      <label className="text-white/60 text-sm font-semibold uppercase tracking-wide mb-2 block">
+                      <label className="text-white/60 text-xs sm:text-sm font-semibold uppercase tracking-wide mb-2 block">
                         Áudio
                       </label>
                       <button
                         type="button"
                         onClick={handlePadToggle}
-                        className={`w-full h-11 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 ${
+                        className={`w-full h-10 sm:h-11 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 text-xs sm:text-sm ${
                           isPadPlaying
                             ? "bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30"
                             : "bg-white/10 text-white border-white/15 hover:bg-white/15"
@@ -447,10 +447,10 @@ const TrackDetails: React.FC = () => {
                     </div>
 
                     {/* Editar Cifra */}
-                    <div className="pt-2 border-t border-white/10">
+                    <div className="pt-2 sm:pt-3 border-t border-white/10">
                       <button
                         onClick={() => setIsEditingCifra(true)}
-                        className="w-full px-4 py-3 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold rounded-lg transition-colors border border-white/15"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors border border-white/15"
                       >
                         Editar Cifra
                       </button>
@@ -460,11 +460,11 @@ const TrackDetails: React.FC = () => {
 
                 {/* Info adicional */}
                 {track.tag && (
-                  <div className="bg-white/5 rounded-2xl border border-white/10 p-5 shadow-lg shadow-black/30">
-                    <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wide mb-2">
+                  <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
+                    <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-2">
                       Categoria
                     </h3>
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-[#1DB954]/20 text-[#1DB954] text-xs font-semibold uppercase tracking-wide">
+                    <span className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-[#1DB954]/20 text-[#1DB954] text-xs font-semibold uppercase tracking-wide">
                       {track.tag}
                     </span>
                   </div>

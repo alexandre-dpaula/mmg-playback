@@ -30,27 +30,29 @@ const AppRoutes = () => {
   const showNav = location.pathname !== "/login" && location.pathname !== "/register";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#121212]">
+    <div className="flex flex-col md:flex-row h-screen w-screen max-w-screen overflow-x-hidden bg-[#121212]">
       {showNav && <Sidebar />}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-h-screen md:min-h-0 overflow-hidden md:overflow-y-auto">
         {showNav && <MobileNav />}
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Events />} />
-            <Route path="/playlist/:eventId" element={<Index />} />
-            <Route path="/playlist/:eventId/track/:trackId" element={<TrackDetails />} />
-            <Route path="/add" element={<AddTrackPage />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/settings/profile" element={<SettingsProfile />} />
-            <Route path="/settings/about" element={<SettingsAbout />} />
-            <Route path="/settings/privacy" element={<SettingsPrivacy />} />
-            <Route path="/settings/notifications" element={<SettingsNotifications />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <main className="flex-1 overflow-y-auto w-full">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Events />} />
+              <Route path="/playlist/:eventId" element={<Index />} />
+              <Route path="/playlist/:eventId/track/:trackId" element={<TrackDetails />} />
+              <Route path="/add" element={<AddTrackPage />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/profile" element={<SettingsProfile />} />
+              <Route path="/settings/about" element={<SettingsAbout />} />
+              <Route path="/settings/privacy" element={<SettingsPrivacy />} />
+              <Route path="/settings/notifications" element={<SettingsNotifications />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
       </div>
     </div>
   );

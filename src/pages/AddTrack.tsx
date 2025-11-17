@@ -315,32 +315,30 @@ const AddTrackPage: React.FC = () => {
   const isSubmitting = form.formState.isSubmitting;
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-10 sm:py-14">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-white/70 hover:text-white transition"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para playlist
-          </Link>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-8 md:pt-0 md:pb-0">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-8">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Voltar</span>
+        </Link>
 
-        <header className="space-y-2">
-          <p className="text-sm uppercase tracking-[0.3em] text-[#1DB954]">
-            Adicionar faixa
+        <header className="space-y-1 mb-6">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#1DB954] font-semibold">
+            ADICIONAR FAIXA
           </p>
-          <h1 className="text-3xl font-semibold">Adicionar Faixa</h1>
-          <p className="text-white/70">
-            Use o formulário para registrar novas músicas rapidamente.
+          <h1 className="text-2xl font-bold">Nova Música</h1>
+          <p className="text-sm text-white/60">
+            Preencha os campos para adicionar uma música
           </p>
         </header>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4 rounded-3xl bg-gradient-to-b from-[#1f1f1f] via-[#181818] to-[#121212] p-6 shadow-2xl shadow-black/40 ring-1 ring-white/10"
+            className="space-y-4 rounded-2xl bg-gradient-to-br from-[#181818] to-[#101010] p-5 border border-white/5"
           >
             {/* Cifra / Pauta - PRIMEIRO campo */}
             <FormField
@@ -348,25 +346,25 @@ const AddTrackPage: React.FC = () => {
               name="pauta"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Cifra (URL)</FormLabel>
+                  <FormLabel className="text-sm text-white/90">Cifra (URL)</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Cole a URL do CifraClub ou Google Docs"
-                      className="!text-black placeholder:text-gray-400"
+                      placeholder="Insira URL ou Google Doc"
+                      className="!text-black placeholder:text-gray-400 h-9"
                       {...field}
                     />
                   </FormControl>
-                  <p className="text-xs text-white/60 mt-1">
-                    💡 URLs do CifraClub serão analisadas automaticamente (título, versão e tom).
+                  <p className="text-xs text-white/50 mt-1">
+                    💡 Algumas URLs preenchem informações automaticamente
                   </p>
                   {isFetchingCifraMetadata && (
                     <p className="text-xs text-[#1DB954] mt-1 animate-pulse">
-                      Buscando informações no CifraClub...
+                      Buscando informações...
                     </p>
                   )}
                   {!isFetchingCifraMetadata && hasAutoFilledForCurrentUrl && (
                     <p className="text-xs text-[#1DB954] mt-1">
-                      Informações preenchidas automaticamente.
+                      ✓ Preenchido automaticamente
                     </p>
                   )}
                   <FormMessage />
@@ -374,112 +372,112 @@ const AddTrackPage: React.FC = () => {
               )}
             />
 
-            {/* Título da música - 1 coluna */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Título da música</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Me amas"
-                      className="!text-black placeholder:text-gray-400"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Versão */}
-            <FormField
-              control={form.control}
-              name="versao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Versão</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: Live, Studio, Acordes simples..."
-                      className="!text-black placeholder:text-gray-400"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Tom */}
-            <FormField
-              control={form.control}
-              name="tom"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Tom</FormLabel>
-                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+            {/* Grid 2 colunas: Título + Versão */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-white/90">Título</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/20 text-white text-sm font-medium rounded-lg">
-                        <SelectValue placeholder="Selecione o tom" />
-                      </SelectTrigger>
+                      <Input
+                        placeholder="Nome da música"
+                        className="!text-black placeholder:text-gray-400 h-9"
+                        {...field}
+                      />
                     </FormControl>
-                    <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
-                      {AVAILABLE_KEYS.map((key) => (
-                        <SelectItem key={key} value={key}>
-                          {key}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Tag */}
-            <FormField
-              control={form.control}
-              name="tag"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Tag</FormLabel>
-                  <Select
-                    value={field.value || undefined}
-                    onValueChange={field.onChange}
-                  >
+              <FormField
+                control={form.control}
+                name="versao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-white/90">Versão</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/20 text-white text-sm font-medium rounded-lg">
-                        <SelectValue placeholder="Selecionar" />
-                      </SelectTrigger>
+                      <Input
+                        placeholder="Ex: Live, Studio..."
+                        className="!text-black placeholder:text-gray-400 h-9"
+                        {...field}
+                      />
                     </FormControl>
-                    <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
-                      {TAG_OPTIONS.map((option) => (
-                        <SelectItem
-                          key={option}
-                          value={option}
-                          className="text-sm py-3"
-                        >
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Grid 2 colunas: Tom + Tag */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="tom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-white/90">Tom</FormLabel>
+                    <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full h-9 bg-white/10 border-white/20 text-white text-sm rounded-lg">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
+                        {AVAILABLE_KEYS.map((key) => (
+                          <SelectItem key={key} value={key}>
+                            {key}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tag"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-white/90">Tag</FormLabel>
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full h-9 bg-white/10 border-white/20 text-white text-sm rounded-lg">
+                          <SelectValue placeholder="Selecionar" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
+                        {TAG_OPTIONS.map((option) => (
+                          <SelectItem
+                            key={option}
+                            value={option}
+                            className="text-sm py-2"
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Enviar Áudio */}
-            <div className="space-y-3">
-              <FormLabel className="text-white">Enviar Áudio</FormLabel>
-
-              {/* Botão de upload de arquivo */}
-              <div className="flex flex-col gap-3">
+            <div className="space-y-2">
+              <FormLabel className="text-sm text-white/90">Áudio (Opcional)</FormLabel>
+              <div className="flex flex-col gap-2">
                 <label
                   htmlFor="audio-upload"
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-white/20 transition"
+                  className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm rounded-lg cursor-pointer hover:bg-white/20 transition"
                 >
                   {audioFile ? "Trocar arquivo" : "Escolher arquivo"}
                 </label>
@@ -491,13 +489,13 @@ const AddTrackPage: React.FC = () => {
                   className="hidden"
                 />
                 {audioFile && (
-                  <div className="flex items-center gap-2 text-sm text-white/70">
-                    <File className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-xs text-white/70 bg-white/5 px-3 py-2 rounded-lg">
+                    <File className="h-4 w-4 flex-shrink-0" />
                     <span className="flex-1 truncate">{audioFile.name}</span>
                     <button
                       type="button"
                       onClick={() => setAudioFile(null)}
-                      className="text-red-400 hover:text-red-300"
+                      className="text-red-400 hover:text-red-300 flex-shrink-0"
                     >
                       ✕
                     </button>
@@ -509,12 +507,12 @@ const AddTrackPage: React.FC = () => {
             <Button
               type="submit"
               disabled={isSubmitting || isUploading}
-              className="h-12 w-full bg-[#1DB954] text-black text-base font-semibold hover:bg-[#1ed760]"
+              className="h-10 w-full bg-[#1DB954] text-black text-sm font-semibold hover:bg-[#1ed760] mt-6"
             >
               {(isSubmitting || isUploading) && (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {isUploading ? "Enviando áudio..." : "Adicionar Faixa"}
+              {isUploading ? "Enviando..." : "Adicionar Faixa"}
             </Button>
           </form>
         </Form>

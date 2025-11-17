@@ -7,8 +7,8 @@ const SettingsPrivacy: React.FC = () => {
   const lastUpdated = new Date().toLocaleDateString("pt-BR");
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <div className="px-6 pt-8 pb-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-8 md:pt-0 md:pb-0">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
         <button
           onClick={() => navigate("/settings")}
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-4"
@@ -30,7 +30,7 @@ const SettingsPrivacy: React.FC = () => {
       </div>
 
       <div className="px-6 space-y-4">
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Lock className="w-5 h-5 text-[#1DB954]" />
             Compromisso com a privacidade
@@ -42,7 +42,7 @@ const SettingsPrivacy: React.FC = () => {
           </p>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <KeyRound className="w-5 h-5 text-[#1DB954]" />
             Coleta e uso de dados
@@ -54,7 +54,7 @@ const SettingsPrivacy: React.FC = () => {
           </ul>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <FileText className="w-5 h-5 text-[#1DB954]" />
             Termos de uso
@@ -67,18 +67,18 @@ const SettingsPrivacy: React.FC = () => {
           </ul>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Globe className="w-5 h-5 text-[#1DB954]" />
             Serviços conectados
           </h3>
           <p className="text-white/70 text-sm">
-            O MMG Playback integra Supabase, Google Sheets/Drive e CifraClub apenas para leitura e organização das cifras.
+            O MMG Playback integra Supabase e Google Sheets/Drive apenas para leitura e organização das cifras.
             Esses serviços têm políticas próprias, e recomendamos revisar a privacidade de cada um para entender como tratam os dados.
           </p>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
           <h3 className="text-lg font-semibold">Direitos dos usuários</h3>
           <p className="text-white/70 text-sm">
             Caso deseje revisar, corrigir ou excluir informações pessoais, entre em contato com a liderança do ministério.
@@ -86,7 +86,7 @@ const SettingsPrivacy: React.FC = () => {
           </p>
         </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
+        <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
           <h3 className="text-lg font-semibold">Contato</h3>
           <p className="text-white/70 text-sm">
             Dúvidas sobre privacidade ou termos podem ser enviadas para o time responsável pelo MMG Playback.

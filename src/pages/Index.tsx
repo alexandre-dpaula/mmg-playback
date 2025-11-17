@@ -68,18 +68,18 @@ const Index = () => {
   }, []);
 
   const renderEmptyState = (title: string, subtitle: string) => (
-    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 py-16 text-center">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-lg shadow-black/30 space-y-3">
-          <p className="text-sm uppercase tracking-[0.2em] text-[#1DB954] font-semibold">
+    <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-8 md:pb-0 px-0">
+      <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 py-12 md:py-16 text-center">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 sm:p-8 shadow-lg shadow-black/30 space-y-3 w-full max-w-sm">
+          <p className="text-xs sm:text-sm uppercase tracking-[0.2em] text-[#1DB954] font-semibold">
             Nenhum evento disponível
           </p>
-          <h1 className="text-2xl font-semibold">{title}</h1>
-          <p className="text-white/60">{subtitle}</p>
+          <h1 className="text-xl sm:text-2xl font-semibold">{title}</h1>
+          <p className="text-sm sm:text-base text-white/60">{subtitle}</p>
         </div>
         <Link
           to="/"
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-6 py-3 text-black font-semibold hover:bg-[#1ed760] transition"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#1DB954] px-6 py-3 text-black font-semibold hover:bg-[#1ed760] transition text-sm sm:text-base"
         >
           Voltar para eventos
         </Link>
@@ -108,36 +108,36 @@ const Index = () => {
 
   // Quando terminar de carregar, mostra a página principal
   return (
-    <div className="min-h-screen bg-[#121212] text-white pt-16 pb-24 md:pt-8 md:pb-8">
+    <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-8 pb-24 md:pb-8 px-0">
       {/* Indicador de loading discreto para refreshes */}
       {isLoading && !showPreloader && (
         <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />
       )}
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8 md:gap-12 px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
-        <header className="text-center space-y-1">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:gap-6 md:gap-8 px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+        <header className="text-center space-y-2 sm:space-y-3">
           <div
-            className="flex flex-wrap items-baseline justify-center gap-3 text-[14px] font-medium tracking-wide"
+            className="flex flex-wrap items-baseline justify-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium tracking-wide"
             style={{ color: CLOCK_TEXT_COLOR }}
           >
             <div className="flex items-baseline gap-1">
-              <span>{clockInfo.weekday}</span>
+              <span className="truncate">{clockInfo.weekday}</span>
               <span>{clockInfo.day}</span>
               <span className="uppercase">{clockInfo.month}</span>
             </div>
             <div className="flex items-baseline gap-1">
               <span>{clockInfo.time}</span>
-              <span className="text-[12px] font-medium self-start" style={{ color: CLOCK_TEXT_COLOR, opacity: 0.8 }}>
+              <span className="text-xs font-medium self-start" style={{ color: CLOCK_TEXT_COLOR, opacity: 0.8 }}>
                 {clockInfo.seconds}
               </span>
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-medium mb-10">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-medium mb-4 sm:mb-6 md:mb-10 px-2 break-words">
             {title}
           </h1>
         </header>
         <SpotifyPlayer filter={filter} eventId={playlistEventId!} />
-        <div className="text-center pb-8">
+        <div className="text-center pb-4 sm:pb-6 md:pb-8">
           <MadeWithDyad />
         </div>
       </div>

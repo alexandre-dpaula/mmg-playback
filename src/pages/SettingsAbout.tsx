@@ -9,12 +9,11 @@ const SettingsAbout: React.FC = () => {
   const buildDate = new Date().toLocaleDateString("pt-BR");
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      {/* Header */}
-      <div className="px-6 pt-8 pb-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-8 md:pt-0 md:pb-0">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
         <button
           onClick={() => navigate("/settings")}
-          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-4"
+          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Voltar</span>
@@ -26,13 +25,12 @@ const SettingsAbout: React.FC = () => {
           </div>
           <h1 className="text-3xl font-bold">Sobre</h1>
         </div>
-        <p className="text-white/60">Versão e informações do aplicativo</p>
-      </div>
+        <p className="text-white/60 mb-8">Versão e informações do aplicativo</p>
 
-      {/* Content */}
-      <div className="px-6 space-y-4">
+        {/* Content */}
+        <div className="space-y-4">
         {/* App Info Card */}
-        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+        <div className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5">
           <h2 className="text-xl font-semibold mb-4">MMG - Ensaio Vocal</h2>
 
           <div className="space-y-3">
@@ -54,7 +52,7 @@ const SettingsAbout: React.FC = () => {
         </div>
 
         {/* Description Card */}
-        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+        <div className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5">
           <h3 className="text-lg font-semibold mb-3">Sobre o App</h3>
           <p className="text-white/70 leading-relaxed">
             Aplicativo desenvolvido para organizar e facilitar o acesso às cifras,
@@ -64,7 +62,7 @@ const SettingsAbout: React.FC = () => {
         </div>
 
         {/* Features Card */}
-        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+        <div className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5">
           <h3 className="text-lg font-semibold mb-3">Funcionalidades</h3>
           <ul className="space-y-2 text-white/70">
             <li className="flex items-start gap-2">
@@ -73,7 +71,7 @@ const SettingsAbout: React.FC = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-[#1DB954] mt-1">•</span>
-              <span>Visualização de cifras extraídas do CifraClub</span>
+              <span>Visualização de cifras online</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-[#1DB954] mt-1">•</span>
@@ -93,6 +91,7 @@ const SettingsAbout: React.FC = () => {
 
         <div className="pt-4">
           <MadeWithDyad />
+        </div>
         </div>
       </div>
     </div>

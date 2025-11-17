@@ -46,17 +46,17 @@ const SettingsProfile: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-24 md:pt-0 md:pb-0">
-      <div className="px-6 pt-8 pb-6">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-8 md:pt-0 md:pb-0">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
         <button
           onClick={() => navigate("/settings")}
-          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-4"
+          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Voltar</span>
         </button>
 
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-8">
           <div className="relative">
             <img
               key={profile.avatarUrl}
@@ -97,37 +97,37 @@ const SettingsProfile: React.FC = () => {
             <p className="text-white/70 text-sm">{profile.email}</p>
           </div>
         </div>
-      </div>
 
-      <div className="px-6 space-y-4">
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
-          <h2 className="text-lg font-semibold">Identidade</h2>
-          <div className="space-y-2 text-sm text-white/70">
-            <div className="flex justify-between">
-              <span className="text-white/50">Nome completo</span>
-              <span>{profile.name}</span>
+        <div className="space-y-4">
+          <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
+            <h2 className="text-lg font-semibold">Identidade</h2>
+            <div className="space-y-2 text-sm text-white/70">
+              <div className="flex justify-between">
+                <span className="text-white/50">Nome completo</span>
+                <span>{profile.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-white/50">Email</span>
+                <span>{profile.email}</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-white/50">Email</span>
-              <span>{profile.email}</span>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="bg-white/5 rounded-xl p-5 border border-white/10 space-y-3">
-          <h2 className="text-lg font-semibold">Conta</h2>
-          <p className="text-white/70 text-sm">
-            Essa conta está vinculada automaticamente ao Google ou Apple. Caso precise alterar informações,
-            atualize diretamente no provedor de login.
-          </p>
-          <Button
-            className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] gap-2 font-semibold h-12 text-base"
-            onClick={handleSignOut}
-          >
-            <LogOut className="w-4 h-4" />
-            Sair do aplicativo
-          </Button>
-        </section>
+          <section className="bg-gradient-to-br from-[#181818] to-[#101010] rounded-2xl p-5 border border-white/5 space-y-3">
+            <h2 className="text-lg font-semibold">Conta</h2>
+            <p className="text-white/70 text-sm">
+              Essa conta está vinculada automaticamente ao Google ou Apple. Caso precise alterar informações,
+              atualize diretamente no provedor de login.
+            </p>
+            <Button
+              className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] gap-2 font-semibold h-12 text-base"
+              onClick={handleSignOut}
+            >
+              <LogOut className="w-4 h-4" />
+              Sair do aplicativo
+            </Button>
+          </section>
+        </div>
       </div>
     </div>
   );
