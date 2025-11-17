@@ -10,13 +10,12 @@ export const FooterBrand: React.FC = () => {
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)",
         }}
       >
-        <div className="mx-auto max-w-6xl flex items-center justify-center gap-3 text-white/70 text-xs tracking-[0.3em] uppercase pointer-events-auto px-4">
+        <div className="mx-auto max-w-6xl flex items-center justify-center pointer-events-auto px-4">
           <img
             src="/logo.png"
             alt="MMGPlayback"
-            className="h-6 w-6 object-contain"
+            className="h-24 w-24 object-contain"
           />
-          <span>MMGPlayback™</span>
         </div>
       </div>
     </div>
