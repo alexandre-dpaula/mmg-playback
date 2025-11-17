@@ -368,7 +368,16 @@ const TrackDetails: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-24 md:pb-8 px-0">
+      ┌─────────────────────────────────┐
+      │      CONTROLES                  │
+      ├──────────────┬──────────────────┤
+      │   Tom        │   Categoria      │
+      │  [Selector]  │   [Badge: Vocal] │
+      ├─────────────────────────────────┤
+      │  Áudio: [Tocar Pad] (Full)      │
+      ├─────────────────────────────────┤
+      │  [Editar Cifra] (Full)          │
+      └─────────────────────────────────┘      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-24 md:pb-8 px-0">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-12">
           <button
             onClick={() => navigate(-1)}
@@ -423,7 +432,7 @@ const TrackDetails: React.FC = () => {
                     Controles
                   </h3>
 
-                  {/* Grid 2 colunas */}
+                  {/* Primeira linha: Tom | Pad */}
                   <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
                     {/* Tom */}
                     <div>
@@ -451,12 +460,40 @@ const TrackDetails: React.FC = () => {
                       </Select>
                     </div>
 
+                    {/* Pad */}
+                    <div>
+                      <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
+                        Pad
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handlePadToggle}
+                        className={`w-full h-10 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 text-xs ${
+                          isPadPlaying
+                            ? "bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30"
+                            : "bg-white/10 text-white border-white/15 hover:bg-white/15"
+                        }`}
+                      >
+                        {isPadPlaying ? "Tocando" : "Ativar"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Segunda linha: Editar Cifra | Categoria */}
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    {/* Editar Cifra */}
+                    <div>
+                      <button
+                        onClick={() => setIsEditingCifra(true)}
+                        className="w-full h-10 px-3 sm:px-4 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold rounded-lg transition-colors border border-white/15 uppercase tracking-wide"
+                      >
+                        Editar
+                      </button>
+                    </div>
+
                     {/* Categoria */}
                     {track.tag && (
                       <div>
-                        <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
-                          Categoria
-                        </label>
                         <div className="h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center">
                           <span className="text-xs font-semibold text-[#1DB954] uppercase">
                             {track.tag}
@@ -464,34 +501,6 @@ const TrackDetails: React.FC = () => {
                         </div>
                       </div>
                     )}
-                  </div>
-
-                  {/* Pad - Full width */}
-                  <div className="mb-3 sm:mb-4">
-                    <label className="text-white/60 text-xs font-semibold uppercase tracking-wide mb-1 block">
-                      Áudio
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handlePadToggle}
-                      className={`w-full h-10 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 text-xs ${
-                        isPadPlaying
-                          ? "bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30"
-                          : "bg-white/10 text-white border-white/15 hover:bg-white/15"
-                      }`}
-                    >
-                      {isPadPlaying ? "Tocando Pad" : "Tocar Pad"}
-                    </button>
-                  </div>
-
-                  {/* Editar Cifra */}
-                  <div className="pt-2 sm:pt-3 border-t border-white/10">
-                    <button
-                      onClick={() => setIsEditingCifra(true)}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors border border-white/15"
-                    >
-                      Editar Cifra
-                    </button>
                   </div>
                 </div>
               </div>
