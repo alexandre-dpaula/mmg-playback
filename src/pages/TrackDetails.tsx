@@ -417,9 +417,7 @@ const TrackDetails: React.FC = () => {
                   Controles
                 </h3>
 
-                {/* Primeira linha: Tom | Pad */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-                  {/* Tom */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
                   <div>
                     <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
                       Tom
@@ -445,7 +443,6 @@ const TrackDetails: React.FC = () => {
                     </Select>
                   </div>
 
-                  {/* Pad */}
                   <div>
                     <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
                       Pad
@@ -462,12 +459,8 @@ const TrackDetails: React.FC = () => {
                       {isPadPlaying ? "Tocando" : "Ativar"}
                     </button>
                   </div>
-                </div>
 
-                {/* Segunda linha: Editar Cifra | Categoria */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  {/* Editar Cifra */}
-                  <div>
+                  <div className="flex flex-col justify-end">
                     <button
                       type="button"
                       onClick={handleEditCifraClick}
@@ -476,17 +469,6 @@ const TrackDetails: React.FC = () => {
                       Editar
                     </button>
                   </div>
-
-                  {/* Categoria */}
-                  {track.tag && (
-                    <div>
-                      <div className="h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center">
-                        <span className="text-xs font-semibold text-[#1DB954] uppercase">
-                          {track.tag}
-                        </span>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
 export const SELECTED_EVENT_STORAGE_KEY = "mmg-selected-event";
 const SELECTED_EVENT_EVENT = "mmg-selected-event-changed";
 const CACHE_VERSION_KEY = "mmg-cache-version";
-const CURRENT_CACHE_VERSION = "2.0"; // Incrementar para forçar limpeza
+const CURRENT_CACHE_VERSION = "3.0"; // Incrementar para forçar limpeza
 
 // Lista de chaves antigas que devem ser removidas
 const DEPRECATED_KEYS = [
