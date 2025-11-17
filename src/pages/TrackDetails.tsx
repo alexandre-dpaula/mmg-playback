@@ -387,11 +387,91 @@ const TrackDetails: React.FC = () => {
             <span>Voltar para playlist</span>
           </button>
 
-          {/* Layout responsivo: mobile stacked, desktop grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
-            {/* Área principal da cifra */}
-            <div className="lg:col-span-8 xl:col-span-9 min-w-0">
-              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30 min-h-screen lg:min-h-0">
+          {/* Layout responsivo: controles no topo, cifra embaixo */}
+          <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8">
+            {/* Painel de controle - No topo */}
+            <div className="min-w-0">
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
+                <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-3 sm:mb-4">
+                  Controles
+                </h3>
+
+                {/* Primeira linha: Tom | Pad */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  {/* Tom */}
+                  <div>
+                    <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
+                      Tom
+                    </label>
+                    <Select
+                      value={selectedKey}
+                      onValueChange={handleKeyChange}
+                    >
+                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/15 text-white font-semibold text-xs">
+                        <SelectValue placeholder={track.tom || "C"} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#282828] border-white/20">
+                        {AVAILABLE_KEYS.map((key) => (
+                          <SelectItem
+                            key={key}
+                            value={key}
+                            className="text-white hover:bg-white/10 focus:bg-white/20 text-sm"
+                          >
+                            {key}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Pad */}
+                  <div>
+                    <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
+                      Pad
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handlePadToggle}
+                      className={`w-full h-10 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 text-xs ${
+                        isPadPlaying
+                          ? "bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30"
+                          : "bg-white/10 text-white border-white/15 hover:bg-white/15"
+                      }`}
+                    >
+                      {isPadPlaying ? "Tocando" : "Ativar"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Segunda linha: Editar Cifra | Categoria */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  {/* Editar Cifra */}
+                  <div>
+                    <button
+                      onClick={() => setIsEditingCifra(true)}
+                      className="w-full h-10 px-3 sm:px-4 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold rounded-lg transition-colors border border-white/15 uppercase tracking-wide"
+                    >
+                      Editar
+                    </button>
+                  </div>
+
+                  {/* Categoria */}
+                  {track.tag && (
+                    <div>
+                      <div className="h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center">
+                        <span className="text-xs font-semibold text-[#1DB954] uppercase">
+                          {track.tag}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Área principal da cifra - Abaixo dos controles */}
+            <div className="min-w-0">
+              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30">
                 <div className="flex items-start justify-between mb-4 gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="space-y-1">
@@ -419,89 +499,6 @@ const TrackDetails: React.FC = () => {
                     originalKey={track.original_tom || track.tom || "D"}
                     selectedKey={selectedKey}
                   />
-                </div>
-              </div>
-            </div>
-
-            {/* Painel de controle lateral */}
-            <div className="lg:col-span-4 xl:col-span-3 min-w-0">
-              <div className="space-y-3 sm:space-y-4">
-                {/* Card de controles */}
-                <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
-                  <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-3 sm:mb-4">
-                    Controles
-                  </h3>
-
-                  {/* Primeira linha: Tom | Pad */}
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4">
-                    {/* Tom */}
-                    <div>
-                      <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
-                        Tom
-                      </label>
-                      <Select
-                        value={selectedKey}
-                        onValueChange={handleKeyChange}
-                      >
-                        <SelectTrigger className="w-full h-10 bg-white/10 border-white/15 text-white font-semibold text-xs">
-                          <SelectValue placeholder={track.tom || "C"} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#282828] border-white/20">
-                          {AVAILABLE_KEYS.map((key) => (
-                            <SelectItem
-                              key={key}
-                              value={key}
-                              className="text-white hover:bg-white/10 focus:bg-white/20 text-sm"
-                            >
-                              {key}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Pad */}
-                    <div>
-                      <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
-                        Pad
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handlePadToggle}
-                        className={`w-full h-10 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 text-xs ${
-                          isPadPlaying
-                            ? "bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30"
-                            : "bg-white/10 text-white border-white/15 hover:bg-white/15"
-                        }`}
-                      >
-                        {isPadPlaying ? "Tocando" : "Ativar"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Segunda linha: Editar Cifra | Categoria */}
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    {/* Editar Cifra */}
-                    <div>
-                      <button
-                        onClick={() => setIsEditingCifra(true)}
-                        className="w-full h-10 px-3 sm:px-4 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold rounded-lg transition-colors border border-white/15 uppercase tracking-wide"
-                      >
-                        Editar
-                      </button>
-                    </div>
-
-                    {/* Categoria */}
-                    {track.tag && (
-                      <div>
-                        <div className="h-10 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center">
-                          <span className="text-xs font-semibold text-[#1DB954] uppercase">
-                            {track.tag}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
