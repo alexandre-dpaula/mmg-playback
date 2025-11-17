@@ -368,12 +368,7 @@ const TrackDetails: React.FC = () => {
 
   return (
     <>
-      ┌─────────────────────────────────┐ │ CONTROLES │
-      ├──────────────┬──────────────────┤ │ Tom │ Categoria │ │ [Selector] │
-      [Badge: Vocal] │ ├─────────────────────────────────┤ │ Áudio: [Tocar Pad]
-      (Full) │ ├─────────────────────────────────┤ │ [Editar Cifra] (Full) │
-      └─────────────────────────────────┘{" "}
-      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-4 sm:pt-6 md:pt-0 pb-8 md:pb-8 overflow-x-hidden">
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-8 md:pb-8 overflow-x-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8 py-2 sm:py-3 md:py-4 lg:py-6">
           <button
             onClick={() => navigate(-1)}

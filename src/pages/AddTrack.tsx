@@ -315,7 +315,7 @@ const AddTrackPage: React.FC = () => {
   const isSubmitting = form.formState.isSubmitting;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-16 pb-8 md:pt-0 md:pb-0">
+    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-8 md:pb-0">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 py-6 sm:py-8">
         <Link
           to="/"
