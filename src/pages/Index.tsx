@@ -28,11 +28,7 @@ const Index = () => {
   }, [refreshKey, refetch]);
   const title = playlistData?.title ?? DEFAULT_PLAYLIST.title;
   const [filter] = React.useState<"all" | "vocal" | "instrumental">("all");
-  const [showPreloader, setShowPreloader] = React.useState(() => {
-    // Mostra preloader apenas na primeira visita da sessão
-    const hasVisited = sessionStorage.getItem("hasVisited");
-    return !hasVisited;
-  });
+  const [showPreloader, setShowPreloader] = React.useState(true);
   const [now, setNow] = React.useState(() => new Date());
 
   React.useEffect(() => {
@@ -66,12 +62,14 @@ const Index = () => {
     };
   }, [now]);
 
-  // Marca que já visitou na primeira renderização
+  // Quando terminar de carregar, aguarda um pequeno delay e oculta o preloader
   React.useEffect(() => {
-    if (!sessionStorage.getItem("hasVisited")) {
-      sessionStorage.setItem("hasVisited", "true");
+    if (!showPreloader) return;
+    if (!isLoading) {
+      const timeout = window.setTimeout(() => setShowPreloader(false), 600);
+      return () => window.clearTimeout(timeout);
     }
-  }, []);
+  }, [isLoading, showPreloader]);
 
   const renderEmptyState = (title: string, subtitle: string) => (
     <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-8 md:pb-0 overflow-x-hidden">
@@ -93,6 +91,10 @@ const Index = () => {
     </div>
   );
 
+  if (showPreloader) {
+    return <Preloader isLoading={true} />;
+  }
+
   if (!playlistEventId) {
     return renderEmptyState(
       "Selecione um evento para acessar o repertório",
@@ -105,11 +107,6 @@ const Index = () => {
       "Evento não encontrado",
       "Talvez ele tenha sido removido. Selecione outro evento na aba principal."
     );
-  }
-
-  // Se está carregando E é a primeira visita, mostra o preloader
-  if (isLoading && showPreloader) {
-    return <Preloader isLoading={true} />;
   }
 
   // Quando terminar de carregar, mostra a página principal

@@ -87,11 +87,25 @@ export const MobileNav: React.FC = () => {
     setIsMenuOpen(false);
   };
 
+  const barHeight = 60;
+  const safeAreaTop = "env(safe-area-inset-top, 0px)";
+  const combinedHeight = `calc(${barHeight}px + ${safeAreaTop})`;
+  const overlayHeight = `calc(100vh - ${barHeight}px - ${safeAreaTop})`;
+
   return (
     <>
       {/* Top Bar Mobile - Fixed positioning com altura fixa */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10 h-[60px]">
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2 h-full">
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10"
+        style={{
+          paddingTop: safeAreaTop,
+          height: combinedHeight,
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-3 sm:px-4 py-2"
+          style={{ height: `${barHeight}px` }}
+        >
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
             <img
               src={profile.avatarUrl}
@@ -129,11 +143,13 @@ export const MobileNav: React.FC = () => {
       {/* Menu Overlay Mobile - Começa abaixo do top bar */}
       {isMenuOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm top-[60px]"
+          className="md:hidden fixed left-0 right-0 bottom-0 z-40 bg-black/50 backdrop-blur-sm"
+          style={{ top: combinedHeight }}
           onClick={() => setIsMenuOpen(false)}
         >
           <div
-            className="absolute top-0 right-0 w-full sm:w-64 max-w-xs h-[calc(100vh-60px)] bg-[#0a0a0a] border-l border-white/10 overflow-y-auto"
+            className="absolute top-0 right-0 w-full sm:w-64 max-w-xs bg-[#0a0a0a] border-l border-white/10 overflow-y-auto"
+            style={{ height: overlayHeight }}
             onClick={(e) => e.stopPropagation()}
           >
             <nav className="p-4 space-y-1">
