@@ -2,7 +2,6 @@ import React from "react";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
-import { Preloader } from "@/components/Preloader";
 import { Link, useParams } from "react-router-dom";
 import { useRefresh } from "@/context/RefreshContext";
 
@@ -28,7 +27,6 @@ const Index = () => {
   }, [refreshKey, refetch]);
   const title = playlistData?.title ?? DEFAULT_PLAYLIST.title;
   const [filter] = React.useState<"all" | "vocal" | "instrumental">("all");
-  const [showPreloader, setShowPreloader] = React.useState(true);
   const [now, setNow] = React.useState(() => new Date());
 
   React.useEffect(() => {
@@ -62,15 +60,6 @@ const Index = () => {
     };
   }, [now]);
 
-  // Quando terminar de carregar, aguarda um pequeno delay e oculta o preloader
-  React.useEffect(() => {
-    if (!showPreloader) return;
-    if (!isLoading) {
-      const timeout = window.setTimeout(() => setShowPreloader(false), 600);
-      return () => window.clearTimeout(timeout);
-    }
-  }, [isLoading, showPreloader]);
-
   const renderEmptyState = (title: string, subtitle: string) => (
     <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-8 md:pb-0 overflow-x-hidden">
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 sm:px-6 md:px-8 py-12 md:py-16 text-center">
@@ -91,10 +80,6 @@ const Index = () => {
     </div>
   );
 
-  if (showPreloader) {
-    return <Preloader isLoading={true} />;
-  }
-
   if (!playlistEventId) {
     return renderEmptyState(
       "Selecione um evento para acessar o repertório",
@@ -113,7 +98,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-8 md:pb-8 overflow-x-hidden">
       {/* Indicador de loading discreto para refreshes */}
-      {isLoading && !showPreloader && (
+      {isLoading && (
         <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />
       )}
 
