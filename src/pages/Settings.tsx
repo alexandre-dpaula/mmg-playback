@@ -51,7 +51,7 @@ const Settings: React.FC = () => {
   ];
 
   return (
-    <>
+    <div className="relative">
       <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-32 md:pb-12">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
         <header className="space-y-2 mb-6 sm:mb-8">
@@ -89,8 +89,9 @@ const Settings: React.FC = () => {
           ))}
         </div>
       </div>
+      </div>
       <FooterBrand />
-    </>
+    </div>
   );
 };
 
