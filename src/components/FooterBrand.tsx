@@ -1,0 +1,24 @@
+import React from "react";
+
+export const FooterBrand: React.FC = () => {
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
+      <div
+        className="mx-auto w-full bg-black/80 backdrop-blur border-t border-white/5"
+        style={{
+          paddingTop: "0.75rem",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)",
+        }}
+      >
+        <div className="mx-auto max-w-6xl flex items-center justify-center gap-3 text-white/70 text-xs tracking-[0.3em] uppercase pointer-events-auto px-4">
+          <img
+            src="/logo.png"
+            alt="MMGPlayback"
+            className="h-6 w-6 object-contain"
+          />
+          <span>MMGPlayback™</span>
+        </div>
+      </div>
+    </div>
+  );
+};

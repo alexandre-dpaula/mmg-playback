@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { getSelectedEventId, setSelectedEventId } from "@/lib/preferences";
 import { useRefresh } from "@/context/RefreshContext";
+import { FooterBrand } from "@/components/FooterBrand";
 
 type EventItem = {
   id: string;
@@ -385,7 +386,8 @@ export default function Events() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-8 md:pb-0 overflow-x-hidden">
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4">
         <header className="space-y-2 mb-6 sm:mb-8">
           <p className="text-sm uppercase tracking-[0.3em] text-[#1DB954] font-semibold">
@@ -445,6 +447,8 @@ export default function Events() {
           />
         </div>
       </div>
-    </div>
+      </div>
+      <FooterBrand />
+    </>
   );
 }

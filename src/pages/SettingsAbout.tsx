@@ -1,6 +1,5 @@
 import React from "react";
 import { ArrowLeft, Info } from "lucide-react";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useNavigate } from "react-router-dom";
 
 const SettingsAbout: React.FC = () => {
@@ -89,9 +88,6 @@ const SettingsAbout: React.FC = () => {
         </div>
 
 
-        <div className="pt-4">
-          <MadeWithDyad />
-        </div>
         </div>
       </div>
     </div>

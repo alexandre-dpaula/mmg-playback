@@ -1,9 +1,9 @@
 import React from "react";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
-import { MadeWithDyad } from "@/components/made-with-dyad";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import { Link, useParams } from "react-router-dom";
 import { useRefresh } from "@/context/RefreshContext";
+import { FooterBrand } from "@/components/FooterBrand";
 
 const CLOCK_TEXT_COLOR = "rgb(255 255 255 / 16%)";
 
@@ -96,7 +96,8 @@ const Index = () => {
 
   // Quando terminar de carregar, mostra a página principal
   return (
-    <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-8 md:pb-8 overflow-x-hidden">
+    <>
+      <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden">
       {/* Indicador de loading discreto para refreshes */}
       {isLoading && (
         <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />
@@ -128,11 +129,10 @@ const Index = () => {
           </h1>
         </header>
         <SpotifyPlayer filter={filter} eventId={playlistEventId!} />
-        <div className="text-center pb-4 sm:pb-6 md:pb-8">
-          <MadeWithDyad />
-        </div>
       </div>
-    </div>
+      </div>
+      <FooterBrand />
+    </>
   );
 };
 
