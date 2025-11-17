@@ -12,6 +12,7 @@ type CifraDisplayProps = {
   selectedKey?: string;
   isEditing?: boolean;
   onEditClose?: () => void;
+  onContentResolved?: (content: string) => void;
 };
 
 const renderCifraContent = (content: string) => {
@@ -82,7 +83,8 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({
   originalKey,
   selectedKey,
   isEditing = false,
-  onEditClose
+  onEditClose,
+  onContentResolved
 }) => {
   const [editedContent, setEditedContent] = useState<string | undefined>();
 
@@ -94,6 +96,12 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({
 
   // Determina qual conteúdo usar (prioridade: editedContent > cifraContent > docContent)
   const contentToUse = editedContent || cifraContent || docContent;
+
+  React.useEffect(() => {
+    if (contentToUse) {
+      onContentResolved?.(contentToUse);
+    }
+  }, [contentToUse, onContentResolved]);
 
   // Aplica transposição se necessário
   const transposedContent = React.useMemo(() => {

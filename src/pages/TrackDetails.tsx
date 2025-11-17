@@ -5,6 +5,7 @@ import { supabase, getPadUrl } from "@/lib/supabase";
 import { CifraDisplay } from "@/components/CifraDisplay";
 import { CifraEditor } from "@/components/CifraEditor";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -97,6 +98,8 @@ const TrackDetails: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPadPlaying, setIsPadPlaying] = useState(false);
   const [isEditingCifra, setIsEditingCifra] = useState(false);
+  const [resolvedCifraContent, setResolvedCifraContent] = useState("");
+  const [editorInitialContent, setEditorInitialContent] = useState("");
   const padAudioRef = useRef<HTMLAudioElement | null>(null);
   const queryClient = useQueryClient();
 
@@ -197,6 +200,16 @@ const TrackDetails: React.FC = () => {
       setSelectedKey(normalized);
     }
   }, [track?.tom]);
+
+  useEffect(() => {
+    if (track?.cifra_content) {
+      setResolvedCifraContent(track.cifra_content);
+      setEditorInitialContent(track.cifra_content);
+    } else {
+      setResolvedCifraContent("");
+      setEditorInitialContent("");
+    }
+  }, [track?.cifra_content]);
 
   // Função para alterar o tom (salva apenas o tom, não a cifra transposta)
   const handleKeyChange = async (newKey: string) => {
@@ -321,6 +334,21 @@ const TrackDetails: React.FC = () => {
     setIsPadPlaying((prev) => !prev);
   };
 
+  const handleEditCifraClick = () => {
+    const contentToEdit =
+      (track?.cifra_content && track.cifra_content.trim().length > 0
+        ? track.cifra_content
+        : resolvedCifraContent) || "";
+
+    if (!contentToEdit.trim()) {
+      toast.error("Nenhuma cifra disponível para editar.");
+      return;
+    }
+
+    setEditorInitialContent(contentToEdit);
+    setIsEditingCifra(true);
+  };
+
   const handleSaveCifra = async (newContent: string) => {
     if (!trackId) {
       throw new Error("Faixa inválida");
@@ -337,6 +365,8 @@ const TrackDetails: React.FC = () => {
     }
 
     setTrack((prev) => (prev ? { ...prev, cifra_content: newContent } : prev));
+    setResolvedCifraContent(newContent);
+    setEditorInitialContent(newContent);
   };
 
   if (isLoading) {
@@ -396,7 +426,10 @@ const TrackDetails: React.FC = () => {
                     </label>
                     <Select value={selectedKey} onValueChange={handleKeyChange}>
                       <SelectTrigger className="w-full h-10 bg-white/10 border-white/15 text-white font-semibold text-xs">
-                        <SelectValue placeholder={track.tom || "C"} />
+                        <SelectValue
+                          className="flex-1 text-center"
+                          placeholder={track.tom || "C"}
+                        />
                       </SelectTrigger>
                       <SelectContent className="bg-[#282828] border-white/20">
                         {AVAILABLE_KEYS.map((key) => (
@@ -436,7 +469,8 @@ const TrackDetails: React.FC = () => {
                   {/* Editar Cifra */}
                   <div>
                     <button
-                      onClick={() => setIsEditingCifra(true)}
+                      type="button"
+                      onClick={handleEditCifraClick}
                       className="w-full h-10 px-3 sm:px-4 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold rounded-lg transition-colors border border-white/15 uppercase tracking-wide"
                     >
                       Editar
@@ -486,6 +520,10 @@ const TrackDetails: React.FC = () => {
                     cifraContent={track.cifra_content || undefined}
                     originalKey={track.original_tom || track.tom || "D"}
                     selectedKey={selectedKey}
+                    onContentResolved={(content) => {
+                      setResolvedCifraContent(content);
+                      setEditorInitialContent(content);
+                    }}
                   />
                 </div>
               </div>
@@ -495,7 +533,7 @@ const TrackDetails: React.FC = () => {
       </div>
       {isEditingCifra && (
         <CifraEditor
-          initialContent={track.cifra_content || ""}
+          initialContent={editorInitialContent}
           onClose={() => setIsEditingCifra(false)}
           onSaveContent={handleSaveCifra}
         />
