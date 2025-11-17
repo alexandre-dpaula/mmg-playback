@@ -408,24 +408,20 @@ const TrackDetails: React.FC = () => {
             <span>Voltar para playlist</span>
           </button>
 
-          {/* Layout responsivo: controles no topo (mobile) ou lateral (desktop/tablet) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8 w-full">
-            {/* Painel de controle - No topo em mobile, lateral em desktop */}
-            <div className="lg:col-span-4 xl:col-span-3 w-full lg:order-2">
+          {/* Layout responsivo: controles sempre acima da cifra */}
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 w-full">
+            <div className="w-full">
               <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
                 <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-3 sm:mb-4">
                   Controles
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
-                      Tom
-                    </label>
                     <Select value={selectedKey} onValueChange={handleKeyChange}>
-                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/15 text-white font-semibold text-xs">
+                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/15 text-white font-semibold text-sm uppercase flex items-center justify-center rounded-lg opacity-100">
                         <SelectValue
-                          className="flex-1 text-center"
+                          className="text-center"
                           placeholder={track.tom || "C"}
                         />
                       </SelectTrigger>
@@ -444,29 +440,30 @@ const TrackDetails: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-[#1DB954] text-xs font-semibold uppercase tracking-wide mb-1 block">
-                      Pad
-                    </label>
                     <button
                       type="button"
                       onClick={handlePadToggle}
-                      className={`w-full h-10 rounded-lg border font-semibold uppercase tracking-wide transition-all duration-200 text-xs ${
+                      className={`w-full h-10 rounded-lg border font-semibold uppercase text-sm transition-all duration-200 ${
                         isPadPlaying
-                          ? "bg-[#1DB954] text-black border-[#1DB954] shadow-lg shadow-[#1DB954]/30"
-                          : "bg-white/10 text-white border-white/15 hover:bg-white/15"
+                          ? "bg-[#1DB954] text-black border-[#1DB954] opacity-100"
+                          : "bg-white/10 text-white border-white/15 opacity-30 hover:opacity-60"
                       }`}
                     >
-                      {isPadPlaying ? "Tocando" : "Ativar"}
+                      PAD
                     </button>
                   </div>
 
-                  <div className="flex flex-col justify-end">
+                  <div>
                     <button
                       type="button"
                       onClick={handleEditCifraClick}
-                      className="w-full h-10 px-3 sm:px-4 bg-white/10 hover:bg-white/15 text-white text-xs font-semibold rounded-lg transition-colors border border-white/15 uppercase tracking-wide"
+                      className={`w-full h-10 px-3 bg-white/10 text-white text-sm font-semibold rounded-lg border border-white/15 uppercase transition-all duration-200 ${
+                        isEditingCifra
+                          ? "opacity-100"
+                          : "opacity-30 hover:opacity-60"
+                      }`}
                     >
-                      Editar
+                      EDITAR
                     </button>
                   </div>
                 </div>
@@ -474,7 +471,7 @@ const TrackDetails: React.FC = () => {
             </div>
 
             {/* Área principal da cifra */}
-            <div className="lg:col-span-8 xl:col-span-9 w-full lg:order-1">
+            <div className="w-full">
               <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30 w-full overflow-x-hidden">
                 <div className="flex items-start justify-between mb-4 gap-3">
                   <div className="flex-1 min-w-0">

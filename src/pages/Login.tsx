@@ -220,13 +220,14 @@ const Login: React.FC = () => {
 
                 {/* Link para login com email */}
                 <div className="text-center">
-                  <p className="text-white/90 text-base font-bold">
+                  <p className="text-white/70 text-sm">
                     Já tem uma conta?{" "}
                     <button
+                      type="button"
                       onClick={() => setShowEmailLogin(true)}
-                      className="underline hover:text-[#1DB954] transition-colors"
+                      className="text-[#1DB954] font-semibold hover:underline transition-colors"
                     >
-                      Faça login aqui.
+                      Faça login
                     </button>
                   </p>
                 </div>
