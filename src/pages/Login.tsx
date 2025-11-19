@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Loader2 } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const CounterAnimation: React.FC = () => {
   const [count, setCount] = useState(0);
@@ -126,13 +127,13 @@ const Login: React.FC = () => {
                 Bem-vindo a
               </p>
               <div className="flex justify-center mb-5 animate-fade-in-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-                <img src="/logo.png" alt="MMGPlayback" className="h-28 object-contain brightness-110 drop-shadow-2xl" />
+                <BrandLogo size="xl" className="drop-shadow-2xl" />
               </div>
             </div>
 
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#1DB954]/10 to-transparent blur-xl"></div>
-              <p className="relative text-lg font-light text-white leading-[1.1] tracking-normal animate-fade-in-up" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
+              <p className="relative text-lg font-light text-white leading-[1.1] tracking-normal animate-fade-in-up mb-[50px]" style={{ animationDelay: '0.2s', animationFillMode: 'both' }}>
                 Milhões de músicas e cifras<br />
                 <span className="text-white font-light">para os seus repertórios</span>
               </p>

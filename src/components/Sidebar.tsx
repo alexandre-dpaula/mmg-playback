@@ -9,6 +9,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Building2,
+  User as UserIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -18,7 +20,14 @@ import {
 } from "@/lib/preferences";
 import { useRefresh } from "@/context/RefreshContext";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserRole } from "@/context/AuthContext";
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  lider: "Líder",
+  vocal: "Vocal",
+  instrumental: "Instrumental",
+  member: "Membro",
+};
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -29,6 +38,8 @@ export const Sidebar: React.FC = () => {
   );
   const { triggerRefresh } = useRefresh();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [avatarError, setAvatarError] = React.useState(false);
+  const showFallbackAvatar = avatarError || !profile.avatarUrl;
 
   React.useEffect(() => {
     const updatePath = () => {
@@ -54,7 +65,7 @@ export const Sidebar: React.FC = () => {
     navigate("/login");
   };
 
-  const tabs = [
+  const baseTabs = [
     {
       name: "Eventos",
       icon: Home,
@@ -79,13 +90,25 @@ export const Sidebar: React.FC = () => {
       path: "/add",
       isActive: location.pathname === "/add",
     },
-    {
-      name: "Configurações",
-      icon: Settings,
-      path: "/settings",
-      isActive: location.pathname.startsWith("/settings"),
-    },
   ];
+
+  const tabs = [...baseTabs];
+
+  if (profile.role === "lider") {
+    tabs.push({
+      name: "Minha Igreja",
+      icon: Building2,
+      path: "/onboarding/igreja",
+      isActive: location.pathname.startsWith("/onboarding"),
+    });
+  }
+
+  tabs.push({
+    name: "Configurações",
+    icon: Settings,
+    path: "/settings",
+    isActive: location.pathname.startsWith("/settings"),
+  });
 
   return (
     <div
@@ -98,40 +121,41 @@ export const Sidebar: React.FC = () => {
       <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 flex-shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <img
-              src={profile.avatarUrl}
-              alt={profile.name}
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-[#1DB954]/30 flex-shrink-0"
-              onError={(e) => {
-                const img = e.currentTarget as HTMLImageElement;
-                if (img.src !== "/perfil.jpg") {
-                  img.src = "/perfil.jpg";
-                }
-              }}
-            />
+            {showFallbackAvatar ? (
+              <div className="w-10 h-10 rounded-full ring-2 ring-[#1DB954]/30 flex-shrink-0 bg-[#1DB954]/10 text-[#1DB954] flex items-center justify-center shadow-inner shadow-black/50">
+                <UserIcon className="w-5 h-5" />
+              </div>
+            ) : (
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name}
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-[#1DB954]/30 flex-shrink-0"
+                onError={() => setAvatarError(true)}
+              />
+            )}
             <div className="flex-1 min-w-0">
               <h1 className="text-xs sm:text-sm font-bold text-white truncate">
                 {profile.name}
               </h1>
               <p className="text-xs text-white/60 capitalize truncate">
-                {profile.role}
+                {ROLE_LABELS[profile.role] ?? profile.role}
               </p>
             </div>
           </div>
         )}
-        {isCollapsed && (
-          <img
-            src={profile.avatarUrl}
-            alt={profile.name}
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-[#1DB954]/30"
-            onError={(e) => {
-              const img = e.currentTarget as HTMLImageElement;
-              if (img.src !== "/perfil.jpg") {
-                img.src = "/perfil.jpg";
-              }
-            }}
-          />
-        )}
+        {isCollapsed &&
+          (showFallbackAvatar ? (
+            <div className="w-10 h-10 rounded-full ring-2 ring-[#1DB954]/30 bg-[#1DB954]/10 text-[#1DB954] flex items-center justify-center shadow-inner shadow-black/50">
+              <UserIcon className="w-5 h-5" />
+            </div>
+          ) : (
+            <img
+              src={profile.avatarUrl}
+              alt={profile.name}
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-[#1DB954]/30"
+              onError={() => setAvatarError(true)}
+            />
+          ))}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className={cn(

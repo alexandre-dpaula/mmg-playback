@@ -1,4 +1,5 @@
 import React from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const FooterBrand: React.FC = () => {
   return (
@@ -10,12 +11,8 @@ export const FooterBrand: React.FC = () => {
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)",
         }}
       >
-        <div className="mx-auto max-w-6xl flex items-center justify-center pointer-events-auto px-4">
-          <img
-            src="/logo.png"
-            alt="MMGPlayback"
-            className="h-24 w-24 object-contain"
-          />
+        <div className="mx-auto max-w-6xl flex items-center justify-center pointer-events-auto px-4 py-2">
+          <BrandLogo className="text-white drop-shadow-lg" />
         </div>
       </div>
     </div>

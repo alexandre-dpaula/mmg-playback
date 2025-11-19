@@ -2,13 +2,15 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
-export type UserRole = 'lider' | 'vocal' | 'instrumental';
+export type UserRole = 'lider' | 'vocal' | 'instrumental' | 'member';
 
 type AuthProfile = {
   name: string;
   email: string;
   avatarUrl: string;
   role: UserRole;
+  churchId: string | null;
+  churchName: string | null;
 };
 
 type AuthContextType = {
@@ -27,13 +29,27 @@ const DEFAULT_PROFILE: AuthProfile = {
   name: "Alexandre Dpaula",
   email: "contato.m2bstudio@gmail.com",
   avatarUrl: "/perfil.jpg",
-  role: "vocal",
+  role: "member",
+  churchId: null,
+  churchName: null,
 };
 
 const LOCAL_AUTH_KEY = "mmg_local_auth";
 const LOCAL_PROFILE_KEY = "mmg_local_profile";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const normalizeRole = (value?: string | null): UserRole | null => {
+  if (!value) return null;
+  const map: Record<string, UserRole> = {
+    lider: "lider",
+    leader: "lider",
+    vocal: "vocal",
+    instrumental: "instrumental",
+    member: "member",
+  };
+  return map[value.toLowerCase()] ?? null;
+};
 
 const getStoredProfile = (): AuthProfile => {
   const raw = localStorage.getItem(LOCAL_PROFILE_KEY);
@@ -45,6 +61,8 @@ const getStoredProfile = (): AuthProfile => {
       email: parsed.email || DEFAULT_PROFILE.email,
       avatarUrl: parsed.avatarUrl || DEFAULT_PROFILE.avatarUrl,
       role: parsed.role || DEFAULT_PROFILE.role,
+      churchId: parsed.churchId ?? null,
+      churchName: parsed.churchName ?? null,
     };
   } catch {
     return DEFAULT_PROFILE;
@@ -89,11 +107,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       console.log('Perfil buscado do banco:', profileData);
       if (profileError) {
         console.error('Erro ao buscar perfil:', profileError);
+      }
+
+      const { data: userAppDataInitial, error: userAppError } = await supabase
+        .from('users_app')
+        .select('role, church_id')
+        .eq('auth_user_id', session.user.id)
+        .maybeSingle();
+
+      let userAppData = userAppDataInitial;
+
+      if (userAppError) {
+        console.error('Erro ao buscar role interno:', userAppError);
+      }
+
+      if (!userAppError && !userAppData) {
+        const { data: insertedUserApp, error: insertUserAppError } = await supabase
+          .from('users_app')
+          .insert({
+            auth_user_id: session.user.id,
+            full_name: profileData?.full_name || session.user.user_metadata?.full_name || session.user.email,
+            email: profileData?.email || session.user.email,
+            church_id: null,
+            role: 'member',
+          })
+          .select('role, church_id')
+          .single();
+
+        if (insertUserAppError) {
+          console.error('Erro ao registrar usuário interno:', insertUserAppError);
+        } else {
+          userAppData = insertedUserApp;
+        }
+      }
+
+      const resolvedRole =
+        normalizeRole(userAppData?.role) ||
+        normalizeRole(profileData?.role) ||
+        DEFAULT_PROFILE.role;
+      const resolvedChurchId = userAppData?.church_id ?? null;
+      let resolvedChurchName: string | null = null;
+
+      if (resolvedChurchId) {
+        const { data: churchData, error: churchFetchError } = await supabase
+          .from('churches')
+          .select('name')
+          .eq('id', resolvedChurchId)
+          .maybeSingle();
+
+        if (churchFetchError) {
+          console.error('Erro ao buscar nome da igreja:', churchFetchError);
+        } else {
+          resolvedChurchName = churchData?.name ?? null;
+        }
       }
 
       const profile: AuthProfile = {
@@ -109,7 +180,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           session.user.user_metadata?.avatar_url ||
           session.user.user_metadata?.picture ||
           DEFAULT_PROFILE.avatarUrl,
-        role: (profileData?.role as UserRole) || DEFAULT_PROFILE.role,
+        role: resolvedRole,
+        churchId: resolvedChurchId,
+        churchName: resolvedChurchName,
       };
 
       console.log('Profile criado:', profile);
@@ -179,6 +252,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: profile.email,
           avatarUrl: finalAvatar,
           role: profile.role,
+          churchId: profile.churchId,
+          churchName: profile.churchName,
         });
       }
     } else {
@@ -188,12 +263,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Função para verificar hierarquia de roles
-  // lider > vocal > instrumental
+  // lider > vocal > instrumental > member
   const hasRole = (minRole: UserRole): boolean => {
     const roleHierarchy: Record<UserRole, number> = {
-      lider: 3,
-      vocal: 2,
-      instrumental: 1,
+      lider: 4,
+      vocal: 3,
+      instrumental: 2,
+      member: 1,
     };
     return roleHierarchy[profile.role] >= roleHierarchy[minRole];
   };

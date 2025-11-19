@@ -1,6 +1,8 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/BrandLogo";
+import { User as UserIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,18 +19,16 @@ type NavbarProps = {
 
 export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
   const { profile } = useAuth();
+  const [avatarError, setAvatarError] = React.useState(false);
+  const showFallbackAvatar = avatarError || !profile.avatarUrl;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#121212] border-b border-white/10" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-4 md:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-4 sm:gap-4">
-          {/* Logo MMG */}
+          {/* Logo SetlistGO™ */}
           <div className="flex items-center flex-shrink-0">
-            <img
-              src="/logo.png"
-              alt="MMG"
-              className="h-[55px] sm:h-10 md:h-[100px] w-auto object-contain"
-            />
+            <BrandLogo className="text-white drop-shadow-sm" />
           </div>
 
           {/* Select para filtros - mobile */}
@@ -96,20 +96,20 @@ export const Navbar: React.FC<NavbarProps> = ({ filter, onFilterChange }) => {
 
           {/* Perfil */}
           <div className="flex items-center flex-shrink-0">
-            <img
-              key={profile.avatarUrl}
-              src={profile.avatarUrl}
-              alt={profile.name}
-              className="h-11 w-11 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full object-cover ring-2 ring-white/10"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                const img = e.currentTarget as HTMLImageElement;
-                if (img.src !== "/perfil.jpg") {
-                  console.error('Erro ao carregar imagem de perfil, usando fallback');
-                  img.src = "/perfil.jpg";
-                }
-              }}
-            />
+            {showFallbackAvatar ? (
+              <div className="h-11 w-11 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full ring-2 ring-white/10 bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
+                <UserIcon className="w-5 h-5" />
+              </div>
+            ) : (
+              <img
+                key={profile.avatarUrl}
+                src={profile.avatarUrl}
+                alt={profile.name}
+                className="h-11 w-11 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full object-cover ring-2 ring-white/10"
+                crossOrigin="anonymous"
+                onError={() => setAvatarError(true)}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useRefresh } from "@/context/RefreshContext";
+import { useAuth } from "@/context/AuthContext";
 
 type Track = {
   id: string;
@@ -28,6 +29,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   eventId,
 }) => {
   const { triggerRefresh } = useRefresh();
+  const { user, profile } = useAuth();
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
@@ -188,6 +190,15 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
       return;
     }
 
+    if (!user) {
+      toast.error("Usuário não autenticado. Faça login novamente.");
+      return;
+    }
+
+    const editorName = profile.name || user.email || "Usuário";
+    const nowIso = new Date().toISOString();
+    const churchId = profile.churchId ?? null;
+
     setIsSaving(true);
     const savingToast = toast.loading(
       isEditing ? "Atualizando evento..." : "Criando evento..."
@@ -202,6 +213,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           .update({
             name: eventName.trim(),
             date: eventDate,
+            updated_by: user.id,
+            updated_by_name: editorName,
+            updated_at: nowIso,
           })
           .eq("id", currentEventId);
 
@@ -233,6 +247,11 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           .insert({
             name: eventName.trim(),
             date: eventDate,
+            church_id: churchId,
+            created_by: user.id,
+            updated_by: user.id,
+            updated_by_name: editorName,
+            updated_at: nowIso,
           })
           .select()
           .single();

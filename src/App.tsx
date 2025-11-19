@@ -26,10 +26,26 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import SettingsProfile from "./pages/SettingsProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { RefreshProvider } from "./context/RefreshContext";
+import OnboardingChurchWizard from "./pages/OnboardingChurchWizard";
 
 const queryClient = new QueryClient();
+
+const LeaderOnlyRoute = () => {
+  const { profile, isLoading } = useAuth();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
+        <p className="text-sm text-white/60">Carregando...</p>
+      </div>
+    );
+  }
+  if (profile.role !== "lider") {
+    return <Navigate to="/" replace />;
+  }
+  return <OnboardingChurchWizard />;
+};
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -65,6 +81,10 @@ const AppRoutes = () => {
               <Route
                 path="/settings/notifications"
                 element={<SettingsNotifications />}
+              />
+              <Route
+                path="/onboarding/igreja"
+                element={<LeaderOnlyRoute />}
               />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

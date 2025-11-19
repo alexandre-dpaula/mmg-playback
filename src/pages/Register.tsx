@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ArrowLeft, Camera, Loader2 } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -146,24 +147,20 @@ const Register: React.FC = () => {
             }
           }
 
-          // Sempre criar/atualizar perfil (com ou sem foto)
-          console.log('Criando perfil com dados:', {
-            id: data.user.id,
+          const profilePayload = {
             email: formData.email,
             full_name: formData.name,
             avatar_url: avatarUrl,
-          });
+          };
 
-          const { error: profileError } = await supabase.from('profiles').upsert({
-            id: data.user.id,
-            email: formData.email,
-            full_name: formData.name,
-            avatar_url: avatarUrl,
-          });
+          const { error: profileUpdateError } = await supabase
+            .from('profiles')
+            .update(profilePayload)
+            .eq('id', data.user.id);
 
-          if (profileError) {
-            console.error('Erro ao criar perfil:', profileError);
-            toast.error(`Erro ao criar perfil: ${profileError.message}`);
+          if (profileUpdateError) {
+            console.error('Erro ao atualizar perfil:', profileUpdateError);
+            toast.error(`Erro ao atualizar perfil: ${profileUpdateError.message}`);
           }
 
           toast.success("Cadastro realizado! Você já pode fazer login.");
@@ -192,7 +189,7 @@ const Register: React.FC = () => {
 
       {/* Logo */}
       <div className="flex justify-center pt-4 pb-4">
-        <img src="/logo.png" alt="MMG" className="h-10 object-contain brightness-110" />
+        <BrandLogo size="lg" className="text-white" />
       </div>
 
       {/* Conteúdo principal */}

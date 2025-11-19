@@ -9,6 +9,8 @@ import {
   Menu,
   X,
   LogOut,
+  Building2,
+  User as UserIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -18,7 +20,30 @@ import {
 } from "@/lib/preferences";
 import { useRefresh } from "@/context/RefreshContext";
 import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserRole } from "@/context/AuthContext";
+
+const ROLE_TAG_STYLES: Record<
+  UserRole,
+  { label: string; className: string }
+> = {
+  lider: {
+    label: "Líder",
+    className:
+      "bg-[#1DB954]/15 text-[#1DB954] border border-[#1DB954]/30",
+  },
+  vocal: {
+    label: "Vocal",
+    className: "bg-purple-500/15 text-purple-300 border border-purple-400/30",
+  },
+  instrumental: {
+    label: "Instrumental",
+    className: "bg-sky-500/15 text-sky-300 border border-sky-400/30",
+  },
+  member: {
+    label: "Membro",
+    className: "bg-white/10 text-white/70 border border-white/20",
+  },
+};
 
 export const MobileNav: React.FC = () => {
   const location = useLocation();
@@ -29,6 +54,12 @@ export const MobileNav: React.FC = () => {
   );
   const { triggerRefresh } = useRefresh();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [avatarError, setAvatarError] = React.useState(false);
+  const showFallbackAvatar = avatarError || !profile.avatarUrl;
+
+  const roleTag =
+    ROLE_TAG_STYLES[profile.role] ??
+    ROLE_TAG_STYLES.member;
 
   React.useEffect(() => {
     const updatePath = () => {
@@ -55,7 +86,7 @@ export const MobileNav: React.FC = () => {
     setIsMenuOpen(false);
   };
 
-  const tabs = [
+  const baseTabs = [
     {
       name: "Eventos",
       icon: Home,
@@ -81,6 +112,18 @@ export const MobileNav: React.FC = () => {
       isActive: location.pathname === "/add",
     },
   ];
+  const tabs =
+    profile.role === "lider"
+      ? [
+          ...baseTabs,
+          {
+            name: "Minha Igreja",
+            icon: Building2,
+            path: "/onboarding/igreja",
+            isActive: location.pathname.startsWith("/onboarding"),
+          },
+        ]
+      : baseTabs;
 
   const handleNavClick = () => {
     triggerRefresh();
@@ -107,23 +150,39 @@ export const MobileNav: React.FC = () => {
           style={{ height: `${barHeight}px` }}
         >
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-            <img
-              src={profile.avatarUrl}
-              alt={profile.name}
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-[#1DB954]/30 flex-shrink-0"
-              onError={(e) => {
-                const img = e.currentTarget as HTMLImageElement;
-                if (img.src !== "/perfil.jpg") {
-                  img.src = "/perfil.jpg";
-                }
-              }}
-            />
+            {showFallbackAvatar ? (
+              <div className="w-9 h-9 rounded-full ring-2 ring-[#1DB954]/30 flex-shrink-0 bg-[#1DB954]/10 text-[#1DB954] flex items-center justify-center shadow-inner shadow-black/50">
+                <UserIcon className="w-4 h-4" />
+              </div>
+            ) : (
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name}
+                className="w-9 h-9 rounded-full object-cover ring-2 ring-[#1DB954]/30 flex-shrink-0"
+                onError={() => setAvatarError(true)}
+              />
+            )}
             <div className="flex-1 min-w-0">
-              <h1 className="text-xs sm:text-sm font-bold text-white truncate">
-                {profile.name}
-              </h1>
-              <p className="text-xs text-white/60 capitalize truncate">
-                {profile.role}
+              <div className="flex items-center justify-between gap-2">
+                <h1 className="text-xs sm:text-sm font-bold text-white truncate">
+                  {profile.name}
+                </h1>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase",
+                    roleTag.className
+                  )}
+                >
+                  {roleTag.label}
+                </span>
+              </div>
+              <p
+                className={cn(
+                  "text-[10px] truncate",
+                  profile.churchName ? "text-white/60" : "text-white/40"
+                )}
+              >
+                {profile.churchName ?? "Sem igreja vinculada"}
               </p>
             </div>
           </div>
