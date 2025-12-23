@@ -3,9 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Loader2, File } from "lucide-react";
-import { supabase, uploadAudioToSupabase, addTrackToSupabase, processCifraClub, fetchCifraPreview } from "@/lib/supabase";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { supabase, addTrackToSupabase, processCifraClub, fetchCifraPreview } from "@/lib/supabase";
 import { getSelectedEventId } from "@/lib/preferences";
 import {
   Form,
@@ -26,35 +26,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { AVAILABLE_KEYS, convertMinorToRelativeMajor, formatNoteForDisplay } from "@/utils/chordTransposer";
 import { isCifraClubUrl } from "@/utils/cifraClubParser";
+import { processCifraClubVersion } from "@/utils/versionNormalizer";
 
-const TAG_OPTIONS = ["Cifras", "Vocal", "Instrumental"];
-
-const formSchema = z
-  .object({
-    title: z.string().min(2, "Informe o título da música"),
-    versao: z.string().optional(),
-    tom: z.string().optional(),
-    url: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
-    tag: z.string().optional(),
-    pauta: z
-      .string()
-      .url("Informe uma URL válida")
-      .optional()
-      .or(z.literal("")),
-  })
-  .refine(
-    (data) => {
-      // Se a tag for "Cifras", a pauta é obrigatória
-      if (data.tag === "Cifras") {
-        return Boolean(data.pauta?.trim());
-      }
-      return true;
-    },
-    {
-      message: "Para tag Cifras, o link da cifra/pauta é obrigatório",
-      path: ["pauta"],
-    }
-  );
+const formSchema = z.object({
+  title: z.string().min(2, "Informe o título da música"),
+  versao: z.string().optional(),
+  tom: z.string().optional(),
+  url: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
+  referencia: z.string().url("Informe uma URL válida").optional().or(z.literal("")),
+  pauta: z
+    .string()
+    .url("Informe uma URL válida")
+    .optional()
+    .or(z.literal("")),
+});
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -63,13 +48,13 @@ const DEFAULT_VALUES: FormValues = {
   versao: "",
   tom: "",
   url: "",
-  tag: "",
+  referencia: "",
   pauta: "",
 };
 
 const AddTrackPage: React.FC = () => {
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isFetchingCifraMetadata, setIsFetchingCifraMetadata] = useState(false);
   const [lastAutoFilledUrl, setLastAutoFilledUrl] = useState<string | null>(null);
 
@@ -77,6 +62,9 @@ const AddTrackPage: React.FC = () => {
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULT_VALUES,
   });
+
+  // Pega a origem da navegação (de onde o usuário veio)
+  const from = (location.state as { from?: string })?.from;
 
   const cifraUrlValue = form.watch("pauta");
 
@@ -108,13 +96,15 @@ const AddTrackPage: React.FC = () => {
           const currentTitle = form.getValues("title")?.trim();
           const currentVersion = form.getValues("versao")?.trim();
           const currentKey = form.getValues("tom")?.trim();
+          const currentReferencia = form.getValues("referencia")?.trim();
 
           if (metadata.title && !currentTitle) {
             form.setValue("title", metadata.title, { shouldDirty: true });
             updated = true;
           }
           if (metadata.version && !currentVersion) {
-            form.setValue("versao", metadata.version, { shouldDirty: true });
+            const normalizedVersion = processCifraClubVersion(metadata.version);
+            form.setValue("versao", normalizedVersion, { shouldDirty: true });
             updated = true;
           }
           if (metadata.key && !currentKey) {
@@ -123,6 +113,10 @@ const AddTrackPage: React.FC = () => {
               form.setValue("tom", normalizedKey, { shouldDirty: true });
               updated = true;
             }
+          }
+          if (metadata.youtubeUrl && !currentReferencia) {
+            form.setValue("referencia", metadata.youtubeUrl, { shouldDirty: true });
+            updated = true;
           }
 
           if (updated) {
@@ -163,60 +157,17 @@ const AddTrackPage: React.FC = () => {
     return AVAILABLE_KEYS.includes(finalKey) ? finalKey : "";
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validar tipo de arquivo (apenas áudio)
-      const validTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/ogg", "audio/m4a"];
-      if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|ogg|m4a)$/i)) {
-        toast.error("Formato de áudio inválido. Use MP3, WAV, OGG ou M4A.");
-        return;
-      }
-
-      // Validar tamanho (max 50MB)
-      const maxSize = 50 * 1024 * 1024; // 50MB
-      if (file.size > maxSize) {
-        toast.error("Arquivo muito grande. Tamanho máximo: 50MB.");
-        return;
-      }
-
-      setAudioFile(file);
-      toast.success(`Arquivo selecionado: ${file.name}`);
-    }
-  };
-
-  const handleAudioUpload = async (file: File): Promise<string> => {
-    setIsUploading(true);
-
-    try {
-      // Upload direto para Supabase Storage
-      const publicUrl = await uploadAudioToSupabase(file, 'audios');
-      return publicUrl;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao fazer upload do áudio";
-      throw new Error(message);
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   const maybeAddTrackToCurrentEvent = async (trackId: string, trackTitle: string) => {
     const selectedEventId = getSelectedEventId();
     if (!selectedEventId) {
-      toast.info("Selecione um evento na aba Eventos para vincular novas faixas.");
-      return;
-    }
-
-    const confirmAdd = window.confirm(
-      `Deseja adicionar "${trackTitle}" na playlist selecionada agora?`
-    );
-
-    if (!confirmAdd) {
+      // Sem evento selecionado, apenas informa
+      console.log("Nenhum evento selecionado, música criada apenas no banco geral");
       return;
     }
 
     try {
-      toast.info("Adicionando música à playlist atual...");
+      // Adiciona automaticamente à playlist atual sem perguntar
       const { count, error } = await supabase
         .from("event_tracks")
         .select("*", { count: "exact", head: true })
@@ -234,7 +185,7 @@ const AddTrackPage: React.FC = () => {
 
       if (linkError) throw linkError;
 
-      toast.success("Música adicionada à playlist atual!");
+      toast.success(`"${trackTitle}" adicionada à playlist atual!`);
     } catch (error) {
       console.error("Erro ao vincular faixa ao evento:", error);
       toast.error("Não foi possível adicionar a faixa na playlist atual.");
@@ -242,27 +193,15 @@ const AddTrackPage: React.FC = () => {
   };
 
   const handleSubmit = async (values: FormValues) => {
-    let audioUrl = values.url?.trim() || "";
-
-    // 1. Upload do áudio se necessário
-    if (audioFile && !audioUrl) {
-      try {
-        audioUrl = await handleAudioUpload(audioFile);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Erro ao fazer upload do áudio";
-        toast.error(message);
-        return;
-      }
-    }
-
     const trackData = {
       evento: "",
       titulo: values.title.trim(),
       versao: values.versao?.trim() || "",
       tom: values.tom || "",
-      tag: values.tag?.trim() || "",
+      tag: "",
       cifra_url: values.pauta?.trim() || "",
-      audio_url: audioUrl,
+      audio_url: "",
+      referencia: values.referencia?.trim() || "",
     };
 
     const submissionToast = toast.loading("Adicionando faixa...");
@@ -281,8 +220,8 @@ const AddTrackPage: React.FC = () => {
         const payload = {
           playlistTitle: trackData.evento,
           title: trackData.titulo,
-          url: trackData.audio_url,
-          tag: trackData.tag,
+          url: "",
+          tag: "",
           pauta: trackData.cifra_url,
         };
 
@@ -298,12 +237,25 @@ const AddTrackPage: React.FC = () => {
         });
       }
 
-      await maybeAddTrackToCurrentEvent(trackId, trackData.titulo);
       toast.success("Faixa adicionada com sucesso!", { id: submissionToast });
+
+      // Adiciona à playlist atual se houver evento selecionado
+      const selectedEventId = getSelectedEventId();
+      await maybeAddTrackToCurrentEvent(trackId, trackData.titulo);
 
       // Limpar completamente todos os campos
       form.reset(DEFAULT_VALUES);
-      setAudioFile(null);
+
+      // Redireciona para a playlist atual ou para a página inicial
+      setTimeout(() => {
+        if (selectedEventId) {
+          // Redireciona para a playlist atual para ver a música adicionada
+          navigate(`/playlist/${selectedEventId}`);
+        } else {
+          // Se não tem playlist, vai para a página inicial
+          navigate(`/`);
+        }
+      }, 500);
     } catch (error) {
       console.error("Erro ao enviar faixa:", error);
       const message =
@@ -437,82 +389,39 @@ const AddTrackPage: React.FC = () => {
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="tag"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm text-white/90">Tag</FormLabel>
-                    <Select
-                      value={field.value || undefined}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full h-9 bg-white/10 border-white/20 text-white text-sm rounded-lg">
-                          <SelectValue placeholder="Selecionar" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-[#1f1f1f] border-white/10 text-white">
-                        {TAG_OPTIONS.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className="text-sm py-2"
-                          >
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
-            {/* Enviar Áudio */}
-            <div className="space-y-2">
-              <FormLabel className="text-sm text-white/90">Áudio (Opcional)</FormLabel>
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="audio-upload"
-                  className="flex items-center justify-center gap-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm rounded-lg cursor-pointer hover:bg-white/20 transition"
-                >
-                  {audioFile ? "Trocar arquivo" : "Escolher arquivo"}
-                </label>
-                <input
-                  id="audio-upload"
-                  type="file"
-                  accept="audio/*,.mp3,.wav,.ogg,.m4a"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                {audioFile && (
-                  <div className="flex items-center gap-2 text-xs text-white/70 bg-white/5 px-3 py-2 rounded-lg">
-                    <File className="h-4 w-4 flex-shrink-0" />
-                    <span className="flex-1 truncate">{audioFile.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => setAudioFile(null)}
-                      className="text-red-400 hover:text-red-300 flex-shrink-0"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Campo Referência (YouTube) */}
+            <FormField
+              control={form.control}
+              name="referencia"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm text-white/90">Referência (YouTube)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="URL do YouTube será preenchida automaticamente"
+                      className="!text-black placeholder:text-gray-400 h-9"
+                      {...field}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-white/50 mt-1">
+                    💡 Preenchido automaticamente ao colar URL do CifraClub
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button
               type="submit"
-              disabled={isSubmitting || isUploading}
+              disabled={isSubmitting}
               className="h-10 w-full bg-[#1DB954] text-black text-sm font-semibold hover:bg-[#1ed760] mt-6"
             >
-              {(isSubmitting || isUploading) && (
+              {isSubmitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {isUploading ? "Enviando..." : "Adicionar Faixa"}
+              Adicionar Faixa
             </Button>
           </form>
         </Form>

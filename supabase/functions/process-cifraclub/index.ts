@@ -10,6 +10,7 @@ import {
   parseKey,
   parseSongTitle,
   parseVersion,
+  parseYouTubeUrl,
 } from './parser.ts'
 
 const corsHeaders = {
@@ -26,6 +27,7 @@ async function fetchAndParseCifra(url: string): Promise<{
   key: string | null;
   version: string | null;
   title: string | null;
+  youtubeUrl: string | null;
 }> {
   try {
     const response = await fetch(url, {
@@ -44,8 +46,9 @@ async function fetchAndParseCifra(url: string): Promise<{
     const key = parseKey(html);
     const version = parseVersion(html, url);
     const title = parseSongTitle(html, url);
+    const youtubeUrl = parseYouTubeUrl(html);
 
-    return { content, artistPhoto, key, version, title };
+    return { content, artistPhoto, key, version, title, youtubeUrl };
   } catch (error) {
     console.error('Erro ao buscar cifra:', error);
     throw error;
@@ -91,6 +94,7 @@ serve(async (req) => {
       key,
       version,
       title,
+      youtubeUrl,
     } = await fetchAndParseCifra(cifraUrl)
 
     if (isPreviewRequest) {
@@ -101,6 +105,7 @@ serve(async (req) => {
           title: title || null,
           version: version || null,
           key: key || null,
+          youtubeUrl: youtubeUrl || null,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

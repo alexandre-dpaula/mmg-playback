@@ -434,3 +434,52 @@ export function parseCifraClubContent(html: string): string {
     throw new Error('Erro ao processar conteúdo da cifra');
   }
 }
+
+/**
+ * Extrai a URL do YouTube do HTML do CifraClub
+ */
+export function parseYouTubeUrl(html: string): string | null {
+  try {
+    // Padrões para encontrar URLs do YouTube
+    // ORDEM IMPORTANTE: mais específicos primeiro para evitar capturar IDs genéricos
+    const patterns = [
+      // IDs em JavaScript inline (mais específico - prioridade máxima)
+      /youtubeId:\s*['"]([a-zA-Z0-9_-]{11})['"]/,
+      /"youtubeId"\s*:\s*"([a-zA-Z0-9_-]{11})"/,
+      /"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"/,
+      // Data attributes específicos
+      /data-youtube-id="([a-zA-Z0-9_-]{11})"/,
+      /data-video-id="([a-zA-Z0-9_-]{11})"/,
+      /data-[a-z-]*video[a-z-]*="([a-zA-Z0-9_-]{11})"/i,
+      // iframes e embeds
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      // URLs curtas
+      /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+      // URLs completas em strings (mas não em links genéricos)
+      /"(https?:\/\/(?:www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11})"/,
+      /"(https?:\/\/youtu\.be\/[a-zA-Z0-9_-]{11})"/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = html.match(pattern);
+      if (match?.[1]) {
+        const captured = match[1];
+
+        // Se capturou uma URL completa, retorna ela
+        if (captured.startsWith('http')) {
+          return captured;
+        }
+
+        // Se capturou apenas o ID (11 caracteres alfanuméricos), monta a URL
+        if (/^[a-zA-Z0-9_-]{11}$/.test(captured)) {
+          return `https://www.youtube.com/watch?v=${captured}`;
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Erro ao extrair URL do YouTube:', error);
+    return null;
+  }
+}

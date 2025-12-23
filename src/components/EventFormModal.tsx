@@ -451,8 +451,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSaving}
-              variant="outline"
-              className="bg-white/10 text-white border-white/20 hover:bg-white/20"
+              className="bg-white/10 text-white hover:bg-white/20 border-0"
             >
               Cancelar
             </Button>

@@ -4,6 +4,11 @@ import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import { Link, useParams } from "react-router-dom";
 import { useRefresh } from "@/context/RefreshContext";
 import { FooterBrand } from "@/components/FooterBrand";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/PullToRefresh";
+import { toast } from "sonner";
+import { Share2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const CLOCK_TEXT_COLOR = "rgb(255 255 255 / 16%)";
 
@@ -18,6 +23,14 @@ const Index = () => {
     refetch,
     error,
   } = useEventPlaylist(playlistEventId ?? undefined);
+
+  const { containerRef, isPulling, isRefreshing, pullDistance } = usePullToRefresh({
+    onRefresh: async () => {
+      await refetch();
+      toast.success("Playlist atualizada");
+    },
+    enabled: !!playlistEventId,
+  });
 
   // Atualiza quando refreshKey mudar
   React.useEffect(() => {
@@ -60,6 +73,73 @@ const Index = () => {
     };
   }, [now]);
 
+  const handleSharePlaylist = async () => {
+    if (!playlistEventId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("event_tracks")
+        .select(`
+          order_index,
+          track:tracks (
+            titulo,
+            versao,
+            tom
+          )
+        `)
+        .eq("event_id", playlistEventId)
+        .order("order_index", { ascending: true });
+
+      if (error) throw error;
+
+      const trackLines =
+        data
+          ?.map((item, index) => {
+            // Handle both array and object responses from Supabase
+            const track = Array.isArray(item.track) ? item.track[0] : item.track;
+            if (!track?.titulo) return null;
+
+            const num = (index + 1).toString().padStart(2, "0");
+            const titulo = track.titulo?.trim();
+            if (!titulo) return null;
+            const versao = track.versao?.trim();
+            const tom = track.tom?.trim();
+            const versaoText = versao ? ` (${versao})` : "";
+            const tomText = tom ? ` - ${tom}` : "";
+            return `${num}. ${titulo}${versaoText}${tomText}`;
+          })
+          .filter(Boolean) ?? [];
+
+      if (!trackLines.length) {
+        toast.info("Esta playlist está vazia");
+        return;
+      }
+
+      const shareMessage = [
+        "*REPERTÓRIO*",
+        `_${title}_`,
+        "",
+        ...trackLines,
+      ].join("\n");
+
+      const encodedText = encodeURIComponent(shareMessage);
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+
+      if (typeof navigator !== "undefined" && navigator.share) {
+        navigator.share({ text: shareMessage }).catch((err) => {
+          if (err?.name === "AbortError") return;
+          window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+        });
+        return;
+      }
+
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Erro ao compartilhar playlist:", error);
+      toast.error("Não foi possível compartilhar esta playlist");
+    }
+  };
+
   const renderEmptyState = (title: string, subtitle: string) => (
     <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-8 md:pb-0 overflow-x-hidden">
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-6 px-4 sm:px-6 md:px-8 py-12 md:py-16 text-center">
@@ -97,7 +177,15 @@ const Index = () => {
   // Quando terminar de carregar, mostra a página principal
   return (
     <>
-      <div className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden">
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+      />
+      <div
+        ref={containerRef}
+        className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden overflow-y-auto"
+      >
       {/* Indicador de loading discreto para refreshes */}
       {isLoading && (
         <div className="fixed top-0 left-0 right-0 z-40 h-1 bg-gradient-to-r from-transparent via-[#1DB954] to-transparent animate-pulse" />
@@ -124,9 +212,19 @@ const Index = () => {
               </span>
             </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl md:text-5xl font-medium mb-4 sm:mb-6 md:mb-10 px-2 break-words">
-            {title}
-          </h1>
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl font-medium mb-4 sm:mb-6 md:mb-10 px-2 break-words">
+              {title}
+            </h1>
+            <button
+              onClick={handleSharePlaylist}
+              className="p-2 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white transition mb-4 sm:mb-6 md:mb-10"
+              aria-label="Compartilhar playlist"
+              title="Compartilhar no WhatsApp"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+          </div>
         </header>
         <SpotifyPlayer filter={filter} eventId={playlistEventId!} />
       </div>

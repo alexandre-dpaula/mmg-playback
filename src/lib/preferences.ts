@@ -11,7 +11,7 @@ const DEPRECATED_KEYS = [
   "festa_tabernaculos",
 ];
 
-export const clearOldCaches = () => {
+export const clearOldCaches = async () => {
   if (typeof window === "undefined") return;
 
   const currentVersion = window.localStorage.getItem(CACHE_VERSION_KEY);
@@ -41,6 +41,23 @@ export const clearOldCaches = () => {
         window.localStorage.removeItem(key);
       }
     });
+
+    // Limpar caches do Service Worker antigos
+    if ('caches' in window) {
+      try {
+        const cacheNames = await caches.keys();
+        await Promise.all(
+          cacheNames
+            .filter(name => name.startsWith('mmg-playback') && name !== 'mmg-playback-v3.1')
+            .map(name => {
+              console.log('Deletando cache antigo:', name);
+              return caches.delete(name);
+            })
+        );
+      } catch (error) {
+        console.error('Erro ao limpar caches do Service Worker:', error);
+      }
+    }
 
     // Atualizar versão do cache
     window.localStorage.setItem(CACHE_VERSION_KEY, CURRENT_CACHE_VERSION);

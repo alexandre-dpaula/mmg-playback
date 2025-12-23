@@ -125,6 +125,19 @@ export const MobileNav: React.FC = () => {
         ]
       : baseTabs;
 
+  // Determina a origem para navegação (de onde o usuário está vindo)
+  const getNavigationState = (targetPath: string) => {
+    // Se está indo para /add ou /search, passa de onde está vindo
+    if (targetPath === "/add" || targetPath === "/search") {
+      if (location.pathname.startsWith("/playlist")) {
+        return { from: "playlist" };
+      } else if (location.pathname === "/") {
+        return { from: "events" };
+      }
+    }
+    return undefined;
+  };
+
   const handleNavClick = () => {
     triggerRefresh();
     setIsMenuOpen(false);
@@ -218,6 +231,7 @@ export const MobileNav: React.FC = () => {
                   <Link
                     key={tab.name}
                     to={tab.path}
+                    state={getNavigationState(tab.path)}
                     onClick={handleNavClick}
                     className={cn(
                       "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",

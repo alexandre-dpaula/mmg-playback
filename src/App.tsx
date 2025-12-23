@@ -52,15 +52,18 @@ const AppRoutes = () => {
   const showNav =
     location.pathname !== "/login" && location.pathname !== "/register";
 
-  const mobileNavOffsetClass = showNav
+  // Esconde navegação na página de cifras (TrackDetails)
+  const isTrackDetailsPage = location.pathname.includes("/track/");
+
+  const mobileNavOffsetClass = showNav && !isTrackDetailsPage
     ? "pt-[calc(60px+1rem+env(safe-area-inset-top,0px))] md:pt-0"
     : "";
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-screen max-w-screen overflow-x-hidden bg-[#121212]">
-      {showNav && <Sidebar />}
+      {showNav && !isTrackDetailsPage && <Sidebar />}
       <div className="flex-1 flex flex-col min-h-screen md:min-h-0 overflow-hidden md:overflow-y-auto">
-        {showNav && <MobileNav />}
+        {showNav && !isTrackDetailsPage && <MobileNav />}
         <main className={`flex-1 overflow-y-auto w-full ${mobileNavOffsetClass}`}>
           <Routes>
             <Route path="/login" element={<Login />} />

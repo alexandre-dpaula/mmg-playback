@@ -173,6 +173,7 @@ interface CifraPreviewResponse {
   title: string | null;
   version: string | null;
   key: string | null;
+  youtubeUrl: string | null;
 }
 
 /**
@@ -210,6 +211,7 @@ export async function fetchCifraPreview(cifraUrl: string): Promise<CifraPreviewR
     title: data.title ?? null,
     version: data.version ?? null,
     key: data.key ?? null,
+    youtubeUrl: data.youtubeUrl ?? null,
   };
 }
 

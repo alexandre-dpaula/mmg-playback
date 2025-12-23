@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Search as SearchIcon, Music, Loader2, MoreVertical, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { getSelectedEventId } from "@/lib/preferences";
@@ -23,12 +23,16 @@ type Track = {
 
 const Search: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
+
+  // Pega a origem da navegação (de onde o usuário veio)
+  const from = (location.state as { from?: string })?.from;
 
   useEffect(() => {
     loadTracks();
@@ -108,6 +112,11 @@ const Search: React.FC = () => {
       }
 
       toast.success(`"${track.titulo}" adicionada à playlist atual!`);
+
+      // Sempre redireciona para a playlist atual
+      setTimeout(() => {
+        navigate(`/playlist/${selectedEventId}`);
+      }, 300);
     } catch (error) {
       console.error("Erro ao adicionar música à playlist:", error);
       toast.error("Não foi possível adicionar essa música à playlist.");

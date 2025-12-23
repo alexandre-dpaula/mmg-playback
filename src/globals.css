@@ -93,23 +93,33 @@
 }
 
 @layer base {
+  /* CSS NORMALIZE - Remove espaços desnecessários */
   * {
     @apply border-border;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   html {
     background-color: #121212;
     overflow-x: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   body {
     @apply bg-background text-foreground;
-    font-family: "Helvetica Neue", "Helvetica", "Neve Hass",
-      "Neue Haas Grotesk Display", "Neue Haas Grotesk", sans-serif;
+    font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
     background-color: #121212;
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    line-height: 1.5;
   }
 
   #root {
@@ -118,6 +128,55 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Remove margens e paddings padrão de elementos HTML */
+  h1, h2, h3, h4, h5, h6,
+  p, blockquote, pre,
+  dl, dd, ol, ul,
+  figure, hr {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Remove espaços de listas */
+  ol, ul {
+    list-style: none;
+  }
+
+  /* Remove espaços de inputs e buttons */
+  input, button, textarea, select {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font: inherit;
+  }
+
+  /* Remove espaços de imagens */
+  img, picture, video, canvas, svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Remove espaços de tabelas */
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  /* Remove espaços de formulários */
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  /* Garante que divs não tenham espaços extras */
+  div {
+    margin: 0;
+    padding: 0;
   }
 }
 

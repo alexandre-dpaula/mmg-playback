@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Calendar, Plus, Music, MoreVertical } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Calendar, Plus, Music, Trash2, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { EventFormModal } from "@/components/EventFormModal";
@@ -11,27 +11,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import {
-  getSelectedEventId,
-  onSelectedEventChange,
-  setSelectedEventId,
-} from "@/lib/preferences";
+import { getSelectedEventId, setSelectedEventId } from "@/lib/preferences";
 import { useRefresh } from "@/context/RefreshContext";
 import { FooterBrand } from "@/components/FooterBrand";
-import { useAuth } from "@/context/AuthContext";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/PullToRefresh";
 
 type EventItem = {
   id: string;
   name: string;
   date: string;
   trackCount: number;
-  updatedByName: string | null;
-  updatedAt: string | null;
 };
 
 export default function Events() {
   const navigate = useNavigate();
-  const { user, profile, isLoading: isAuthLoading } = useAuth();
   const { refreshKey } = useRefresh();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -42,43 +36,41 @@ export default function Events() {
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  const fetchEvents = useCallback(async () => {
-    if (!user) {
-      setEvents([]);
-      setIsLoadingEvents(false);
-      return;
+  const { containerRef, isPulling, isRefreshing, pullDistance } = usePullToRefresh({
+    onRefresh: async () => {
+      await fetchEvents();
+      toast.success("Eventos atualizados");
+    },
+    enabled: true,
+  });
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  // Atualiza quando refreshKey mudar
+  useEffect(() => {
+    if (refreshKey > 0) {
+      fetchEvents();
     }
+  }, [refreshKey]);
+
+  const fetchEvents = async () => {
     setIsLoadingEvents(true);
     try {
-      let query = supabase
+      const { data, error } = await supabase
         .from("events")
         .select(
           `
             id,
             name,
             date,
-            updated_at,
-            updated_by_name,
-            created_by,
-            church_id,
             event_tracks (
               track_id
             )
           `
         )
         .order("date", { ascending: false });
-
-      if (profile.role === "member" || !profile.churchId) {
-        query = query.eq("created_by", user.id);
-      } else if (profile.role === "lider" && profile.churchId) {
-        query = query.or(
-          `church_id.eq.${profile.churchId},and(created_by.eq.${user.id},church_id.is.null)`
-        );
-      } else if (profile.churchId) {
-        query = query.eq("church_id", profile.churchId);
-      }
-
-      const { data, error } = await query;
 
       if (error) {
         throw error;
@@ -90,8 +82,6 @@ export default function Events() {
           name: event.name,
           date: event.date,
           trackCount: event.event_tracks?.length ?? 0,
-          updatedByName: event.updated_by_name ?? null,
-          updatedAt: event.updated_at ?? null,
         })) ?? [];
 
       setEvents(mappedEvents);
@@ -108,37 +98,6 @@ export default function Events() {
     } finally {
       setIsLoadingEvents(false);
     }
-  }, [profile, user]);
-
-  useEffect(() => {
-    if (!isAuthLoading) {
-      fetchEvents();
-    }
-  }, [fetchEvents, isAuthLoading]);
-
-  // Atualiza quando refreshKey mudar
-  useEffect(() => {
-    if (refreshKey > 0 && !isAuthLoading) {
-      fetchEvents();
-    }
-  }, [refreshKey, fetchEvents, isAuthLoading]);
-
-  useEffect(() => {
-    const unsubscribe = onSelectedEventChange(() => {
-      setActiveEventId(getSelectedEventId());
-    });
-    return unsubscribe;
-  }, []);
-
-  const formatUpdatedInfo = (event?: EventItem | null) => {
-    if (!event?.updatedByName) return null;
-    if (!event.updatedAt) return `Editado por ${event.updatedByName}`;
-    const date = new Date(event.updatedAt);
-    const formatted = new Intl.DateTimeFormat("pt-BR", {
-      dateStyle: "short",
-      timeStyle: "short",
-    }).format(date);
-    return `Editado por ${event.updatedByName} em ${formatted}`;
   };
 
   const handleEventSelection = (event: EventItem) => {
@@ -207,20 +166,9 @@ export default function Events() {
 
       if (error) throw error;
 
-      type EventTrackWithRelations = {
-        order_index: number | null;
-        track: {
-          titulo: string | null;
-          tom: string | null;
-        } | null;
-      };
-
-      const trackRows =
-        ((data ?? []) as unknown as EventTrackWithRelations[]) ?? [];
-
       const trackLines =
-        trackRows
-          .filter((item) => item.track?.titulo)
+        data
+          ?.filter((item) => item.track?.titulo)
           .map((item) => {
             const title = item.track?.titulo?.trim();
             if (!title) return null;
@@ -314,7 +262,6 @@ export default function Events() {
     : events.length
     ? "Toque em um card para abrir o repertório na aba Playlist."
     : "Use o botão abaixo para criar e organizar suas músicas.";
-  const highlightUpdatedText = activeEvent ? formatUpdatedInfo(activeEvent) : null;
 
   const highlightCardClasses = activeEvent
     ? "rounded-2xl bg-white/5 border border-white/10 text-white p-4 sm:p-5 shadow-lg shadow-black/30"
@@ -387,11 +334,6 @@ export default function Events() {
           <p className="text-sm text-white/60 truncate">
             {formatEventDetails(event)}
           </p>
-          {formatUpdatedInfo(event) && (
-            <p className="text-xs text-white/25 mt-1">
-              {formatUpdatedInfo(event)}
-            </p>
-          )}
         </div>
         <div className="relative z-10" data-event-menu="true">
           <DropdownMenu
@@ -453,17 +395,17 @@ export default function Events() {
     );
   };
 
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen bg-[#121212] text-white flex items-center justify-center">
-        <p className="text-sm text-white/60">Carregando seus eventos...</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden">
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+      />
+      <div
+        ref={containerRef}
+        className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden overflow-y-auto"
+      >
       <div className="mx-auto max-w-4xl px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4">
         <header className="space-y-2 mb-6 sm:mb-8">
           <p className="text-sm uppercase tracking-[0.3em] text-[#1DB954] font-semibold">
@@ -479,9 +421,6 @@ export default function Events() {
             <div className="mt-2 flex flex-col gap-1">
               <h3 className={highlightTitleClass}>{highlightTitle}</h3>
               <p className={highlightSubtitleClass}>{highlightSubtitle}</p>
-              {highlightUpdatedText && (
-                <p className="text-xs text-white/25">{highlightUpdatedText}</p>
-              )}
             </div>
           </div>
 

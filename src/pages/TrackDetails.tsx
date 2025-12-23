@@ -1,23 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2 } from "lucide-react";
-import { supabase, getPadUrl } from "@/lib/supabase";
+import { ArrowLeft, Loader2, Settings } from "lucide-react";
+import { supabase, getPadUrl, fetchCifraPreview } from "@/lib/supabase";
 import { CifraDisplay } from "@/components/CifraDisplay";
 import { CifraEditor } from "@/components/CifraEditor";
+import { ControlsSidebar } from "@/components/ControlsSidebar";
+import { SongMap } from "@/components/SongMap";
+import { YouTubePlayer } from "@/components/YouTubePlayer";
+import { TrackFormModal } from "@/components/TrackFormModal";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   AVAILABLE_KEYS,
   convertMinorToRelativeMajor,
   transposeContent,
 } from "@/utils/chordTransposer";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/PullToRefresh";
 
 const PAD_FILE_MAP: Record<string, string> = {
   C: getPadUrl("C Guitar Pads.m4a"),
@@ -78,6 +77,7 @@ type TrackRecord = {
   original_tom?: string | null; // Tom original da cifra (quando foi importada)
   cifra_url?: string | null;
   cifra_content?: string | null;
+  referencia?: string | null; // URL do YouTube
 };
 
 type EventRecord = {
@@ -98,21 +98,31 @@ const TrackDetails: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPadPlaying, setIsPadPlaying] = useState(false);
   const [isEditingCifra, setIsEditingCifra] = useState(false);
+  const [isEditingTrack, setIsEditingTrack] = useState(false);
   const [resolvedCifraContent, setResolvedCifraContent] = useState("");
   const [editorInitialContent, setEditorInitialContent] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showSongMap, setShowSongMap] = useState(true);
+  const [showSectionOutlines, setShowSectionOutlines] = useState(true);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [fontSize, setFontSize] = useState(100);
+  const [capo, setCapo] = useState(0);
+  const [playlistTracks, setPlaylistTracks] = useState<TrackRecord[]>([]);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
+  const [columnLayout, setColumnLayout] = useState(false); // Layout em colunas
+  const [lyricsOnly, setLyricsOnly] = useState(false); // Somente letras (sem acordes)
   const padAudioRef = useRef<HTMLAudioElement | null>(null);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!trackId) return;
-      setIsLoading(true);
-      setErrorMessage(null);
+  const fetchData = async () => {
+    if (!trackId) return;
+    setIsLoading(true);
+    setErrorMessage(null);
       try {
         const trackPromise = supabase
           .from("tracks")
           .select(
-            "id, titulo, tag, versao, tom, original_tom, cifra_url, cifra_content"
+            "id, titulo, tag, versao, tom, original_tom, cifra_url, cifra_content, referencia"
           )
           .eq("id", trackId)
           .single<TrackRecord>();
@@ -126,8 +136,17 @@ const TrackDetails: React.FC = () => {
               .single<EventRecord>()
           : Promise.resolve({ data: null, error: null } as any);
 
-        const [{ data: trackData, error: trackError }, { data: eventData }] =
-          await Promise.all([trackPromise, eventPromise]);
+        // Busca todas as músicas do evento/playlist para navegação
+        const playlistPromise = eventId && eventId !== "repertorio"
+          ? supabase
+              .from("event_tracks")
+              .select("track_id, order_index, tracks(id, titulo, tag, versao, cifra_url)")
+              .eq("event_id", eventId)
+              .order("order_index")
+          : Promise.resolve({ data: null, error: null } as any);
+
+        const [{ data: trackData, error: trackError }, { data: eventData }, { data: playlistData }] =
+          await Promise.all([trackPromise, eventPromise, playlistPromise]);
 
         if (trackError || !trackData) {
           throw trackError || new Error("Faixa não encontrada");
@@ -170,6 +189,29 @@ const TrackDetails: React.FC = () => {
             .eq("id", trackId);
         }
 
+        console.log('[TrackDetails] Dados da música carregados:', trackData);
+        console.log('[TrackDetails] Referência YouTube:', trackData.referencia);
+
+        // Se não tem referência mas tem cifra_url do CifraClub, buscar automaticamente
+        if (!trackData.referencia && trackData.cifra_url && trackData.cifra_url.includes('cifraclub.com')) {
+          console.log('[TrackDetails] Buscando referência YouTube automaticamente...');
+          try {
+            const preview = await fetchCifraPreview(trackData.cifra_url);
+            if (preview?.youtubeUrl) {
+              console.log('[TrackDetails] Referência YouTube encontrada:', preview.youtubeUrl);
+              // Atualiza no banco de dados
+              await supabase
+                .from("tracks")
+                .update({ referencia: preview.youtubeUrl })
+                .eq("id", trackId);
+              // Atualiza o trackData local
+              trackData.referencia = preview.youtubeUrl;
+            }
+          } catch (error) {
+            console.error('[TrackDetails] Erro ao buscar referência YouTube:', error);
+          }
+        }
+
         setTrack({
           ...trackData,
           tom: normalizedKey,
@@ -178,6 +220,19 @@ const TrackDetails: React.FC = () => {
         setSelectedKey(normalizedKey);
         if (eventData) {
           setEventInfo(eventData);
+        }
+
+        // Configura lista de músicas para navegação
+        if (playlistData && playlistData.length > 0) {
+          const tracks = playlistData
+            .map((et: any) => et.tracks)
+            .filter(Boolean);
+          setPlaylistTracks(tracks);
+          const currentIndex = tracks.findIndex((t: any) => t.id === trackId);
+          setCurrentTrackIndex(currentIndex);
+        } else {
+          setPlaylistTracks([]);
+          setCurrentTrackIndex(-1);
         }
       } catch (error) {
         console.error("Erro ao carregar faixa:", error);
@@ -189,10 +244,19 @@ const TrackDetails: React.FC = () => {
       } finally {
         setIsLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     fetchData();
   }, [eventId, trackId]);
+
+  const { containerRef, isPulling, isRefreshing, pullDistance } = usePullToRefresh({
+    onRefresh: async () => {
+      await fetchData();
+      toast.success("Cifra atualizada");
+    },
+    enabled: true,
+  });
 
   useEffect(() => {
     if (track?.tom) {
@@ -210,6 +274,7 @@ const TrackDetails: React.FC = () => {
       setEditorInitialContent("");
     }
   }, [track?.cifra_content]);
+
 
   // Função para alterar o tom (salva apenas o tom, não a cifra transposta)
   const handleKeyChange = async (newKey: string) => {
@@ -349,6 +414,21 @@ const TrackDetails: React.FC = () => {
     setIsEditingCifra(true);
   };
 
+  // Funções de navegação entre músicas
+  const handlePreviousTrack = () => {
+    if (currentTrackIndex > 0 && playlistTracks.length > 0) {
+      const previousTrack = playlistTracks[currentTrackIndex - 1];
+      navigate(`/playlist/${eventId}/track/${previousTrack.id}`);
+    }
+  };
+
+  const handleNextTrack = () => {
+    if (currentTrackIndex < playlistTracks.length - 1 && playlistTracks.length > 0) {
+      const nextTrack = playlistTracks[currentTrackIndex + 1];
+      navigate(`/playlist/${eventId}/track/${nextTrack.id}`);
+    }
+  };
+
   const handleSaveCifra = async (newContent: string) => {
     if (!trackId) {
       throw new Error("Faixa inválida");
@@ -398,117 +478,131 @@ const TrackDetails: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white pt-20 md:pt-0 pb-8 md:pb-8 overflow-x-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-8 py-2 sm:py-3 md:py-4 lg:py-6">
+      <PullToRefreshIndicator
+        isPulling={isPulling}
+        isRefreshing={isRefreshing}
+        pullDistance={pullDistance}
+      />
+      <div className="min-h-screen bg-gradient-to-b from-[#121212] to-black text-white overflow-x-hidden">
+        {/* Barra superior fixa - Mobile */}
+        <div className="fixed top-0 left-0 right-0 z-40 bg-[#121212]/95 backdrop-blur-sm border-b border-white/10 px-3 py-2 flex items-center justify-between">
+          {/* Botão voltar */}
           <button
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition text-xs sm:text-sm font-semibold mb-4 sm:mb-6"
+            className="p-2 hover:bg-white/10 rounded-full transition-all duration-200"
+            aria-label="Voltar"
           >
-            <ArrowLeft className="w-4 h-4 flex-shrink-0" />
-            <span>Voltar para playlist</span>
+            <ArrowLeft className="w-5 h-5 text-white" />
           </button>
 
-          {/* Layout responsivo: controles sempre acima da cifra */}
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 w-full">
-            <div className="w-full">
-              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 shadow-lg shadow-black/30">
-                <h3 className="text-xs sm:text-sm font-semibold text-white/60 uppercase tracking-wide mb-3 sm:mb-4">
-                  Controles
-                </h3>
+          {/* Nome da música - Centro */}
+          <div className="flex-1 mx-3 text-center truncate">
+            <h1 className="text-sm font-semibold text-white truncate">
+              {track.titulo}
+            </h1>
+          </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <Select value={selectedKey} onValueChange={handleKeyChange}>
-                      <SelectTrigger className="w-full h-10 bg-white/10 border-white/15 text-white font-semibold text-sm uppercase flex items-center justify-center rounded-lg opacity-100">
-                        <SelectValue
-                          className="text-center"
-                          placeholder={track.tom || "C"}
-                        />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#282828] border-white/20">
-                        {AVAILABLE_KEYS.map((key) => (
-                          <SelectItem
-                            key={key}
-                            value={key}
-                            className="text-white hover:bg-white/10 focus:bg-white/20 text-sm"
-                          >
-                            {key}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handlePadToggle}
-                      className={`w-full h-10 rounded-lg border font-semibold uppercase text-sm transition-all duration-200 ${
-                        isPadPlaying
-                          ? "bg-[#1DB954] text-black border-[#1DB954] opacity-100"
-                          : "bg-white/10 text-white border-white/15 opacity-30 hover:opacity-60"
-                      }`}
-                    >
-                      PAD
-                    </button>
-                  </div>
-
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handleEditCifraClick}
-                      className={`w-full h-10 px-3 bg-white/10 text-white text-sm font-semibold rounded-lg border border-white/15 uppercase transition-all duration-200 ${
-                        isEditingCifra
-                          ? "opacity-100"
-                          : "opacity-30 hover:opacity-60"
-                      }`}
-                    >
-                      EDITAR
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Área principal da cifra */}
-            <div className="w-full">
-              <div className="bg-white/5 rounded-2xl border border-white/10 p-4 sm:p-5 md:p-6 lg:p-8 shadow-lg shadow-black/30 w-full overflow-x-hidden">
-                <div className="flex items-start justify-between mb-4 gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="space-y-1">
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/60">
-                        Cifras
-                      </span>
-                      <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
-                        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold break-words">
-                          {track.titulo}
-                        </h2>
-                        {track.versao?.trim() && (
-                          <span className="text-xs sm:text-sm text-white/70 font-semibold flex-shrink-0">
-                            • {track.versao.trim()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 sm:mt-8">
-                  <CifraDisplay
-                    cifra={track.cifra_url || undefined}
-                    cifraContent={track.cifra_content || undefined}
-                    originalKey={track.original_tom || track.tom || "D"}
-                    selectedKey={selectedKey}
-                    onContentResolved={(content) => {
-                      setResolvedCifraContent(content);
-                      setEditorInitialContent(content);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+          {/* Letras e Settings - Direita */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setLyricsOnly(!lyricsOnly)}
+              className={`px-3 py-1 backdrop-blur-sm border rounded-full font-bold text-sm transition-all duration-200 ${
+                lyricsOnly
+                  ? "bg-[#1DB954] text-black border-[#1DB954]"
+                  : "bg-white/10 text-white border-white/20 hover:bg-white/15"
+              }`}
+            >
+              Letras
+            </button>
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 hover:bg-white/10 rounded-full transition-all duration-200"
+              aria-label="Abrir controles"
+            >
+              <Settings className="w-5 h-5 text-white" />
+            </button>
           </div>
         </div>
+
+        {/* Song Map fixo no topo - abaixo da barra de navegação */}
+        {showSongMap && resolvedCifraContent && (
+          <div className="fixed top-14 left-0 right-0 z-30 bg-[#121212]/95 backdrop-blur-sm border-b border-white/10 py-2 px-4">
+            <SongMap
+              cifraContent={resolvedCifraContent}
+              onSectionClick={(sectionId) => setActiveSection(sectionId)}
+            />
+          </div>
+        )}
+
+        {/* Conteúdo principal da cifra - com scroll interno e altura fixa */}
+        <div
+          ref={containerRef}
+          className={`fixed left-0 right-0 overflow-y-auto ${
+            showSongMap && resolvedCifraContent
+              ? 'top-[7.5rem]' // top-14 (56px) + SongMap (~64px)
+              : 'top-14'
+          }`}
+          style={{
+            bottom: track?.cifra_url ? '110px' : '0', // Altura do YouTubePlayer quando presente
+          }}
+        >
+          <div className="px-4 w-full">
+            <CifraDisplay
+              cifra={track.cifra_url || undefined}
+              cifraContent={track.cifra_content || undefined}
+              originalKey={track.original_tom || track.tom || "D"}
+              selectedKey={selectedKey}
+              capo={capo}
+              activeSection={activeSection}
+              fontSize={fontSize}
+              columnLayout={columnLayout}
+              lyricsOnly={lyricsOnly}
+              onContentResolved={(content) => {
+                setResolvedCifraContent(content);
+                setEditorInitialContent(content);
+              }}
+              onMetadataExtracted={async (metadata) => {
+                // Salva metadados extraídos do Google Docs no banco
+                if (!trackId) return;
+
+                const updates: any = {};
+                if (metadata.titulo && !track.titulo) updates.titulo = metadata.titulo;
+                if (metadata.versao && !track.versao) updates.versao = metadata.versao;
+                if (metadata.tom && !track.tom) updates.tom = metadata.tom;
+                if (metadata.referencia && !track.referencia) updates.referencia = metadata.referencia;
+
+                if (Object.keys(updates).length > 0) {
+                  console.log('[TrackDetails] Salvando metadados extraídos:', updates);
+                  const { error } = await supabase
+                    .from("tracks")
+                    .update(updates)
+                    .eq("id", trackId);
+
+                  if (error) {
+                    console.error('[TrackDetails] Erro ao salvar metadados:', error);
+                  } else {
+                    // Atualiza estado local
+                    setTrack((prev) => (prev ? { ...prev, ...updates } : prev));
+                    if (updates.tom) {
+                      setSelectedKey(updates.tom);
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* YouTube Player fixo no footer */}
+        {track?.cifra_url && (
+          <div className="fixed bottom-0 left-0 right-0 z-30">
+            <YouTubePlayer
+              youtubeUrl={track.referencia || undefined}
+              trackTitle={track.titulo}
+              trackVersion={track.versao || undefined}
+            />
+          </div>
+        )}
       </div>
       {isEditingCifra && (
         <CifraEditor
@@ -517,6 +611,38 @@ const TrackDetails: React.FC = () => {
           onSaveContent={handleSaveCifra}
         />
       )}
+
+      <ControlsSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        selectedKey={selectedKey}
+        onKeyChange={handleKeyChange}
+        capo={capo}
+        onCapoChange={setCapo}
+        isPadPlaying={isPadPlaying}
+        onPadToggle={handlePadToggle}
+        onEditClick={handleEditCifraClick}
+        onEditTrackClick={() => setIsEditingTrack(true)}
+        showSongMap={showSongMap}
+        onToggleSongMap={setShowSongMap}
+        showSectionOutlines={showSectionOutlines}
+        onToggleSectionOutlines={setShowSectionOutlines}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
+        columnLayout={columnLayout}
+        onToggleColumnLayout={() => setColumnLayout(!columnLayout)}
+      />
+
+      <TrackFormModal
+        isOpen={isEditingTrack}
+        onClose={() => setIsEditingTrack(false)}
+        onSuccess={() => {
+          setIsEditingTrack(false);
+          // Recarregar dados da música
+          window.location.reload();
+        }}
+        trackId={trackId}
+      />
     </>
   );
 };

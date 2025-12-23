@@ -11,6 +11,8 @@ import {
   SkipForward,
   Music,
   GripVertical,
+  Trash2,
+  Search,
 } from "lucide-react";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import type { PlaylistTrack } from "@/hooks/useEventPlaylist";
@@ -33,6 +35,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/lib/supabase";
+import { useSwipeToDelete } from "@/hooks/useSwipeToDelete";
+import { toast } from "sonner";
+import { QuickAddTrackModal } from "@/components/QuickAddTrackModal";
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -61,6 +66,7 @@ type SortableTrackItemProps = {
   isActive: boolean;
   onSelectTrack: (id: string) => void;
   onOpenCifra: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
 const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
@@ -69,6 +75,7 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
   isActive,
   onSelectTrack,
   onOpenCifra,
+  onDelete,
 }) => {
   const {
     attributes,
@@ -78,6 +85,11 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
     transition,
     isDragging,
   } = useSortable({ id: track.id });
+
+  const { swipeDistance, isSwiping, swipeHandlers } = useSwipeToDelete({
+    onDelete: () => onDelete(track.id),
+    threshold: 100,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -96,7 +108,24 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
           "hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f]"
       )}
     >
-      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4">
+      {/* Fundo vermelho de delete revelado ao arrastar */}
+      <div
+        className="absolute inset-0 bg-red-500/90 flex items-center justify-end px-6 pointer-events-none"
+        style={{
+          opacity: Math.min(swipeDistance / 100, 1),
+        }}
+      >
+        <Trash2 className="w-6 h-6 text-white" />
+      </div>
+
+      <div
+        className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 relative bg-gradient-to-br from-[#181818] to-[#101010]"
+        style={{
+          transform: `translateX(-${swipeDistance}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+        }}
+        {...swipeHandlers}
+      >
         {/* Número da faixa e Drag handle */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <span className="text-2xl sm:text-3xl font-bold text-white/30 w-10 sm:w-12 text-center">
@@ -158,7 +187,15 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
           <Music className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       </div>
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
+
+      {/* Gradiente de hover */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent"
+        style={{
+          transform: `translateX(-${swipeDistance}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
+        }}
+      />
     </div>
   );
 };
@@ -260,6 +297,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
     null
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -459,6 +497,44 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
     navigate(`/playlist/${eventId}/track/${trackId}`);
   };
 
+  const handleDeleteTrack = async (trackId: string) => {
+    const track = tracks.find((t) => t.id === trackId);
+    if (!track) return;
+
+    // Confirma com o usuário
+    const confirmDelete = window.confirm(
+      `Deseja remover "${track.title}" da playlist?`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      // Remove da tabela event_tracks
+      const { error } = await supabase
+        .from("event_tracks")
+        .delete()
+        .eq("event_id", eventId)
+        .eq("track_id", trackId);
+
+      if (error) throw error;
+
+      toast.success("Música removida da playlist!");
+
+      // Se a música removida era a atual, para a reprodução
+      if (currentTrackId === trackId) {
+        setIsPlaying(false);
+        setCurrentTrackId(null);
+      }
+
+      // Atualiza a lista
+      await refetch();
+      setLocalTracks([]);
+    } catch (error) {
+      console.error("Erro ao remover música:", error);
+      toast.error("Não foi possível remover a música");
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -540,6 +616,14 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
               Playlist
             </p>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+              <button
+                onClick={() => setIsQuickAddOpen(true)}
+                className="flex items-center gap-1.5 rounded-full bg-[#1DB954]/10 hover:bg-[#1DB954]/20 px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-[#1DB954] transition-colors whitespace-nowrap"
+                aria-label="Adicionar música à playlist"
+              >
+                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Adicionar</span>
+              </button>
               <span className="rounded-full bg-[#1DB954]/10 px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-semibold text-[#1DB954] whitespace-nowrap">
                 {trackCountLabel}
               </span>
@@ -551,14 +635,11 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
             </div>
           </div>
           <p className="text-xs text-white/40 mt-1">
-            Dica: arraste as faixas para organizar a ordem desejada.
+            Dica: arraste as faixas para organizar ou deslize para esquerda para remover.
           </p>
         </div>
         <ScrollArea
-          className="w-full pr-2 sm:pr-3 md:pr-4"
-          style={{
-            maxHeight: Math.min(Math.max(tracks.length * 110, 320), 760),
-          }}
+          className="w-full pr-2 sm:pr-3 md:pr-4 max-h-[70vh] overflow-y-auto"
         >
           <DndContext
             sensors={sensors}
@@ -580,6 +661,7 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
                         isActive={isActive}
                         onSelectTrack={handleSelectTrack}
                         onOpenCifra={openCifraPage}
+                        onDelete={handleDeleteTrack}
                       />
                     </li>
                   );
@@ -666,6 +748,17 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
         onError={handleAudioError}
         onTimeUpdate={() => setCurrentTime(audioRef.current?.currentTime || 0)}
         onLoadedMetadata={() => setDuration(audioRef.current?.duration || 0)}
+      />
+
+      {/* Modal de adicionar música rápida */}
+      <QuickAddTrackModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        eventId={eventId}
+        onSuccess={() => {
+          refetch();
+          setIsQuickAddOpen(false);
+        }}
       />
     </section>
   );

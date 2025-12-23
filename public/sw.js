@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mmg-playback-v2';
+const CACHE_NAME = 'mmg-playback-v3.1';
 const urlsToCache = [
   '/index.html',
   '/logo.png',
@@ -51,6 +51,25 @@ self.addEventListener('fetch', (event) => {
     return; // Skip cross-origin requests
   }
 
+  // Network-first strategy for JS/CSS files (they change often during development)
+  if (request.url.includes('/assets/') || request.url.endsWith('.js') || request.url.endsWith('.css')) {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(request)) // Fallback to cache if offline
+    );
+    return;
+  }
+
+  // Cache-first strategy for static assets (images, fonts, etc.)
   event.respondWith(
     caches.match(request).then((response) => {
       if (response) {

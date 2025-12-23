@@ -66,6 +66,19 @@ export const TabBar: React.FC = () => {
     },
   ];
 
+  // Determina a origem para navegação (de onde o usuário está vindo)
+  const getNavigationState = (targetPath: string) => {
+    // Se está indo para /add ou /search, passa de onde está vindo
+    if (targetPath === "/add" || targetPath === "/search") {
+      if (location.pathname.startsWith("/playlist")) {
+        return { from: "playlist" };
+      } else if (location.pathname === "/") {
+        return { from: "events" };
+      }
+    }
+    return undefined;
+  };
+
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-white/10"
@@ -81,6 +94,7 @@ export const TabBar: React.FC = () => {
             <Link
               key={tab.name}
               to={tab.path!}
+              state={getNavigationState(tab.path!)}
               onClick={() => triggerRefresh()}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all min-w-[60px]",
