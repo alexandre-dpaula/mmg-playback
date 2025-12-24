@@ -1,11 +1,22 @@
-import React, { useRef, useState, useEffect } from "react";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Volume2 } from "lucide-react";
+import React, { useRef, useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import { Play, Pause } from "lucide-react";
 
 interface YouTubePlayerProps {
   youtubeUrl?: string;
   trackTitle?: string;
   trackVersion?: string;
   className?: string;
+  onTimeUpdate?: (currentTime: number) => void; // Callback para atualizar scroll da cifra
+  sectionTimestamps?: Record<string, number> | null; // Timestamps das seções para cores
+  bpm?: number; // BPM para o metrônomo
+  onMetronomeToggle?: () => void; // Callback para toggle do metrônomo
+  isMetronomePlaying?: boolean; // Estado do metrônomo
+  onBpmChange?: (bpm: number) => void; // Callback para alterar BPM via TAP
+}
+
+export interface YouTubePlayerRef {
+  getCurrentTime: () => number;
+  seekTo: (time: number) => void; // Pula para um tempo específico
 }
 
 // Declare YouTube API types
@@ -16,12 +27,18 @@ declare global {
   }
 }
 
-export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
+export const YouTubePlayer = forwardRef<YouTubePlayerRef, YouTubePlayerProps>(({
   youtubeUrl,
   trackTitle = "Música Original",
   trackVersion,
   className = "",
-}) => {
+  onTimeUpdate,
+  sectionTimestamps,
+  bpm = 120,
+  onMetronomeToggle,
+  isMetronomePlaying = false,
+  onBpmChange,
+}, ref) => {
   useEffect(() => {
     console.log('[YouTubePlayer] Props recebidas:', { youtubeUrl, trackTitle, trackVersion });
     if (!youtubeUrl) {
@@ -38,6 +55,21 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
+
+  // TAP Tempo - refs para calcular BPM
+  const tapTimesRef = useRef<number[]>([]);
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Expõe métodos para o componente pai controlar o player
+  useImperativeHandle(ref, () => ({
+    getCurrentTime: () => currentTime,
+    seekTo: (time: number) => {
+      if (playerRef.current && isReady) {
+        playerRef.current.seekTo(time);
+        setCurrentTime(time);
+      }
+    },
+  }));
 
   // Extract video ID from YouTube URL
   const getVideoId = (url: string): string | null => {
@@ -107,11 +139,16 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       if (playerRef.current && !isSeeking) {
         const current = playerRef.current.getCurrentTime();
         setCurrentTime(current);
+
+        // Notifica o componente pai sobre a atualização do tempo (para auto-scroll)
+        if (onTimeUpdate) {
+          onTimeUpdate(current);
+        }
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isPlaying, isSeeking]);
+  }, [isPlaying, isSeeking, onTimeUpdate]);
 
   // Initialize player when API is loaded
   useEffect(() => {
@@ -229,6 +266,120 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  // Função TAP Tempo - calcula BPM baseado nos cliques E liga/desliga metrônomo
+  const handleMetronomeClick = () => {
+    const now = Date.now();
+
+    // Adiciona o timestamp do clique
+    tapTimesRef.current.push(now);
+
+    // Limpa o timeout anterior
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+
+    // Se ficou mais de 2 segundos sem clicar, reseta
+    tapTimeoutRef.current = setTimeout(() => {
+      tapTimesRef.current = [];
+    }, 2000);
+
+    // Precisa de pelo menos 2 cliques para calcular BPM
+    if (tapTimesRef.current.length >= 2) {
+      // Calcula a média dos intervalos entre cliques
+      const intervals: number[] = [];
+      for (let i = 1; i < tapTimesRef.current.length; i++) {
+        intervals.push(tapTimesRef.current[i] - tapTimesRef.current[i - 1]);
+      }
+
+      const averageInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      const calculatedBpm = Math.round(60000 / averageInterval);
+
+      // Limita BPM entre 40 e 240
+      const validBpm = Math.max(40, Math.min(240, calculatedBpm));
+
+      // Atualiza o BPM
+      if (onBpmChange) {
+        onBpmChange(validBpm);
+      }
+
+      // Se não estiver tocando, liga o metrônomo após calcular o BPM
+      if (!isMetronomePlaying && onMetronomeToggle) {
+        onMetronomeToggle();
+      }
+    } else {
+      // Primeiro clique - apenas toggle do metrônomo
+      if (onMetronomeToggle) {
+        onMetronomeToggle();
+      }
+    }
+  };
+
+  // Função para obter a cor da seção baseado no tipo (mesmas cores do SongMap)
+  const getSectionColor = (sectionId: string): string => {
+    // Remove "section-" prefix se existir
+    const cleanId = sectionId.replace('section-', '').toUpperCase();
+
+    // Extrai o tipo base (primeira letra ou primeiras letras)
+    let baseType = cleanId;
+
+    // Para seções com números (V1, V2, R1, R2), pega apenas a letra
+    const match = cleanId.match(/^([A-Z]+)/);
+    if (match) {
+      baseType = match[1];
+    }
+
+    // Cores do SongMap (mesma paleta)
+    const colorMap: Record<string, string> = {
+      'I': '#F1C500',      // Intro - Amarelo
+      'V': '#4CB4FF',      // Verse - Azul claro
+      'S': '#FF4848',      // Solo - Vermelho
+      'C': '#F59D00',      // Chorus - Laranja
+      'R': '#F59D00',      // Refrão - Laranja
+      'PR': '#34CD62',     // Pré-Refrão - Verde
+      'PC': '#34CD62',     // Pré-Chorus - Verde
+      'P': '#34CD62',      // Ponte - Verde
+      'B': '#9A58BB',      // Bridge - Roxo
+      'PO': '#34CD62',     // Ponte - Verde
+      'T': '#F1C500',      // Turnaround - Amarelo
+      'TA': '#F1C500',     // Turnaround - Amarelo
+      'TG': '#FF4848',     // Tag - Vermelho
+      'IS': '#9A58BB',     // Instrumental - Roxo
+      'IN': '#9A58BB',     // Instrumental - Roxo
+      'RF': '#FF4848',     // Riff - Vermelho
+      'O': '#45A2FF',      // Outro - Azul
+      'IT': '#9A58BB',     // Interlúdio - Roxo
+    };
+
+    return colorMap[baseType] || '#1DB954'; // Verde padrão se não encontrar
+  };
+
+  // Calcula a cor atual baseado na seção ativa
+  const getCurrentSectionColor = (): string => {
+    if (!sectionTimestamps || !duration) {
+      return '#1DB954'; // Verde padrão
+    }
+
+    const sections = Object.entries(sectionTimestamps).sort((a, b) => a[1] - b[1]);
+
+    let currentSection: string | null = null;
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const [sectionId, timestamp] = sections[i];
+      if (currentTime >= timestamp) {
+        currentSection = sectionId;
+        break;
+      }
+    }
+
+    const color = currentSection ? getSectionColor(currentSection) : '#1DB954';
+
+    // Debug: Log para ver qual seção está ativa
+    if (currentSection) {
+      console.log('[YouTubePlayer] Seção atual:', currentSection, 'Cor:', color, 'Tempo:', currentTime);
+    }
+
+    return color;
+  };
+
   // Validar se tem URL válida e video ID válido
   const hasValidVideo = youtubeUrl && videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId);
 
@@ -276,15 +427,6 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
           {/* Controls */}
           <div className="flex items-center gap-2">
-            {/* Skip Back */}
-            <button
-              onClick={skipBackward}
-              disabled={!isReady}
-              className="text-white/60 hover:text-white disabled:opacity-30 transition-colors"
-            >
-              <SkipBack className="w-5 h-5" fill="currentColor" />
-            </button>
-
             {/* Play/Pause */}
             <button
               onClick={togglePlay}
@@ -297,15 +439,6 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
                 <Play className="w-5 h-5 text-black" fill="currentColor" />
               )}
             </button>
-
-            {/* Skip Forward */}
-            <button
-              onClick={skipForward}
-              disabled={!isReady}
-              className="text-white/60 hover:text-white disabled:opacity-30 transition-colors"
-            >
-              <SkipForward className="w-5 h-5" fill="currentColor" />
-            </button>
           </div>
 
           {/* Track Info */}
@@ -316,18 +449,24 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
             )}
           </div>
 
-          {/* Loop button */}
-          <button
-            onClick={toggleLoop}
-            className={`p-2 rounded-full transition-colors ${
-              isLooping
-                ? 'text-blue-500'
-                : 'text-white/40 hover:text-white/80'
-            }`}
-            title="Repetir"
-          >
-            <Repeat className="w-4 h-4" />
-          </button>
+          {/* Metronome button */}
+          {onMetronomeToggle && (
+            <button
+              onClick={handleMetronomeClick}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all duration-200 ${
+                isMetronomePlaying
+                  ? 'bg-[#1DB954] text-black border-[#1DB954]'
+                  : 'bg-white/10 text-white border-white/20 hover:bg-white/15'
+              }`}
+              title="TAP Tempo - Clique no ritmo para ajustar o BPM"
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] opacity-70 font-semibold uppercase tracking-wide">TAP</span>
+                <span className="text-sm font-extrabold">{bpm}</span>
+                <span className="text-[9px] opacity-70 font-semibold uppercase tracking-wide">BPM</span>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Progress bar */}
@@ -337,8 +476,11 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
             onClick={handleSeek}
           >
             <div
-              className="h-full bg-white transition-all duration-100"
-              style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+              className="h-full transition-all duration-300"
+              style={{
+                width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                backgroundColor: getCurrentSectionColor()
+              }}
             />
           </div>
           <div className="flex justify-between text-xs text-white/60">
@@ -349,4 +491,4 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       </div>
     </div>
   );
-};
+});

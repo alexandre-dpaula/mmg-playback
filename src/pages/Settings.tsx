@@ -1,7 +1,9 @@
-import React from "react";
-import { User, Bell, Shield, Info, ChevronRight } from "lucide-react";
+import React, { useState } from "react";
+import { User, Bell, Shield, Info, ChevronRight, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FooterBrand } from "@/components/FooterBrand";
+import { CheckoutDialog } from "@/components/subscription/CheckoutDialog";
+import { useHasProAccess } from "@/hooks/useSubscription";
 
 type SettingItem = {
   id: string;
@@ -14,6 +16,8 @@ type SettingItem = {
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const hasProAccess = useHasProAccess();
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const settingsItems: SettingItem[] = [
     {
@@ -62,6 +66,56 @@ const Settings: React.FC = () => {
           <p className="text-white/60">Personalize sua experiência no aplicativo.</p>
         </header>
 
+        {/* PRO Subscription Card */}
+        {!hasProAccess && (
+          <div className="mb-6 relative overflow-hidden rounded-2xl border border-[#1DB954]/30 bg-gradient-to-br from-[#1DB954]/10 to-[#1DB954]/5 p-6">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#1DB954]/20 rounded-full blur-3xl" />
+            <div className="relative z-10 flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="w-6 h-6 text-[#1DB954]" />
+                  <h2 className="text-xl font-bold text-white">SetlistGO™ PRO</h2>
+                </div>
+                <p className="text-white/80 mb-4">
+                  Acesso total aos recursos profissionais por apenas <span className="font-bold text-[#1DB954]">R$ 9,98/mês</span>
+                </p>
+                <ul className="space-y-2 text-sm text-white/70 mb-4">
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1DB954]" />
+                    Cifras ilimitadas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1DB954]" />
+                    Recursos avançados de transposição
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1DB954]" />
+                    Suporte prioritário
+                  </li>
+                </ul>
+                <button
+                  onClick={() => setShowCheckout(true)}
+                  className="px-6 py-3 bg-[#1DB954] hover:bg-[#1DB954]/90 text-black font-semibold rounded-xl transition-all duration-200 hover:scale-105"
+                >
+                  Assinar Agora
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hasProAccess && (
+          <div className="mb-6 relative overflow-hidden rounded-2xl border border-[#1DB954]/30 bg-gradient-to-br from-[#1DB954]/10 to-[#1DB954]/5 p-6">
+            <div className="flex items-center gap-3">
+              <Crown className="w-6 h-6 text-[#1DB954]" />
+              <div>
+                <h2 className="text-lg font-bold text-white">Assinatura PRO Ativa</h2>
+                <p className="text-sm text-white/60">Você tem acesso a todos os recursos profissionais</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Settings List */}
         <div className="space-y-4">
           {settingsItems.map((item) => (
@@ -91,6 +145,9 @@ const Settings: React.FC = () => {
       </div>
       </div>
       <FooterBrand />
+
+      {/* Checkout Dialog */}
+      <CheckoutDialog open={showCheckout} onOpenChange={setShowCheckout} />
     </div>
   );
 };

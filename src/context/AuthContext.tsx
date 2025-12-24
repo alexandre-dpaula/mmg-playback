@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
-export type UserRole = 'lider' | 'vocal' | 'instrumental' | 'member';
+export type UserRole = 'lider' | 'vocal' | 'instrumental' | 'multimidia' | 'pending';
 
 type AuthProfile = {
   name: string;
@@ -29,7 +29,7 @@ const DEFAULT_PROFILE: AuthProfile = {
   name: "Alexandre Dpaula",
   email: "contato.m2bstudio@gmail.com",
   avatarUrl: "/perfil.jpg",
-  role: "member",
+  role: "pending",
   churchId: null,
   churchName: null,
 };
@@ -46,7 +46,8 @@ const normalizeRole = (value?: string | null): UserRole | null => {
     leader: "lider",
     vocal: "vocal",
     instrumental: "instrumental",
-    member: "member",
+    multimidia: "multimidia",
+    pending: "pending",
   };
   return map[value.toLowerCase()] ?? null;
 };
@@ -134,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             full_name: profileData?.full_name || session.user.user_metadata?.full_name || session.user.email,
             email: profileData?.email || session.user.email,
             church_id: null,
-            role: 'member',
+            role: 'pending',
           })
           .select('role, church_id')
           .single();
@@ -263,13 +264,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Função para verificar hierarquia de roles
-  // lider > vocal > instrumental > member
+  // lider > vocal > instrumental > multimidia > pending
   const hasRole = (minRole: UserRole): boolean => {
     const roleHierarchy: Record<UserRole, number> = {
-      lider: 4,
-      vocal: 3,
-      instrumental: 2,
-      member: 1,
+      lider: 5,
+      vocal: 4,
+      instrumental: 3,
+      multimidia: 2,
+      pending: 1,
     };
     return roleHierarchy[profile.role] >= roleHierarchy[minRole];
   };
@@ -307,7 +309,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const redirectUrl = isLocalhost
       ? window.location.origin
-      : 'https://mmg-playback.vercel.app';
+      : 'https://setlistgo.vercel.app';
 
     console.log('Tentando fazer login com redirect para:', redirectUrl);
 

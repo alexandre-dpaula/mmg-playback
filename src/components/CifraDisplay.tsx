@@ -486,32 +486,71 @@ export const CifraDisplay: React.FC<CifraDisplayProps> = ({
 
   // Aplica transposição se necessário (tom + capotraste)
   const transposedContent = React.useMemo(() => {
-    if (!contentToUse || !originalKey || !selectedKey) return contentToUse;
-
-    // Primeiro transpõe para o tom selecionado
-    let result = transposeContent(contentToUse, originalKey, selectedKey);
-
-    // Se houver capotraste, transpõe para baixo (subtrai semitons)
-    if (capo > 0) {
-      // Para aplicar capo, transpomos os acordes para BAIXO
-      // Exemplo: capo na casa 2 significa que C vira Bb (2 semitons abaixo)
-      const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-      const currentKeyIndex = keys.findIndex(k => k === selectedKey || k === selectedKey.replace('b', '#'));
-      if (currentKeyIndex !== -1) {
-        const targetIndex = (currentKeyIndex - capo + 12) % 12;
-        const targetKey = keys[targetIndex];
-        result = transposeContent(result, selectedKey, targetKey);
-      }
+    if (!contentToUse || !originalKey || !selectedKey) {
+      console.log('[CifraDisplay] Transpose skip:', { contentToUse: !!contentToUse, originalKey, selectedKey });
+      return contentToUse;
     }
+
+    console.log('[CifraDisplay] Transpose calculation:', { originalKey, selectedKey, capo });
+
+    // Lista de tons em ordem cromática
+    const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    // Encontra os índices dos tons
+    const originalIndex = keys.indexOf(originalKey);
+    const selectedIndex = keys.indexOf(selectedKey);
+
+    if (originalIndex === -1 || selectedIndex === -1) {
+      console.warn('[CifraDisplay] Invalid keys:', { originalKey, selectedKey });
+      return contentToUse;
+    }
+
+    // LÓGICA MUSICAL CORRETA:
+    // A cifra exibida deve ser calculada considerando tom + capotraste JUNTOS
+    // Fórmula: CIFRA_EXIBIDA = TOM_ORIGINAL transposto para (TOM_SELECIONADO - CAPO)
+    //
+    // Exemplo 1: Original D, Selecionado C, Capo 0
+    //   → Exibe C (toca C sem capo = soa C) ✓
+    //
+    // Exemplo 2: Original D, Selecionado D, Capo 2
+    //   → Exibe C (toca C com capo 2 = soa D) ✓
+    //
+    // Exemplo 3: Original D, Selecionado E, Capo 2
+    //   → Exibe D (toca D com capo 2 = soa E) ✓
+
+    // Calcula quantos semitons transpor: (selectedKey - capo) - originalKey
+    const targetIndex = (selectedIndex - capo + 12) % 12;
+    const targetKey = keys[targetIndex];
+
+    console.log('[CifraDisplay] Transposing:', {
+      from: originalKey,
+      to: targetKey,
+      willSound: selectedKey,
+      capo
+    });
+
+    // Transpõe UMA VEZ APENAS (de originalKey para targetKey)
+    const result = transposeContent(contentToUse, originalKey, targetKey);
 
     return result;
   }, [contentToUse, originalKey, selectedKey, capo]);
 
-  // Aplica transposição para cifras simples
+  // Aplica transposição para cifras simples (mesmo sistema do transposedContent)
   const transposedCifra = React.useMemo(() => {
     if (!originalKey || !selectedKey || !cifra) return cifra;
-    return transposeContent(cifra, originalKey, selectedKey);
-  }, [cifra, originalKey, selectedKey]);
+
+    const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const originalIndex = keys.indexOf(originalKey);
+    const selectedIndex = keys.indexOf(selectedKey);
+
+    if (originalIndex === -1 || selectedIndex === -1) return cifra;
+
+    // Mesmo cálculo: (selectedKey - capo)
+    const targetIndex = (selectedIndex - capo + 12) % 12;
+    const targetKey = keys[targetIndex];
+
+    return transposeContent(cifra, originalKey, targetKey);
+  }, [cifra, originalKey, selectedKey, capo]);
 
   if (!cifra && !cifraContent) {
     return null;

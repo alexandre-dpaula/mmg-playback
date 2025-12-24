@@ -18,6 +18,7 @@ import { isGoogleDocsUrl, extractDocId } from "@/hooks/useGoogleDoc";
 import { parseGoogleDocContent } from "@/utils/googleDocParser";
 import { fetchCifraPreview } from "@/lib/supabase";
 import { processCifraClubVersion } from "@/utils/versionNormalizer";
+import { autoGenerateTimestamps } from "@/utils/timestampGenerator";
 
 type TrackFormModalProps = {
   isOpen: boolean;
@@ -211,10 +212,36 @@ export const TrackFormModal: React.FC<TrackFormModalProps> = ({
       console.log('  - referencia:', referencia);
       console.log('[TrackFormModal] Dados que serão salvos no banco:', trackData);
 
+      // Se há URL da cifra, busca o conteúdo e gera timestamps automaticamente
+      let generatedTimestamps: Record<string, number> | null = null;
+      if (cifraUrl.trim()) {
+        try {
+          console.log('[TrackFormModal] Buscando conteúdo da cifra para gerar timestamps...');
+          const cifraContent = await fetchCifraPreview(cifraUrl.trim());
+
+          if (cifraContent) {
+            generatedTimestamps = autoGenerateTimestamps(cifraContent);
+            console.log('[TrackFormModal] Timestamps gerados automaticamente:', generatedTimestamps);
+
+            if (Object.keys(generatedTimestamps).length > 0) {
+              toast.success(`${Object.keys(generatedTimestamps).length} seções detectadas automaticamente!`);
+            }
+          }
+        } catch (err) {
+          console.warn('[TrackFormModal] Não foi possível gerar timestamps:', err);
+          // Não bloqueia o salvamento se falhar a geração de timestamps
+        }
+      }
+
+      // Adiciona timestamps ao trackData se foram gerados
+      const finalTrackData = generatedTimestamps && Object.keys(generatedTimestamps).length > 0
+        ? { ...trackData, section_timestamps: generatedTimestamps }
+        : trackData;
+
       if (isEditing && trackId) {
         const { error } = await supabase
           .from("tracks")
-          .update(trackData)
+          .update(finalTrackData)
           .eq("id", trackId);
 
         if (error) throw error;
@@ -222,7 +249,7 @@ export const TrackFormModal: React.FC<TrackFormModalProps> = ({
       } else {
         const { error } = await supabase
           .from("tracks")
-          .insert([trackData]);
+          .insert([finalTrackData]);
 
         if (error) throw error;
         console.log('[TrackFormModal] Música criada com sucesso no banco');

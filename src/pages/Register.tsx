@@ -163,8 +163,8 @@ const Register: React.FC = () => {
             toast.error(`Erro ao atualizar perfil: ${profileUpdateError.message}`);
           }
 
-          toast.success("Cadastro realizado! Você já pode fazer login.");
-          setTimeout(() => navigate("/login"), 2000);
+          toast.success("Cadastro realizado com sucesso!");
+          setTimeout(() => navigate("/role-selection"), 1500);
         }
       }
     } catch (error) {

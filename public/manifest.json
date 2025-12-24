@@ -1,7 +1,7 @@
 {
-  "name": "MMG Playback",
-  "short_name": "MMG Playback",
-  "description": "Playlist de Vozes e Instrumental para ensaios",
+  "name": "SetlistGO™",
+  "short_name": "SetlistGO™",
+  "description": "App de cifras, músicas e playbacks para ensaios e apresentações.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",

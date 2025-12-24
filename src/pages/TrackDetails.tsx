@@ -6,7 +6,7 @@ import { CifraDisplay } from "@/components/CifraDisplay";
 import { CifraEditor } from "@/components/CifraEditor";
 import { ControlsSidebar } from "@/components/ControlsSidebar";
 import { SongMap } from "@/components/SongMap";
-import { YouTubePlayer } from "@/components/YouTubePlayer";
+import { YouTubePlayer, YouTubePlayerRef } from "@/components/YouTubePlayer";
 import { TrackFormModal } from "@/components/TrackFormModal";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -78,6 +78,8 @@ type TrackRecord = {
   cifra_url?: string | null;
   cifra_content?: string | null;
   referencia?: string | null; // URL do YouTube
+  section_timestamps?: Record<string, number> | null; // Timestamps das seções { "I": 0, "V1": 15, "C": 45 }
+  bpm?: number | null; // BPM da música para o metrônomo
 };
 
 type EventRecord = {
@@ -111,7 +113,13 @@ const TrackDetails: React.FC = () => {
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(-1);
   const [columnLayout, setColumnLayout] = useState(false); // Layout em colunas
   const [lyricsOnly, setLyricsOnly] = useState(false); // Somente letras (sem acordes)
+  const [isMetronomePlaying, setIsMetronomePlaying] = useState(false); // Estado do metrônomo
+  const [metronomeBpm, setMetronomeBpm] = useState(120); // BPM do metrônomo
+  const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioContextUnlockedRef = useRef<boolean>(false); // Track se o AudioContext foi desbloqueado
   const padAudioRef = useRef<HTMLAudioElement | null>(null);
+  const youtubePlayerRef = useRef<YouTubePlayerRef | null>(null); // Ref para acessar o tempo atual do YouTube
   const queryClient = useQueryClient();
 
   const fetchData = async () => {
@@ -122,7 +130,7 @@ const TrackDetails: React.FC = () => {
         const trackPromise = supabase
           .from("tracks")
           .select(
-            "id, titulo, tag, versao, tom, original_tom, cifra_url, cifra_content, referencia"
+            "id, titulo, tag, versao, tom, original_tom, cifra_url, cifra_content, referencia, section_timestamps, bpm"
           )
           .eq("id", trackId)
           .single<TrackRecord>();
@@ -218,6 +226,11 @@ const TrackDetails: React.FC = () => {
           original_tom: normalizedOriginalKey,
         });
         setSelectedKey(normalizedKey);
+
+        // Atualiza BPM do metrônomo
+        if (trackData.bpm) {
+          setMetronomeBpm(trackData.bpm);
+        }
         if (eventData) {
           setEventInfo(eventData);
         }
@@ -337,6 +350,22 @@ const TrackDetails: React.FC = () => {
       padAudioRef.current.preload = "auto";
       padAudioRef.current.crossOrigin = "anonymous";
       padAudioRef.current.volume = 0.45;
+
+      // iOS Safari fix: cria um buffer silencioso para "desbloquear" o audio
+      const unlockAudio = () => {
+        if (padAudioRef.current) {
+          padAudioRef.current.play().then(() => {
+            padAudioRef.current?.pause();
+            padAudioRef.current!.currentTime = 0;
+          }).catch(() => {
+            // Ignora erro - tentativa de unlock
+          });
+        }
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+      };
+      document.addEventListener('touchstart', unlockAudio, { once: true });
+      document.addEventListener('click', unlockAudio, { once: true });
     }
     return padAudioRef.current;
   }, []);
@@ -349,7 +378,7 @@ const TrackDetails: React.FC = () => {
   }, []);
 
   const startPad = React.useCallback(
-    (keyValue?: string) => {
+    async (keyValue?: string) => {
       const src =
         getPadSourceForKey(keyValue) ?? getPadSourceForKey(currentPadKey);
       if (!src) {
@@ -365,10 +394,21 @@ const TrackDetails: React.FC = () => {
         audio.load();
       }
       audio.currentTime = 0;
-      audio.play().catch((error) => {
+
+      try {
+        // Tenta reproduzir o áudio
+        await audio.play();
+      } catch (error) {
         console.error("Erro ao reproduzir pad:", error);
-        setIsPadPlaying(false);
-      });
+        // Se falhar por política de autoplay, tenta novamente após user gesture
+        if (error instanceof Error && error.name === 'NotAllowedError') {
+          console.warn("Autoplay bloqueado. Aguardando interação do usuário.");
+          // Mantém o estado como "playing" para tentar novamente
+          // quando houver uma interação
+        } else {
+          setIsPadPlaying(false);
+        }
+      }
     },
     [currentPadKey, ensurePadAudio]
   );
@@ -395,9 +435,108 @@ const TrackDetails: React.FC = () => {
     stopPadAudio();
   }, [track?.id, stopPadAudio]);
 
-  const handlePadToggle = () => {
+  // Função para desbloquear o AudioContext no Safari
+  const unlockAudioContext = async () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
+    }
+
+    if (!audioContextUnlockedRef.current) {
+      // Safari precisa de um som real para desbloquear
+      // Cria um buffer vazio e toca
+      const buffer = audioContextRef.current.createBuffer(1, 1, 22050);
+      const source = audioContextRef.current.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioContextRef.current.destination);
+      source.start(0);
+
+      // Resume o contexto
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+
+      audioContextUnlockedRef.current = true;
+    }
+  };
+
+  const handlePadToggle = async () => {
+    // Desbloquear AudioContext quando liga o PAD (ajuda o metrônomo também)
+    if (!isPadPlaying) {
+      await unlockAudioContext();
+    }
     setIsPadPlaying((prev) => !prev);
   };
+
+  const handleMetronomeToggle = async () => {
+    if (isMetronomePlaying) {
+      // Parar metrônomo
+      if (metronomeIntervalRef.current) {
+        clearInterval(metronomeIntervalRef.current);
+        metronomeIntervalRef.current = null;
+      }
+      setIsMetronomePlaying(false);
+    } else {
+      // Desbloquear AudioContext (especialmente importante no Safari)
+      await unlockAudioContext();
+
+      const playClick = () => {
+        if (!audioContextRef.current) return;
+
+        const oscillator = audioContextRef.current.createOscillator();
+        const gainNode = audioContextRef.current.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContextRef.current.destination);
+
+        oscillator.frequency.value = 800; // Hz
+        gainNode.gain.value = 0.3; // 30% volume
+
+        oscillator.start(audioContextRef.current.currentTime);
+        oscillator.stop(audioContextRef.current.currentTime + 0.1); // 100ms
+      };
+
+      playClick(); // Primeiro click imediato
+
+      const interval = 60000 / metronomeBpm; // Intervalo em ms
+      metronomeIntervalRef.current = setInterval(playClick, interval);
+      setIsMetronomePlaying(true);
+    }
+  };
+
+  // Cleanup do metrônomo ao desmontar
+  useEffect(() => {
+    return () => {
+      if (metronomeIntervalRef.current) {
+        clearInterval(metronomeIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Atualiza o intervalo do metrônomo quando BPM mudar (se estiver tocando)
+  useEffect(() => {
+    if (isMetronomePlaying && metronomeIntervalRef.current && audioContextRef.current) {
+      // Para o metrônomo atual
+      clearInterval(metronomeIntervalRef.current);
+
+      const playClick = () => {
+        if (!audioContextRef.current) return;
+        const oscillator = audioContextRef.current.createOscillator();
+        const gainNode = audioContextRef.current.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContextRef.current.destination);
+
+        oscillator.frequency.value = 800;
+        gainNode.gain.value = 0.3;
+
+        oscillator.start(audioContextRef.current.currentTime);
+        oscillator.stop(audioContextRef.current.currentTime + 0.1);
+      };
+
+      const interval = 60000 / metronomeBpm;
+      metronomeIntervalRef.current = setInterval(playClick, interval);
+    }
+  }, [metronomeBpm, isMetronomePlaying]);
 
   const handleEditCifraClick = () => {
     const contentToEdit =
@@ -429,6 +568,69 @@ const TrackDetails: React.FC = () => {
     }
   };
 
+  // Converte código da seção para nome legível
+  const getSectionDisplayName = (sectionCode: string): string => {
+    const upperCode = sectionCode.toUpperCase();
+
+    const sectionNames: Record<string, string> = {
+      'I': 'Intro',
+      'V1': 'Verso 1',
+      'V2': 'Verso 2',
+      'V3': 'Verso 3',
+      'V4': 'Verso 4',
+      'PR': 'Pré-Refrão',
+      'PC': 'Pré-Refrão',
+      'R': 'Refrão',
+      'R1': 'Refrão 1',
+      'R2': 'Refrão 2',
+      'R3': 'Refrão 3',
+      'C': 'Refrão',
+      'C1': 'Refrão 1',
+      'C2': 'Refrão 2',
+      'C3': 'Refrão 3',
+      'S': 'Solo',
+      'S1': 'Solo 1',
+      'S2': 'Solo 2',
+      'PO': 'Ponte',
+      'B': 'Bridge',
+      'B1': 'Bridge 1',
+      'B2': 'Bridge 2',
+      'IS': 'Instrumental',
+      'IN': 'Instrumental',
+      'O': 'Final',
+      'TA': 'Turnaround',
+      'T': 'Turnaround',
+      'TG': 'Tag',
+      'IT': 'Interlúdio',
+      'RF': 'Refrão Final',
+    };
+
+    return sectionNames[upperCode] || upperCode;
+  };
+
+  // Auto-scroll: Atualiza a seção ativa baseado no tempo atual do YouTube
+  const handleYouTubeTimeUpdate = React.useCallback((currentTime: number) => {
+    if (!track?.section_timestamps) return;
+
+    const timestamps = track.section_timestamps;
+    const sections = Object.entries(timestamps).sort((a, b) => a[1] - b[1]); // Ordena por timestamp
+
+    // Encontra a seção atual baseado no tempo
+    let currentSection: string | null = null;
+    for (let i = sections.length - 1; i >= 0; i--) {
+      const [sectionId, timestamp] = sections[i];
+      if (currentTime >= timestamp) {
+        currentSection = sectionId;
+        break;
+      }
+    }
+
+    // Atualiza a seção ativa (isso vai fazer o scroll automático no CifraDisplay)
+    if (currentSection && currentSection !== activeSection) {
+      setActiveSection(currentSection);
+    }
+  }, [track?.section_timestamps, activeSection]);
+
   const handleSaveCifra = async (newContent: string) => {
     if (!trackId) {
       throw new Error("Faixa inválida");
@@ -448,6 +650,7 @@ const TrackDetails: React.FC = () => {
     setResolvedCifraContent(newContent);
     setEditorInitialContent(newContent);
   };
+
 
   if (isLoading) {
     return (
@@ -502,17 +705,18 @@ const TrackDetails: React.FC = () => {
             </h1>
           </div>
 
-          {/* Letras e Settings - Direita */}
+          {/* PAD e Settings - Direita */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setLyricsOnly(!lyricsOnly)}
-              className={`px-3 py-1 backdrop-blur-sm border rounded-full font-bold text-sm transition-all duration-200 ${
-                lyricsOnly
+              type="button"
+              onClick={handlePadToggle}
+              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold uppercase transition-all duration-200 ${
+                isPadPlaying
                   ? "bg-[#1DB954] text-black border-[#1DB954]"
                   : "bg-white/10 text-white border-white/20 hover:bg-white/15"
               }`}
             >
-              Letras
+              {isPadPlaying ? "PAD Tocando" : "Iniciar PAD"}
             </button>
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -529,7 +733,27 @@ const TrackDetails: React.FC = () => {
           <div className="fixed top-14 left-0 right-0 z-30 bg-[#121212]/95 backdrop-blur-sm border-b border-white/10 py-2 px-4">
             <SongMap
               cifraContent={resolvedCifraContent}
-              onSectionClick={(sectionId) => setActiveSection(sectionId)}
+              onSectionClick={(sectionId) => {
+                console.log('[TrackDetails] Clicou na seção:', sectionId);
+                console.log('[TrackDetails] Timestamps disponíveis:', track?.section_timestamps);
+                setActiveSection(sectionId);
+
+                // Extrai o label da seção do sectionId (remove "section-" e converte para maiúsculo)
+                // Exemplo: "section-v1" -> "V1", "section-r1" -> "R1"
+                const sectionLabel = sectionId.replace('section-', '').toUpperCase();
+                console.log('[TrackDetails] Label extraído:', sectionLabel);
+
+                // Se tem timestamps, pula o áudio do YouTube para a seção clicada
+                if (track?.section_timestamps && track.section_timestamps[sectionLabel] !== undefined) {
+                  const timestamp = track.section_timestamps[sectionLabel];
+                  console.log('[TrackDetails] Pulando para timestamp:', timestamp);
+                  youtubePlayerRef.current?.seekTo(timestamp);
+                  const sectionName = getSectionDisplayName(sectionLabel);
+                  toast.success(`Pulou para ${sectionName} (${Math.floor(timestamp / 60)}:${(timestamp % 60).toString().padStart(2, '0')})`);
+                } else {
+                  console.warn('[TrackDetails] Nenhum timestamp encontrado para:', sectionLabel);
+                }
+              }}
             />
           </div>
         )}
@@ -597,9 +821,16 @@ const TrackDetails: React.FC = () => {
         {track?.cifra_url && (
           <div className="fixed bottom-0 left-0 right-0 z-30">
             <YouTubePlayer
+              ref={youtubePlayerRef}
               youtubeUrl={track.referencia || undefined}
               trackTitle={track.titulo}
               trackVersion={track.versao || undefined}
+              onTimeUpdate={handleYouTubeTimeUpdate}
+              sectionTimestamps={track.section_timestamps}
+              bpm={metronomeBpm}
+              onMetronomeToggle={handleMetronomeToggle}
+              isMetronomePlaying={isMetronomePlaying}
+              onBpmChange={setMetronomeBpm}
             />
           </div>
         )}
@@ -631,6 +862,8 @@ const TrackDetails: React.FC = () => {
         onFontSizeChange={setFontSize}
         columnLayout={columnLayout}
         onToggleColumnLayout={() => setColumnLayout(!columnLayout)}
+        lyricsOnly={lyricsOnly}
+        onToggleLyricsOnly={setLyricsOnly}
       />
 
       <TrackFormModal

@@ -28,6 +28,8 @@ interface ControlsSidebarProps {
   onFontSizeChange: (size: number) => void;
   columnLayout: boolean;
   onToggleColumnLayout: () => void;
+  lyricsOnly: boolean;
+  onToggleLyricsOnly: (value: boolean) => void;
 }
 
 export const ControlsSidebar: React.FC<ControlsSidebarProps> = ({
@@ -49,6 +51,8 @@ export const ControlsSidebar: React.FC<ControlsSidebarProps> = ({
   onFontSizeChange,
   columnLayout,
   onToggleColumnLayout,
+  lyricsOnly,
+  onToggleLyricsOnly,
 }) => {
   return (
     <>
@@ -90,10 +94,7 @@ export const ControlsSidebar: React.FC<ControlsSidebarProps> = ({
             </label>
             <Select value={selectedKey} onValueChange={onKeyChange}>
               <SelectTrigger className="w-full h-12 bg-white/10 border-white/20 text-white font-semibold text-base hover:bg-white/15 transition">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/60">F#m</span>
-                  <SelectValue placeholder={selectedKey} />
-                </div>
+                <SelectValue placeholder={selectedKey} />
               </SelectTrigger>
               <SelectContent className="bg-[#282828] border-white/20 max-h-64">
                 {AVAILABLE_KEYS.map((key) => (
@@ -160,17 +161,6 @@ export const ControlsSidebar: React.FC<ControlsSidebarProps> = ({
             <div className="space-y-2">
               <button
                 type="button"
-                onClick={onPadToggle}
-                className={`w-full h-12 rounded-lg border font-semibold uppercase text-sm transition-all duration-200 ${
-                  isPadPlaying
-                    ? "bg-[#1DB954] text-black border-[#1DB954]"
-                    : "bg-white/10 text-white border-white/20 hover:bg-white/15"
-                }`}
-              >
-                {isPadPlaying ? "PAD Tocando" : "Iniciar PAD"}
-              </button>
-              <button
-                type="button"
                 onClick={onEditClick}
                 className="w-full h-12 px-4 bg-white/10 text-white text-sm font-semibold rounded-lg border border-white/20 uppercase hover:bg-white/15 transition-all duration-200"
               >
@@ -185,6 +175,17 @@ export const ControlsSidebar: React.FC<ControlsSidebarProps> = ({
                   Editar Música
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => onToggleLyricsOnly(!lyricsOnly)}
+                className={`w-full h-12 px-4 text-sm font-semibold rounded-lg border uppercase transition-all duration-200 ${
+                  lyricsOnly
+                    ? "bg-[#1DB954] text-black border-[#1DB954]"
+                    : "bg-white/10 text-white border-white/20 hover:bg-white/15"
+                }`}
+              >
+                {lyricsOnly ? "Letras Ativo" : "Mostrar Letras"}
+              </button>
             </div>
           </div>
 

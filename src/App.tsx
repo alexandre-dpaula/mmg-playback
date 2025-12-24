@@ -25,6 +25,9 @@ import TrackDetails from "./pages/TrackDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import SettingsProfile from "./pages/SettingsProfile";
+import Members from "./pages/Members";
+import RoleSelection from "./pages/RoleSelection";
+import WaitingInvitation from "./pages/WaitingInvitation";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { RefreshProvider } from "./context/RefreshContext";
@@ -50,7 +53,10 @@ const LeaderOnlyRoute = () => {
 const AppRoutes = () => {
   const location = useLocation();
   const showNav =
-    location.pathname !== "/login" && location.pathname !== "/register";
+    location.pathname !== "/login" &&
+    location.pathname !== "/register" &&
+    location.pathname !== "/role-selection" &&
+    location.pathname !== "/waiting-invitation";
 
   // Esconde navegação na página de cifras (TrackDetails)
   const isTrackDetailsPage = location.pathname.includes("/track/");
@@ -68,6 +74,8 @@ const AppRoutes = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/role-selection" element={<RoleSelection />} />
+            <Route path="/waiting-invitation" element={<WaitingInvitation />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Events />} />
               <Route path="/playlist/:eventId" element={<Index />} />
@@ -77,6 +85,7 @@ const AppRoutes = () => {
               />
               <Route path="/add" element={<AddTrackPage />} />
               <Route path="/search" element={<Search />} />
+              <Route path="/members" element={<Members />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/profile" element={<SettingsProfile />} />
               <Route path="/settings/about" element={<SettingsAbout />} />

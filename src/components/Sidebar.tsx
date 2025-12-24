@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Building2,
   User as UserIcon,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -95,6 +96,12 @@ export const Sidebar: React.FC = () => {
   const tabs = [...baseTabs];
 
   if (profile.role === "lider") {
+    tabs.push({
+      name: "Membros",
+      icon: Users,
+      path: "/members",
+      isActive: location.pathname === "/members",
+    });
     tabs.push({
       name: "Minha Igreja",
       icon: Building2,
