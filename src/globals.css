@@ -99,6 +99,11 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    /* Previne zoom acidental em inputs no iOS */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   html {
@@ -106,6 +111,12 @@
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+    /* Altura fixa para mobile sem barra de endereço */
+    height: 100%;
+    /* Previne zoom em double-tap */
+    touch-action: manipulation;
+    /* Suaviza scroll em iOS */
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
@@ -117,18 +128,54 @@
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+    /* Usa toda altura da tela, incluindo notch */
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     line-height: 1.5;
+    /* Previne seleção acidental de texto em mobile */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Previne zoom em double-tap */
+    touch-action: manipulation;
+    /* Remove bounce effect no iOS */
+    overscroll-behavior-y: none;
+    /* Força orientação portrait (opcional - pode ser removido se quiser landscape) */
+    /* orientation: portrait; */
   }
 
   #root {
     background-color: #121212;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+    /* Remove bounce effect */
+    overscroll-behavior-y: none;
+  }
+
+  /* Permite seleção de texto apenas em inputs e áreas de texto */
+  input, textarea, [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Previne zoom em inputs menores que 16px no iOS */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Remove highlight azul ao tocar em elementos no mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* Links e botões permanecem com feedback visual */
+  a, button {
+    -webkit-tap-highlight-color: rgba(29, 185, 84, 0.2);
   }
 
   /* Remove margens e paddings padrão de elementos HTML */
@@ -251,5 +298,85 @@
 
   .bg-black\/80 {
     background-color: rgb(0 0 0 / 0%) !important;
+  }
+}
+
+/* ========================================
+   RESPONSIVIDADE MOBILE - APP NATIVO
+   ======================================== */
+
+/* Safe area insets para notch e home indicator */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Media queries para diferentes dispositivos */
+@media screen and (max-width: 768px) {
+  /* Garante que elementos não ultrapassem a largura da tela */
+  * {
+    max-width: 100vw;
+  }
+
+  /* Melhora legibilidade em telas pequenas */
+  body {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* Evita scroll horizontal */
+  html, body, #root {
+    overflow-x: hidden !important;
+    position: relative;
+  }
+}
+
+/* iPhone SE e dispositivos pequenos */
+@media screen and (max-width: 375px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Tablets portrait */
+@media screen and (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  body {
+    font-size: 18px;
+  }
+}
+
+/* Landscape mobile - ajusta para melhor uso do espaço */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
+
+/* High DPI screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Dark mode nativo do sistema */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Reduz movimento para usuários com preferência de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
