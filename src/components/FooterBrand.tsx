@@ -7,11 +7,11 @@ export const FooterBrand: React.FC = () => {
       <div
         className="mx-auto w-full bg-black border-t border-white/5"
         style={{
-          paddingTop: "0.5rem",
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)",
+          paddingTop: "0.25rem",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.25rem)",
         }}
       >
-        <div className="mx-auto max-w-6xl flex items-center justify-center pointer-events-auto px-4 py-1">
+        <div className="mx-auto max-w-6xl flex items-center justify-center pointer-events-auto px-4">
           <BrandLogo className="text-white drop-shadow-lg" />
         </div>
       </div>

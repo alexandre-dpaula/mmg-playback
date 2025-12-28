@@ -15,6 +15,7 @@ import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { CreditCardForm } from './CreditCardForm';
 import { PixPayment } from './PixPayment';
 import { BoletoPayment } from './BoletoPayment';
+import { BrandLogo } from '@/components/BrandLogo';
 import type { BillingType, CustomerFormData, CreditCardFormData } from '@/types/asaas';
 
 interface CheckoutDialogProps {
@@ -94,7 +95,11 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            {step === 'result' ? 'Pagamento' : 'Assinar SetlistGO™ PRO'}
+            {step === 'result' ? 'Pagamento' : (
+              <>
+                Assinar <BrandLogo variant="inline" inlineSize="md" className="inline-flex" /> PRO
+              </>
+            )}
           </DialogTitle>
         </DialogHeader>
 

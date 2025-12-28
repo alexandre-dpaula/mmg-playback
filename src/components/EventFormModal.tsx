@@ -1,8 +1,11 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { X, Calendar, Music, Loader2, Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useRefresh } from "@/context/RefreshContext";
@@ -38,14 +41,19 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoadingEvent, setIsLoadingEvent] = useState(false);
+  const [isEventWithoutChurch, setIsEventWithoutChurch] = useState(false);
 
   const isEditing = Boolean(eventId);
+
+  // ID especial para eventos sem igreja
+  const SEM_IGREJA_ID = "00000000-0000-0000-0000-000000000000";
 
   const resetForm = useCallback(() => {
     setEventName("");
     setEventDate("");
     setSelectedTracks([]);
     setSearchQuery("");
+    setIsEventWithoutChurch(false);
   }, []);
 
   const isFormDisabled = isSaving || (isEditing && isLoadingEvent);
@@ -197,7 +205,6 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
 
     const editorName = profile.name || user.email || "Usuário";
     const nowIso = new Date().toISOString();
-    const churchId = profile.churchId ?? null;
 
     setIsSaving(true);
     const savingToast = toast.loading(
@@ -205,6 +212,38 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     );
 
     try {
+      // Determinar church_id
+      let churchId: string;
+
+      // Buscar church_id do usuário logado
+      const { data: userData, error: userError } = await supabase
+        .from("users_app")
+        .select("church_id")
+        .eq("auth_user_id", user.id)
+        .single();
+
+      console.log("🔍 Debug - userData:", userData);
+      console.log("🔍 Debug - userError:", userError);
+      console.log("🔍 Debug - user.id:", user.id);
+      console.log("🔍 Debug - isEventWithoutChurch:", isEventWithoutChurch);
+
+      if (userError) {
+        console.error("❌ Erro ao buscar church_id:", userError);
+        throw new Error("Erro ao buscar dados do usuário: " + userError.message);
+      }
+
+      // Se usuário NÃO tem igreja OU marcou checkbox "evento pessoal"
+      if (!userData?.church_id || isEventWithoutChurch) {
+        // Usar ID especial "Sem igreja" (evento pessoal)
+        churchId = SEM_IGREJA_ID;
+        console.log("📝 Criando evento PESSOAL (ID especial):", churchId);
+        console.log("📝 created_by será:", user.id);
+      } else {
+        // Usar church_id da igreja do usuário
+        churchId = userData.church_id;
+        console.log("✅ Criando evento DA IGREJA, church_id:", churchId);
+      }
+
       let currentEventId = eventId ?? null;
 
       if (isEditing && currentEventId) {
@@ -242,21 +281,38 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           if (tracksError) throw tracksError;
         }
       } else {
+        const insertData = {
+          name: eventName.trim(),
+          date: eventDate,
+          church_id: churchId,
+          created_by: user.id,
+          updated_by: user.id,
+          updated_by_name: editorName,
+          updated_at: nowIso,
+        };
+
+        console.log("📝 Tentando inserir evento com dados:", insertData);
+        console.log("📝 Detalhes importantes:");
+        console.log("  - church_id:", churchId);
+        console.log("  - created_by:", user.id);
+        console.log("  - É evento pessoal?", churchId === SEM_IGREJA_ID);
+
         const { data: eventData, error: eventError } = await supabase
           .from("events")
-          .insert({
-            name: eventName.trim(),
-            date: eventDate,
-            church_id: churchId,
-            created_by: user.id,
-            updated_by: user.id,
-            updated_by_name: editorName,
-            updated_at: nowIso,
-          })
+          .insert(insertData)
           .select()
           .single();
 
-        if (eventError) throw eventError;
+        console.log("📊 Resultado da inserção:", { data: eventData, error: eventError });
+
+        if (eventError) {
+          console.error("❌ Erro ao inserir evento:", eventError);
+          console.error("❌ Código do erro:", eventError.code);
+          console.error("❌ Mensagem completa:", eventError.message);
+          console.error("❌ Detalhes:", eventError.details);
+          console.error("❌ Hint:", eventError.hint);
+          throw eventError;
+        }
 
         currentEventId = eventData.id;
 
@@ -300,11 +356,23 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] bg-[#121212] rounded-2xl flex flex-col shadow-2xl border border-white/10 overflow-hidden">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="w-full max-w-2xl max-h-[90vh] bg-[#121212] rounded-2xl flex flex-col shadow-2xl border border-white/10 overflow-hidden"
+          >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-white/10">
           <h2 className="text-2xl font-bold text-white">
@@ -349,15 +417,33 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
               <Label htmlFor="eventDate" className="text-white">
                 Data
               </Label>
-              <Input
+              <DatePicker
                 id="eventDate"
-                type="date"
                 value={eventDate}
-                onChange={(e) => setEventDate(e.target.value)}
+                onChange={(value) => setEventDate(value)}
                 className="bg-white/10 border-white/20 text-white"
                 disabled={isFormDisabled}
               />
             </div>
+
+            {/* Evento pessoal - APENAS para usuários SEM igreja */}
+            {!profile.churchId && (
+              <div className="flex items-center space-x-2 p-4 bg-white/5 rounded-lg border border-white/10">
+                <Checkbox
+                  id="eventWithoutChurch"
+                  checked={isEventWithoutChurch}
+                  onCheckedChange={(checked) => setIsEventWithoutChurch(checked === true)}
+                  disabled={isFormDisabled}
+                  className="border-white/20 data-[state=checked]:bg-[#1DB954] data-[state=checked]:border-[#1DB954]"
+                />
+                <Label
+                  htmlFor="eventWithoutChurch"
+                  className="text-white text-sm cursor-pointer"
+                >
+                  Evento pessoal (somente eu vejo)
+                </Label>
+              </div>
+            )}
 
             {/* Buscar Músicas */}
             <div className="space-y-3">
@@ -471,7 +557,9 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
             </Button>
           </div>
         </form>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

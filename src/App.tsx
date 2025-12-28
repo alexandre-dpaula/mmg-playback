@@ -10,6 +10,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { clearOldCaches } from "@/lib/preferences";
@@ -27,7 +28,6 @@ import Register from "./pages/Register";
 import SettingsProfile from "./pages/SettingsProfile";
 import Members from "./pages/Members";
 import RoleSelection from "./pages/RoleSelection";
-import WaitingInvitation from "./pages/WaitingInvitation";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { RefreshProvider } from "./context/RefreshContext";
@@ -71,36 +71,45 @@ const AppRoutes = () => {
       <div className="flex-1 flex flex-col min-h-screen md:min-h-0 overflow-hidden md:overflow-y-auto">
         {showNav && !isTrackDetailsPage && <MobileNav />}
         <main className={`flex-1 overflow-y-auto w-full ${mobileNavOffsetClass}`}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/role-selection" element={<RoleSelection />} />
-            <Route path="/waiting-invitation" element={<WaitingInvitation />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Events />} />
-              <Route path="/playlist/:eventId" element={<Index />} />
-              <Route
-                path="/playlist/:eventId/track/:trackId"
-                element={<TrackDetails />}
-              />
-              <Route path="/add" element={<AddTrackPage />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/members" element={<Members />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/settings/profile" element={<SettingsProfile />} />
-              <Route path="/settings/about" element={<SettingsAbout />} />
-              <Route path="/settings/privacy" element={<SettingsPrivacy />} />
-              <Route
-                path="/settings/notifications"
-                element={<SettingsNotifications />}
-              />
-              <Route
-                path="/onboarding/igreja"
-                element={<LeaderOnlyRoute />}
-              />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <Routes location={location} key={location.pathname}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/role-selection" element={<RoleSelection />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/" element={<Events />} />
+                  <Route path="/playlist/:eventId" element={<Index />} />
+                  <Route
+                    path="/playlist/:eventId/track/:trackId"
+                    element={<TrackDetails />}
+                  />
+                  <Route path="/add" element={<AddTrackPage />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/members" element={<Members />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings/profile" element={<SettingsProfile />} />
+                  <Route path="/settings/about" element={<SettingsAbout />} />
+                  <Route path="/settings/privacy" element={<SettingsPrivacy />} />
+                  <Route
+                    path="/settings/notifications"
+                    element={<SettingsNotifications />}
+                  />
+                  <Route
+                    path="/onboarding/igreja"
+                    element={<LeaderOnlyRoute />}
+                  />
+                </Route>
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

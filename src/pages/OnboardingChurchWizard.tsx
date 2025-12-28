@@ -1,8 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/BrandLogo";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const STEP_FLOW = [
   { id: 1, title: "Dados da Igreja" },
@@ -22,7 +24,6 @@ const DEFAULT_TEAM_OPTIONS = [
 interface ChurchFormData {
   name: string;
   city: string;
-  primaryColor: string;
   pastorName: string;
   pastorContact: string;
 }
@@ -66,7 +67,6 @@ const OnboardingChurchWizard: React.FC = () => {
   const [churchData, setChurchData] = React.useState<ChurchFormData>({
     name: "",
     city: "",
-    primaryColor: DEFAULT_PRIMARY_COLOR,
     pastorName: "",
     pastorContact: "",
   });
@@ -92,6 +92,30 @@ const OnboardingChurchWizard: React.FC = () => {
   const [newMemberTeamId, setNewMemberTeamId] = React.useState<string | null>(null);
   const [availableUsers, setAvailableUsers] = React.useState<UserDirectoryItem[]>([]);
   const [isLoadingDirectory, setIsLoadingDirectory] = React.useState(false);
+  const [editingMemberId, setEditingMemberId] = React.useState<string | null>(null);
+  const [editingMemberTeams, setEditingMemberTeams] = React.useState<string[]>([]);
+  const [allChurchMembers, setAllChurchMembers] = React.useState<UserDirectoryItem[]>([]);
+  const [memberSearchTerm, setMemberSearchTerm] = React.useState("");
+  const [selectedTeamFilter, setSelectedTeamFilter] = React.useState<string | null>(null);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = React.useState(false);
+
+  const loadAllChurchMembers = React.useCallback(
+    async (churchId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from("users_app")
+          .select("id, full_name, email")
+          .eq("church_id", churchId);
+
+        if (error) throw error;
+        setAllChurchMembers(data ?? []);
+      } catch (error) {
+        console.error("Erro ao carregar membros da igreja:", error);
+        setAllChurchMembers([]);
+      }
+    },
+    []
+  );
 
   const loadTeamMembers = React.useCallback(
     async (churchId: string) => {
@@ -179,23 +203,26 @@ const OnboardingChurchWizard: React.FC = () => {
           setNewMemberTeamId(defaultTeams[0]?.id ?? null);
           await Promise.all([
             loadTeamMembers(data.id),
+            loadAllChurchMembers(data.id),
             loadAvailableUsers(data.id),
           ]);
         } else {
           setExistingChurch(null);
           setIsEditingExisting(false);
           setTeamMembers([]);
+          setAllChurchMembers([]);
           await loadAvailableUsers(null);
         }
       } catch (error) {
         console.error("Erro ao carregar igreja existente:", error);
         setExistingChurch(null);
         setTeamMembers([]);
+        setAllChurchMembers([]);
       } finally {
         setIsLoadingChurch(false);
       }
     },
-    [loadTeamMembers, loadAvailableUsers]
+    [loadTeamMembers, loadAllChurchMembers, loadAvailableUsers]
   );
 
   React.useEffect(() => {
@@ -276,7 +303,6 @@ const OnboardingChurchWizard: React.FC = () => {
     setChurchData({
       name: existingChurch.name,
       city: existingChurch.city ?? "",
-      primaryColor: existingChurch.primary_color ?? DEFAULT_PRIMARY_COLOR,
       pastorName: existingChurch.pastor_name ?? "",
       pastorContact: existingChurch.pastor_phone ?? "",
     });
@@ -323,13 +349,8 @@ const OnboardingChurchWizard: React.FC = () => {
   };
 
   const handleAddMember = async () => {
-    if (
-      !existingChurch ||
-      !newMemberTeamId ||
-      !newMemberEmail.trim() ||
-      !newMemberName.trim()
-    ) {
-      setMemberError("Informe o nome, email e selecione um time.");
+    if (!existingChurch || !newMemberEmail.trim()) {
+      setMemberError("Informe o email do membro.");
       return;
     }
 
@@ -339,7 +360,7 @@ const OnboardingChurchWizard: React.FC = () => {
     try {
       const { data: userApp, error: userLookupError } = await supabase
         .from("users_app")
-        .select("id, full_name")
+        .select("id, full_name, church_id")
         .eq("email", newMemberEmail.trim())
         .maybeSingle();
 
@@ -349,42 +370,21 @@ const OnboardingChurchWizard: React.FC = () => {
         return;
       }
 
-      // Garantir que o usuário esteja vinculado à igreja
-      const cleanName = (userApp.full_name ?? newMemberName.trim()) || null;
-      const teamName = existingChurch.teams?.find((team) => team.id === newMemberTeamId)?.name;
-      const newRole =
-        teamName === "Vocal"
-          ? "vocal"
-          : teamName === "Instrumental"
-          ? "instrumental"
-          : teamName === "Multimídia"
-          ? "vocal"
-          : null;
-
+      // Atualizar igreja do usuário
       const { error: updateUserChurchError } = await supabase
         .from("users_app")
         .update({
           church_id: existingChurch.id,
-          full_name: cleanName,
-          role: newRole ?? "member",
         })
         .eq("id", userApp.id);
 
       if (updateUserChurchError) throw updateUserChurchError;
 
-      const { error: insertError } = await supabase.from("user_team").insert({
-        user_id: userApp.id,
-        team_id: newMemberTeamId,
-        church_id: existingChurch.id,
-        role: "member",
-      });
-
-      if (insertError) throw insertError;
-
-      setNewMemberName("");
+      // Limpar formulário e recarregar
       setNewMemberEmail("");
       await Promise.all([
         loadTeamMembers(existingChurch.id),
+        loadAllChurchMembers(existingChurch.id),
         loadAvailableUsers(existingChurch.id),
       ]);
     } catch (error) {
@@ -412,6 +412,87 @@ const OnboardingChurchWizard: React.FC = () => {
         error instanceof Error ? error.message : "Erro ao remover membro."
       );
     }
+  };
+
+  const handleStartEditMember = async (userId: string) => {
+    if (!existingChurch) return;
+    try {
+      // Buscar todas as equipes que o usuário pertence
+      const { data, error } = await supabase
+        .from("user_team")
+        .select("team_id")
+        .eq("user_id", userId)
+        .eq("church_id", existingChurch.id);
+
+      if (error) throw error;
+
+      const teamIds = (data ?? []).map((item) => item.team_id);
+      setEditingMemberId(userId);
+      setEditingMemberTeams(teamIds);
+    } catch (error) {
+      console.error("Erro ao carregar equipes do membro:", error);
+      setMemberError(
+        error instanceof Error ? error.message : "Erro ao carregar equipes."
+      );
+    }
+  };
+
+  const handleSaveEditMember = async () => {
+    if (!editingMemberId || !existingChurch) return;
+
+    try {
+      setIsSavingMember(true);
+      setMemberError(null);
+
+      // 1. Remover todas as associações antigas do usuário
+      await supabase
+        .from("user_team")
+        .delete()
+        .eq("user_id", editingMemberId)
+        .eq("church_id", existingChurch.id);
+
+      // 2. Inserir novas associações para cada equipe selecionada
+      if (editingMemberTeams.length > 0) {
+        const newAssociations = editingMemberTeams.map((teamId) => ({
+          user_id: editingMemberId,
+          team_id: teamId,
+          church_id: existingChurch.id,
+          role: "membro",
+        }));
+
+        const { error: insertError } = await supabase
+          .from("user_team")
+          .insert(newAssociations);
+
+        if (insertError) throw insertError;
+      }
+
+      // 3. Recarregar membros e fechar edição
+      await loadTeamMembers(existingChurch.id);
+      setEditingMemberId(null);
+      setEditingMemberTeams([]);
+    } catch (error) {
+      console.error("Erro ao atualizar membro:", error);
+      setMemberError(
+        error instanceof Error ? error.message : "Erro ao atualizar membro."
+      );
+    } finally {
+      setIsSavingMember(false);
+    }
+  };
+
+  const handleCancelEditMember = () => {
+    setEditingMemberId(null);
+    setEditingMemberTeams([]);
+    setMemberError(null);
+  };
+
+  const handleToggleEditMemberTeam = (teamId: string) => {
+    setEditingMemberTeams((prev) =>
+      prev.includes(teamId)
+        ? prev.filter((id) => id !== teamId)
+        : [...prev, teamId]
+    );
   };
 
   const updateChurchField = (field: keyof ChurchFormData, value: string) => {
@@ -506,7 +587,6 @@ const OnboardingChurchWizard: React.FC = () => {
           .update({
             name: churchData.name.trim(),
             city: churchData.city.trim() || null,
-            primary_color: churchData.primaryColor || null,
             pastor_name: churchData.pastorName.trim() || null,
             pastor_phone: churchData.pastorContact.trim() || null,
           })
@@ -521,7 +601,6 @@ const OnboardingChurchWizard: React.FC = () => {
           .insert({
             name: churchData.name.trim(),
             city: churchData.city.trim() || null,
-            primary_color: churchData.primaryColor || null,
             pastor_name: churchData.pastorName.trim() || null,
             pastor_phone: churchData.pastorContact.trim() || null,
             owner_user_id: leaderProfile.authUserId,
@@ -652,27 +731,6 @@ const OnboardingChurchWizard: React.FC = () => {
                 onChange={(event) => updateChurchField("city", event.target.value)}
               />
             </div>
-            <div>
-              <label className="text-sm font-medium text-white/80 block mb-2">
-                Cor principal (hexadecimal)
-              </label>
-              <div className="flex gap-3 flex-wrap">
-                <input
-                  type="text"
-                  className="flex-1 min-w-[200px] rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 focus:border-emerald-400 focus:outline-none"
-                  placeholder="#1DB954"
-                  value={churchData.primaryColor}
-                  onChange={(event) => updateChurchField("primaryColor", event.target.value)}
-                />
-                <input
-                  type="color"
-                  aria-label="Escolher cor"
-                  className="h-12 w-20 rounded-lg border border-white/20 bg-transparent cursor-pointer"
-                  value={churchData.primaryColor}
-                  onChange={(event) => updateChurchField("primaryColor", event.target.value)}
-                />
-              </div>
-            </div>
           </div>
         );
       case 2:
@@ -700,12 +758,10 @@ const OnboardingChurchWizard: React.FC = () => {
                 <label className="text-sm font-medium text-white/80 block mb-2">
                   Contato (telefone)
                 </label>
-                <input
-                  type="tel"
-                  className="w-full rounded-lg border border-white/10 bg-[#0a0e18] px-4 py-3 text-white placeholder:text-white/40 focus:border-[#1DB954] focus:outline-none"
-                  placeholder="(11) 99999-0000"
+                <PhoneInput
+                  className="bg-[#0a0e18] border-white/10 text-white placeholder:text-white/40 focus:border-[#1DB954]"
                   value={churchData.pastorContact}
-                  onChange={(event) => updateChurchField("pastorContact", event.target.value)}
+                  onChange={(value) => updateChurchField("pastorContact", value)}
                 />
               </div>
             </div>
@@ -820,18 +876,6 @@ const OnboardingChurchWizard: React.FC = () => {
                     {churchData.pastorContact?.trim() || "Não informado"}
                   </dd>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div>
-                    <dt className="text-white/60">Cor principal</dt>
-                    <dd className="font-medium">{churchData.primaryColor || "N/A"}</dd>
-                  </div>
-                  {churchData.primaryColor && (
-                    <span
-                      className="inline-flex h-6 w-6 rounded-full border border-white/20"
-                      style={{ backgroundColor: churchData.primaryColor }}
-                    />
-                  )}
-                </div>
               </dl>
             </div>
 
@@ -884,144 +928,126 @@ const OnboardingChurchWizard: React.FC = () => {
     const teams = existingChurch.teams ?? [];
     return (
       <div className="min-h-screen bg-[#050505] py-12 px-4 text-white">
-        <div className="mx-auto max-w-3xl space-y-8">
+        <div className="mx-auto max-w-5xl space-y-8">
           <header className="text-center space-y-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs uppercase tracking-[0.35em] text-[#1DB954]">
               Igreja cadastrada
             </div>
-            <h1 className="text-3xl font-semibold">Sua igreja no SetlistGO™</h1>
+            <h1 className="text-2xl font-semibold">
+              Sua igreja no <BrandLogo variant="inline" inlineSize="lg" className="inline-flex" />
+            </h1>
             <p className="text-sm text-white/70">
               Gerencie equipes, repertórios e membros. Use o botão abaixo para atualizar qualquer
               informação.
             </p>
           </header>
 
-          <div className="rounded-3xl border border-white/10 bg-black/30 p-6 md:p-8 shadow-2xl shadow-black/50 space-y-6">
-            <section className="grid gap-6 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-2">
+          <div className="rounded-3xl border border-white/10 bg-black/30 p-4 md:p-6 shadow-2xl shadow-black/50 space-y-4">
+            <section className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
                 <p className="text-xs uppercase tracking-[0.3em] text-white/40">Identidade</p>
                 <h2 className="text-xl font-semibold">{existingChurch.name}</h2>
-                <dl className="space-y-2 text-sm text-white/70">
+                <dl className="grid grid-cols-3 gap-3 text-xs sm:text-sm text-white/70">
                   <div>
-                    <dt className="text-white/50">Cidade</dt>
-                    <dd className="font-medium">{existingChurch.city || "Não informado"}</dd>
+                    <dt className="text-white/50 text-[10px] sm:text-xs">Cidade</dt>
+                    <dd className="font-medium truncate">{existingChurch.city || "Não informado"}</dd>
                   </div>
                   <div>
-                    <dt className="text-white/50">Pastor líder</dt>
-                    <dd className="font-medium">
+                    <dt className="text-white/50 text-[10px] sm:text-xs">Pastor líder</dt>
+                    <dd className="font-medium truncate">
                       {existingChurch.pastor_name || "Não informado"}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-white/50">Contato</dt>
-                    <dd className="font-medium">
+                    <dt className="text-white/50 text-[10px] sm:text-xs">Contato</dt>
+                    <dd className="font-medium truncate">
                       {existingChurch.pastor_phone || "Não informado"}
                     </dd>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <dt className="text-white/50">Cor principal</dt>
-                      <dd className="font-medium">
-                        {existingChurch.primary_color || DEFAULT_PRIMARY_COLOR}
-                      </dd>
-                    </div>
-                    <span
-                      className="inline-flex h-6 w-6 rounded-full border border-white/20"
-                      style={{
-                        backgroundColor:
-                          existingChurch.primary_color ?? DEFAULT_PRIMARY_COLOR,
-                      }}
-                    />
                   </div>
                 </dl>
               </div>
 
             </section>
 
-            <section className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+            <section className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-white/40">Adicionar membro</p>
-                <h3 className="text-lg font-semibold text-white">Nomeie pessoas para equipes</h3>
+                <h3 className="text-lg font-semibold text-white">Buscar membro cadastrado</h3>
               </div>
-              <div className="rounded-xl border border-dashed border-white/20 bg-black/20 p-4 space-y-3">
-                <input
-                  type="email"
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-[#1DB954] focus:outline-none"
-                  placeholder="Email do usuário"
-                  list="available-user-emails"
-                  value={newMemberEmail}
-                  onChange={(event) => handleMemberEmailChange(event.target.value)}
-                />
-                <input
-                  type="text"
-                  className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:border-[#1DB954] focus:outline-none"
-                  placeholder="Nome completo"
-                  value={newMemberName}
-                  onChange={(event) => setNewMemberName(event.target.value)}
-                />
-                <datalist id="available-user-emails">
-                  {availableUsers.map((user) =>
-                    user.email ? (
-                      <option key={user.id} value={user.email}>
-                        {user.full_name ?? "Usuário sem nome"}
-                      </option>
-                    ) : null
-                  )}
-                </datalist>
-                <div className="space-y-1">
-                  <select
-                    className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-white focus:border-[#1DB954] focus:outline-none"
-                    value={newMemberTeamId ?? ""}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      if (!value) {
-                        setNewMemberTeamId(null);
-                      } else {
-                        setNewMemberTeamId(value);
-                      }
-                    }}
-                    disabled={
-                      !(
-                        existingChurch?.teams?.some((team) =>
-                          DEFAULT_TEAM_OPTIONS.some((option) => option.label === team.name)
-                        ) ?? false
-                      )
-                    }
-                  >
-                    <option value="">
-                      Selecionar Função
-                    </option>
-                    {existingChurch?.teams
-                      ?.filter((team) =>
-                        DEFAULT_TEAM_OPTIONS.some((option) => option.label === team.name)
-                      )
-                      .map((team) => (
-                        <option key={team.id} value={team.id}>
-                          {team.name}
-                        </option>
-                      ))}
-                  </select>
-                  {!(
-                    existingChurch?.teams?.some((team) =>
-                      DEFAULT_TEAM_OPTIONS.some((option) => option.label === team.name)
-                    ) ?? false
-                  ) && (
-                    <p className="text-xs text-white/50">
-                      Cadastre primeiro as equipes padrão para adicionar membros.
-                    </p>
-                  )}
+              <div className="space-y-3">
+                <div className="relative">
+                  <input
+                    type="email"
+                    className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-[#1DB954] focus:outline-none"
+                    placeholder="Digite o Email ou Nome do membro (min. 3 letras)"
+                    value={newMemberEmail}
+                    onChange={(event) => handleMemberEmailChange(event.target.value)}
+                  />
+                  {newMemberEmail.length >= 3 && (() => {
+                    const searchTerm = newMemberEmail.toLowerCase();
+                    const filteredUsers = availableUsers.filter((user) => {
+                      const name = (user.full_name || "").toLowerCase();
+                      const email = (user.email || "").toLowerCase();
+                      return name.includes(searchTerm) || email.includes(searchTerm);
+                    });
+
+                    if (filteredUsers.length === 0) return null;
+
+                    return (
+                      <div className="absolute z-10 w-full mt-1 bg-black/95 border border-white/20 rounded-lg max-h-48 overflow-y-auto shadow-lg">
+                        {filteredUsers.slice(0, 5).map((user) => {
+                          const isAlreadyMember = user.church_id === existingChurch?.id;
+
+                          return (
+                            <button
+                              key={user.id}
+                              type="button"
+                              onClick={() => {
+                                setNewMemberEmail(user.email || "");
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-white/80 hover:bg-white/10 transition flex items-start gap-2"
+                            >
+                              <div className="flex-1">
+                                <div className="font-medium flex items-center gap-2">
+                                  {user.full_name || "Sem nome"}
+                                  {isAlreadyMember && (
+                                    <span className="text-xs text-green-400" title="Já é membro desta igreja">
+                                      ●
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-white/50">{user.email}</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
-              </div>
-              {memberError && <p className="text-sm text-rose-300">{memberError}</p>}
-              {matchedDirectoryUser ? (
-                <p className="text-xs text-white/60">
-                  Usuário encontrado: {matchedDirectoryUser.full_name || "Sem nome cadastrado"}
-                  {matchedDirectoryUser.church_id &&
-                    matchedDirectoryUser.church_id !== existingChurch?.id &&
-                    " • Será movido para esta igreja."}
-                </p>
-              ) : (
-                newMemberEmail.trim() && (
+
+                {memberError && <p className="text-sm text-rose-300">{memberError}</p>}
+
+                {matchedDirectoryUser && newMemberEmail.length >= 3 && (
+                  <div className="rounded-lg bg-white/5 p-3 space-y-2">
+                    <p className="text-xs text-white/60">
+                      ✓ Usuário encontrado: <span className="font-semibold text-white">{matchedDirectoryUser.full_name || matchedDirectoryUser.email}</span>
+                    </p>
+                    <button
+                      type="button"
+                      className="w-full rounded-lg bg-[#1DB954] text-black px-4 py-2 text-sm font-semibold hover:bg-[#1ed760] disabled:opacity-50"
+                      onClick={handleAddMember}
+                      disabled={isSavingMember}
+                    >
+                      {isSavingMember ? "Adicionando..." : "Adicionar à igreja"}
+                    </button>
+                    <p className="text-xs text-white/50 text-center">
+                      Após adicionar, use o botão ✎ para definir as equipes
+                    </p>
+                  </div>
+                )}
+
+                {newMemberEmail.trim().length >= 3 && !matchedDirectoryUser && !isLoadingDirectory && (
                   <p className="text-xs text-white/50">
                     Usuário não encontrado.{" "}
                     <button
@@ -1030,20 +1056,330 @@ const OnboardingChurchWizard: React.FC = () => {
                       onClick={() => navigate("/register")}
                     >
                       Cadastre-o pelo app
-                    </button>{" "}
-                    e tente novamente.
+                    </button>
                   </p>
-                )
-              )}
-              <button
-                type="button"
-                className="rounded-lg bg-[#1DB954] text-black px-4 py-2 text-sm font-semibold hover:bg-[#1ed760] disabled:opacity-50"
-                onClick={handleAddMember}
-                disabled={isSavingMember}
-              >
-                {isSavingMember ? "Adicionando..." : "Adicionar membro"}
-              </button>
+                )}
+              </div>
             </section>
+
+            {/* Listagem de TODOS os membros da igreja (com ou sem equipe) */}
+            {allChurchMembers.length > 0 && (() => {
+              // Criar Map de equipes por usuário
+              const teamsByUser = new Map<string, Array<{ id: string; name: string; membershipId: string }>>();
+
+              teamMembers.forEach((membership) => {
+                const userId = membership.user?.id;
+                if (!userId || !membership.team) return;
+
+                if (!teamsByUser.has(userId)) {
+                  teamsByUser.set(userId, []);
+                }
+
+                teamsByUser.get(userId)!.push({
+                  id: membership.team.id,
+                  name: membership.team.name,
+                  membershipId: membership.id,
+                });
+              });
+
+              // Criar lista de membros com suas equipes
+              const allMembers = allChurchMembers.map((user) => ({
+                userId: user.id,
+                userName: user.full_name || "",
+                userEmail: user.email || "",
+                teams: teamsByUser.get(user.id) || [],
+              }));
+
+              if (allMembers.length === 0) return null;
+
+              // Aplicar filtros
+              const filteredMembers = allMembers.filter((member) => {
+                // Filtro por busca (nome ou email)
+                const searchLower = memberSearchTerm.toLowerCase();
+                const matchesSearch = !memberSearchTerm ||
+                  member.userName.toLowerCase().includes(searchLower) ||
+                  member.userEmail.toLowerCase().includes(searchLower);
+
+                // Filtro por equipe
+                const matchesTeam = !selectedTeamFilter ||
+                  member.teams.some((team) => team.name === selectedTeamFilter);
+
+                return matchesSearch && matchesTeam;
+              });
+
+              return (
+                <section className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/40">Membros cadastrados</p>
+                    <h3 className="text-lg font-semibold text-white">Funções</h3>
+                  </div>
+
+                  {/* Barra de busca e filtros */}
+                  <div className="space-y-3">
+                    {/* Campo de busca com botão de filtro */}
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          placeholder="Digite o email ou nome do membro"
+                          value={memberSearchTerm}
+                          onChange={(e) => setMemberSearchTerm(e.target.value)}
+                          className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-2 pl-10 text-sm text-white placeholder:text-white/40 focus:border-[#1DB954] focus:outline-none"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+                          🔍
+                        </span>
+                      </div>
+
+                      {/* Botão hamburger para filtros */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                          className="h-full px-4 rounded-lg border border-white/10 bg-black/40 text-white hover:bg-white/10 transition flex items-center gap-2"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                          </svg>
+                          {selectedTeamFilter && (
+                            <span className="text-xs text-[#1DB954]">•</span>
+                          )}
+                        </button>
+
+                        {/* Menu dropdown de filtros */}
+                        <AnimatePresence>
+                          {isFilterMenuOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                              transition={{ duration: 0.2 }}
+                              className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-white/10 bg-black/95 shadow-lg z-10 p-2"
+                            >
+                              <p className="text-xs text-white/50 px-2 py-1 mb-1">Filtrar por equipe:</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTeamFilter(null);
+                                setIsFilterMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded text-sm transition ${
+                                selectedTeamFilter === null
+                                  ? "bg-[#1DB954] text-black font-medium"
+                                  : "text-white/70 hover:bg-white/10"
+                              }`}
+                            >
+                              Todos
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTeamFilter("Vocal");
+                                setIsFilterMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded text-sm transition flex items-center gap-2 ${
+                                selectedTeamFilter === "Vocal"
+                                  ? "bg-green-500 text-white font-medium"
+                                  : "text-white/70 hover:bg-white/10"
+                              }`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-green-500" />
+                              Vocal
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTeamFilter("Instrumental");
+                                setIsFilterMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded text-sm transition flex items-center gap-2 ${
+                                selectedTeamFilter === "Instrumental"
+                                  ? "bg-yellow-500 text-black font-medium"
+                                  : "text-white/70 hover:bg-white/10"
+                              }`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-yellow-500" />
+                              Instrumental
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedTeamFilter("Multimídia");
+                                setIsFilterMenuOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 rounded text-sm transition flex items-center gap-2 ${
+                                selectedTeamFilter === "Multimídia"
+                                  ? "bg-purple-500 text-white font-medium"
+                                  : "text-white/70 hover:bg-white/10"
+                              }`}
+                            >
+                              <span className="h-2 w-2 rounded-full bg-purple-500" />
+                              Multimídia
+                            </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lista de membros filtrada */}
+                  {filteredMembers.length === 0 ? (
+                    <p className="text-center text-sm text-white/40 py-8">
+                      Nenhum membro encontrado com os filtros selecionados
+                    </p>
+                  ) : (
+                    <motion.ul
+                      className="space-y-3"
+                      initial="hidden"
+                      animate="show"
+                      variants={{
+                        hidden: { opacity: 0 },
+                        show: {
+                          opacity: 1,
+                          transition: {
+                            staggerChildren: 0.1
+                          }
+                        }
+                      }}
+                    >
+                      {filteredMembers.map((member, index) => {
+                        const isEditing = editingMemberId === member.userId;
+
+                        return (
+                          <motion.li
+                            key={member.userId}
+                            variants={{
+                              hidden: { opacity: 0, y: 20 },
+                              show: { opacity: 1, y: 0 }
+                            }}
+                            transition={{ duration: 0.3 }}
+                            whileHover={{ scale: 1.01, y: -2 }}
+                            className="bg-white/5 rounded-lg px-3 py-3"
+                          >
+                          {isEditing ? (
+                            // Modo de edição com checkboxes
+                            <div className="space-y-3">
+                              <p className="text-sm font-semibold text-white">
+                                {member.userName || member.userEmail}
+                              </p>
+                              <div className="space-y-2">
+                                {existingChurch?.teams?.map((team) => {
+                                  let colorClass = "bg-green-500";
+                                  if (team.name === "Instrumental") colorClass = "bg-yellow-500";
+                                  if (team.name === "Multimídia") colorClass = "bg-purple-500";
+
+                                  return (
+                                    <label key={team.id} className="flex items-center gap-2 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={editingMemberTeams.includes(team.id)}
+                                        onChange={() => handleToggleEditMemberTeam(team.id)}
+                                        className="w-4 h-4 rounded border-white/20 bg-white/10 text-[#1DB954] focus:ring-[#1DB954]"
+                                      />
+                                      <span className={`h-2 w-2 rounded-full ${colorClass}`} />
+                                      <span className="text-sm text-white/80">{team.name}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex gap-2 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={handleSaveEditMember}
+                                  disabled={isSavingMember}
+                                  className="px-3 py-1 rounded bg-[#1DB954] text-black text-xs font-semibold hover:bg-[#1ed760] disabled:opacity-50"
+                                >
+                                  {isSavingMember ? "Salvando..." : "Salvar"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleCancelEditMember}
+                                  disabled={isSavingMember}
+                                  className="px-3 py-1 rounded border border-white/20 text-white/70 text-xs hover:border-white/40"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            // Modo de visualização com tags
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-white mb-1">
+                                  {member.userName || member.userEmail}
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {member.teams.length > 0 ? (
+                                    member.teams.map((team) => {
+                                      let colorClass = "bg-green-500";
+                                      if (team.name === "Instrumental") colorClass = "bg-yellow-500";
+                                      if (team.name === "Multimídia") colorClass = "bg-purple-500";
+
+                                      return (
+                                        <span
+                                          key={team.id}
+                                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-white/10 text-xs text-white/80"
+                                        >
+                                          <span className={`h-1.5 w-1.5 rounded-full ${colorClass}`} />
+                                          {team.name}
+                                        </span>
+                                      );
+                                    })
+                                  ) : (
+                                    <span className="text-xs text-white/40 italic">
+                                      Sem equipe definida
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex gap-2 ml-3">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStartEditMember(member.userId)}
+                                  className="text-white/60 hover:text-blue-400 transition text-sm"
+                                  title={member.userId === leaderProfile?.userAppId ? "Editar minhas equipes" : "Editar funções"}
+                                >
+                                  ✎
+                                </button>
+                                {member.userId === leaderProfile?.userAppId ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (confirm("Tem certeza que deseja sair de todas as equipes da igreja?")) {
+                                        member.teams.forEach((team) => handleRemoveMember(team.membershipId));
+                                      }
+                                    }}
+                                    className="text-white/40 hover:text-yellow-400 transition text-sm"
+                                    title="Sair das equipes"
+                                  >
+                                    ⎋
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (confirm(`Tem certeza que deseja remover ${member.userName || member.userEmail} da igreja?`)) {
+                                        member.teams.forEach((team) => handleRemoveMember(team.membershipId));
+                                      }
+                                    }}
+                                    className="text-white/40 hover:text-rose-400 transition text-lg"
+                                    title="Remover membro"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                              </div>
+                            )}
+                          </motion.li>
+                        );
+                      })}
+                    </motion.ul>
+                  )}
+                </section>
+              );
+            })()}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-white/60">

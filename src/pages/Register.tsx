@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { toast } from "sonner";
 import { ArrowLeft, Camera, Loader2 } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -272,8 +273,7 @@ const Register: React.FC = () => {
               <>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold">Senha</label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Mínimo 6 caracteres"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -284,8 +284,7 @@ const Register: React.FC = () => {
 
                 <div className="space-y-2">
                   <label className="text-sm font-semibold">Confirmar senha</label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Digite a senha novamente"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}

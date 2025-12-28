@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -98,14 +99,17 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
   };
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
       style={style}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      whileHover={{ scale: 1.01, y: -2 }}
+      transition={{ duration: 0.2 }}
       className={cn(
         "group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] transition-all duration-200",
-        isActive && "border-[#1DB954]/40 bg-[#1DB954]/5",
-        !isDragging &&
-          "hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f]"
+        isActive && "border-[#1DB954]/40 bg-[#1DB954]/5"
       )}
     >
       {/* Fundo vermelho de delete revelado ao arrastar */}
@@ -196,7 +200,7 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
           transition: isSwiping ? 'none' : 'transform 0.3s ease-out',
         }}
       />
-    </div>
+    </motion.div>
   );
 };
 

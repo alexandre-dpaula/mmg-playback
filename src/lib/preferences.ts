@@ -1,7 +1,7 @@
 export const SELECTED_EVENT_STORAGE_KEY = "mmg-selected-event";
 const SELECTED_EVENT_EVENT = "mmg-selected-event-changed";
 const CACHE_VERSION_KEY = "mmg-cache-version";
-const CURRENT_CACHE_VERSION = "3.0"; // Incrementar para forçar limpeza
+const CURRENT_CACHE_VERSION = "4.0"; // Incrementado para forçar limpeza completa
 
 // Lista de chaves antigas que devem ser removidas
 const DEPRECATED_KEYS = [
@@ -9,6 +9,9 @@ const DEPRECATED_KEYS = [
   "festa-tabernaculos",
   "ensaio_vocal",
   "festa_tabernaculos",
+  "sb-",
+  "tanstack",
+  "react-query",
 ];
 
 export const clearOldCaches = async () => {
@@ -20,44 +23,21 @@ export const clearOldCaches = async () => {
   if (currentVersion !== CURRENT_CACHE_VERSION) {
     console.log("Limpando caches antigos...");
 
-    // Remover chaves deprecated específicas
-    DEPRECATED_KEYS.forEach(key => {
-      window.localStorage.removeItem(key);
-    });
-
-    // Limpar todas as chaves que não sejam essenciais
-    const keysToKeep = [
-      SELECTED_EVENT_STORAGE_KEY,
-      "mmg_local_auth",
-      "mmg_local_profile",
-      CACHE_VERSION_KEY,
+    // Limpar apenas chaves obsoletas específicas (não tudo)
+    const keysToRemove = [
+      "ensaio-vocal",
+      "festa-tabernaculos",
+      "ensaio_vocal",
+      "festa_tabernaculos",
     ];
 
-    // Iterar sobre todas as chaves do localStorage
-    const allKeys = Object.keys(window.localStorage);
-    allKeys.forEach(key => {
-      // Se a chave não está na lista de manter, remover
-      if (!keysToKeep.includes(key) && !key.startsWith("supabase.")) {
+    // Remover apenas chaves obsoletas conhecidas
+    keysToRemove.forEach(key => {
+      if (window.localStorage.getItem(key)) {
+        console.log('Removendo cache antigo:', key);
         window.localStorage.removeItem(key);
       }
     });
-
-    // Limpar caches do Service Worker antigos
-    if ('caches' in window) {
-      try {
-        const cacheNames = await caches.keys();
-        await Promise.all(
-          cacheNames
-            .filter(name => name.startsWith('mmg-playback') && name !== 'mmg-playback-v3.1')
-            .map(name => {
-              console.log('Deletando cache antigo:', name);
-              return caches.delete(name);
-            })
-        );
-      } catch (error) {
-        console.error('Erro ao limpar caches do Service Worker:', error);
-      }
-    }
 
     // Atualizar versão do cache
     window.localStorage.setItem(CACHE_VERSION_KEY, CURRENT_CACHE_VERSION);

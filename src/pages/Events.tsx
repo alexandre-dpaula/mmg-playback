@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, Plus, Music, Trash2, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { EventFormModal } from "@/components/EventFormModal";
 import {
@@ -16,6 +17,7 @@ import { useRefresh } from "@/context/RefreshContext";
 import { FooterBrand } from "@/components/FooterBrand";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/PullToRefresh";
+import { EventCardSkeletonList } from "@/components/EventCardSkeleton";
 
 type EventItem = {
   id: string;
@@ -313,16 +315,24 @@ export default function Events() {
     };
 
     return (
-      <div
+      <motion.div
         key={event.id}
-        role="button"
-        tabIndex={0}
-        onClick={handleCardClick}
-        onKeyDown={handleCardKeyDown}
-        className={`group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-4 sm:p-5 flex items-center gap-4 transition-all duration-200 hover:-translate-y-px hover:border-[#1DB954]/40 hover:bg-[#1f1f1f] cursor-pointer ${
-          isActive ? "border-[#1DB954]/50 bg-[#1DB954]/5" : ""
-        }`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ y: -2 }}
+        whileTap={{ scale: 0.98 }}
       >
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleCardClick}
+          onKeyDown={handleCardKeyDown}
+          className={`group relative w-full overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#181818] to-[#101010] p-4 sm:p-5 flex items-center gap-4 transition-all duration-200 hover:border-[#1DB954]/40 hover:bg-[#1f1f1f] cursor-pointer ${
+            isActive ? "border-[#1DB954]/50 bg-[#1DB954]/5" : ""
+          }`}
+        >
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 bg-gradient-to-r from-white/5 to-transparent" />
         <div className="relative z-10 flex-shrink-0 h-12 w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50">
           <Music className="w-6 h-6" />
@@ -391,7 +401,8 @@ export default function Events() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+        </div>
+      </motion.div>
     );
   };
 
@@ -425,10 +436,7 @@ export default function Events() {
           </div>
 
           {isLoadingEvents ? (
-            <div className="space-y-3">
-              <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
-              <div className="h-20 rounded-2xl bg-white/5 animate-pulse" />
-            </div>
+            <EventCardSkeletonList count={3} />
           ) : events.length === 0 ? (
             <div className="bg-white/5 rounded-2xl p-8 text-center border border-white/10">
               <Calendar className="w-12 h-12 mx-auto mb-4 text-white/40" />
@@ -448,13 +456,15 @@ export default function Events() {
           )}
 
           <div className="mt-6">
-            <Button
-              onClick={openCreateModal}
-              className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
-            >
-              <Plus className="mr-2 h-5 w-5" />
-              Novo Evento
-            </Button>
+            <motion.div whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.01 }}>
+              <Button
+                onClick={openCreateModal}
+                className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                Novo Evento
+              </Button>
+            </motion.div>
           </div>
 
           <EventFormModal
