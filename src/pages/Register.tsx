@@ -184,9 +184,9 @@ const Register: React.FC = () => {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-500/5 via-transparent to-transparent animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      {/* Partículas flutuantes com Framer Motion */}
+      {/* Partículas flutuantes otimizadas - reduzido de 30 para 8 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-[#1DB954] rounded-full"
@@ -203,10 +203,10 @@ const Register: React.FC = () => {
               scale: [0, Math.random() * 1.5, 0],
             }}
             transition={{
-              duration: 10 + Math.random() * 20,
+              duration: 15 + Math.random() * 10,
               repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: "easeInOut",
+              delay: Math.random() * 3,
+              ease: "linear",
             }}
           />
         ))}
@@ -479,13 +479,21 @@ const Register: React.FC = () => {
       >
         <p className="text-xs text-white/50 text-center leading-relaxed">
           Ao se cadastrar, você concorda com nossos{" "}
-          <a href="#" className="underline hover:text-white transition-colors">
+          <button
+            type="button"
+            onClick={() => navigate("/terms-of-service")}
+            className="underline hover:text-white transition-colors"
+          >
             Termos de Serviço
-          </a>{" "}
+          </button>{" "}
           e{" "}
-          <a href="#" className="underline hover:text-white transition-colors">
+          <button
+            type="button"
+            onClick={() => navigate("/privacy-policy")}
+            className="underline hover:text-white transition-colors"
+          >
             Política de Privacidade
-          </a>
+          </button>
           .
         </p>
       </motion.div>

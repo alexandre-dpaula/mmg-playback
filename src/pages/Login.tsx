@@ -113,9 +113,9 @@ const Login: React.FC = () => {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-500/5 via-transparent to-transparent animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      {/* Partículas flutuantes com Framer Motion */}
+      {/* Partículas flutuantes otimizadas - reduzido de 30 para 8 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-[#1DB954] rounded-full"
@@ -132,17 +132,17 @@ const Login: React.FC = () => {
               scale: [0, Math.random() * 1.5, 0],
             }}
             transition={{
-              duration: 10 + Math.random() * 20,
+              duration: 15 + Math.random() * 10,
               repeat: Infinity,
-              delay: Math.random() * 5,
-              ease: "easeInOut",
+              delay: Math.random() * 3,
+              ease: "linear",
             }}
           />
         ))}
       </div>
 
       {/* Conteúdo principal */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-0 relative z-10">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 relative z-10">
         {/* Card com glassmorphism */}
         <motion.div
           initial={{ opacity: 0, y: 40, scale: 0.95 }}
@@ -358,23 +358,27 @@ const Login: React.FC = () => {
             </motion.div>
           </div>
         </motion.div>
-      </div>
 
-      {/* Footer com animação */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.5 }}
-        className="px-8 pb-8"
-      >
-        <p className="text-xs text-white/50 text-center leading-relaxed">
-          Esta página usa cookies. Consulte nossa{" "}
-          <a href="#" className="underline hover:text-white transition-colors">
-            Política de Cookies
-          </a>{" "}
-          para mais informações.
-        </p>
-      </motion.div>
+        {/* Footer dentro do container */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="w-full max-w-md mt-6 px-4"
+        >
+          <p className="text-xs text-white/50 text-center leading-relaxed">
+            Esta página usa cookies. Consulte nossa{" "}
+            <button
+              type="button"
+              onClick={() => navigate("/cookie-policy")}
+              className="underline hover:text-white transition-colors"
+            >
+              Política de Cookies
+            </button>{" "}
+            para mais informações.
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 };

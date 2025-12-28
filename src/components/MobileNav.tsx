@@ -11,6 +11,7 @@ import {
   LogOut,
   Building2,
   User as UserIcon,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +22,8 @@ import {
 import { useRefresh } from "@/context/RefreshContext";
 import { supabase } from "@/lib/supabase";
 import { useAuth, UserRole } from "@/context/AuthContext";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
+import { NotificationBadge } from "@/components/NotificationBadge";
 
 const ROLE_TAG_STYLES: Record<
   UserRole,
@@ -56,6 +59,7 @@ export const MobileNav: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [avatarError, setAvatarError] = React.useState(false);
   const showFallbackAvatar = avatarError || !profile.avatarUrl;
+  const { unreadCount } = useUnreadNotifications();
 
   const roleTag =
     ROLE_TAG_STYLES[profile.role] ??
@@ -250,13 +254,29 @@ export const MobileNav: React.FC = () => {
                 onClick={handleNavClick}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-all",
-                  location.pathname.startsWith("/settings")
+                  location.pathname === "/settings"
                     ? "bg-[#1DB954]/20 text-[#1DB954]"
                     : "text-white/70 hover:text-white hover:bg-white/10"
                 )}
               >
                 <Settings className="w-5 h-5 flex-shrink-0" />
                 <span className="text-sm font-medium">Configurações</span>
+              </Link>
+              <Link
+                to="/settings/notifications"
+                onClick={handleNavClick}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all relative",
+                  location.pathname === "/settings/notifications"
+                    ? "bg-[#1DB954]/20 text-[#1DB954]"
+                    : "text-white/70 hover:text-white hover:bg-white/10"
+                )}
+              >
+                <div className="relative">
+                  <Bell className="w-5 h-5 flex-shrink-0" />
+                  <NotificationBadge count={unreadCount} />
+                </div>
+                <span className="text-sm font-medium">Notificações</span>
               </Link>
             </nav>
 

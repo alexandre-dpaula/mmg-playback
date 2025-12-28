@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Bell, Shield, Info, ChevronRight, Crown } from "lucide-react";
+import { User, Shield, Info, ChevronRight, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { FooterBrand } from "@/components/FooterBrand";
 import { CheckoutDialog } from "@/components/subscription/CheckoutDialog";
@@ -26,14 +26,6 @@ const Settings: React.FC = () => {
       description: "Gerencie suas informações",
       icon: <User className="w-6 h-6 text-[#1DB954]" />,
       route: "/settings/profile",
-      iconBg: "bg-[#1DB954]/10",
-    },
-    {
-      id: "notifications",
-      title: "Notificações",
-      description: "Configure alertas e avisos",
-      icon: <Bell className="w-6 h-6 text-[#1DB954]" />,
-      route: "/settings/notifications",
       iconBg: "bg-[#1DB954]/10",
     },
     {

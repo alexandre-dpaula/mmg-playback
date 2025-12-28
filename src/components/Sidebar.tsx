@@ -22,6 +22,8 @@ import {
 import { useRefresh } from "@/context/RefreshContext";
 import { supabase } from "@/lib/supabase";
 import { useAuth, UserRole } from "@/context/AuthContext";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
+import { NotificationBadge } from "@/components/NotificationBadge";
 
 const ROLE_LABELS: Record<UserRole, string> = {
   lider: "Líder",
@@ -41,6 +43,7 @@ export const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [avatarError, setAvatarError] = React.useState(false);
   const showFallbackAvatar = avatarError || !profile.avatarUrl;
+  const { unreadCount } = useUnreadNotifications();
 
   React.useEffect(() => {
     const updatePath = () => {
@@ -203,20 +206,25 @@ export const Sidebar: React.FC = () => {
                 state={getNavigationState(tab.path)}
                 onClick={() => triggerRefresh()}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 sm:py-3 rounded-lg transition-all group",
+                  "flex items-center gap-3 px-3 py-2 sm:py-3 rounded-lg transition-all group relative",
                   tab.isActive
                     ? "bg-[#1DB954]/20 text-[#1DB954]"
                     : "text-white/70 hover:text-white hover:bg-white/10"
                 )}
               >
-                <Icon
-                  className={cn(
-                    "w-5 h-5 flex-shrink-0",
-                    tab.isActive
-                      ? "text-[#1DB954]"
-                      : "text-white/70 group-hover:text-white"
+                <div className="relative">
+                  <Icon
+                    className={cn(
+                      "w-5 h-5 flex-shrink-0",
+                      tab.isActive
+                        ? "text-[#1DB954]"
+                        : "text-white/70 group-hover:text-white"
+                    )}
+                  />
+                  {tab.name === "Configurações" && (
+                    <NotificationBadge count={unreadCount} />
                   )}
-                />
+                </div>
                 {!isCollapsed && (
                   <span className="text-sm font-medium truncate">
                     {tab.name}

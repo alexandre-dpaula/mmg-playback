@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, Plus, Music, Trash2, MoreVertical } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { EventFormModal } from "@/components/EventFormModal";
 import {
@@ -315,15 +314,7 @@ export default function Events() {
     };
 
     return (
-      <motion.div
-        key={event.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
-      >
+      <div key={event.id}>
         <div
           role="button"
           tabIndex={0}
@@ -402,7 +393,7 @@ export default function Events() {
           </DropdownMenu>
         </div>
         </div>
-      </motion.div>
+      </div>
     );
   };
 
@@ -456,15 +447,13 @@ export default function Events() {
           )}
 
           <div className="mt-6">
-            <motion.div whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.01 }}>
-              <Button
-                onClick={openCreateModal}
-                className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                Novo Evento
-              </Button>
-            </motion.div>
+            <Button
+              onClick={openCreateModal}
+              className="w-full bg-[#1DB954] text-black hover:bg-[#1ed760] font-semibold h-12 text-base"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Novo Evento
+            </Button>
           </div>
 
           <EventFormModal

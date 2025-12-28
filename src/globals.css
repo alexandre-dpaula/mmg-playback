@@ -113,10 +113,6 @@
     padding: 0;
     /* Altura fixa para mobile sem barra de endereço */
     height: 100%;
-    /* Previne zoom em double-tap */
-    touch-action: manipulation;
-    /* Suaviza scroll em iOS */
-    -webkit-overflow-scrolling: touch;
   }
 
   body {
@@ -136,11 +132,7 @@
     -webkit-user-select: none;
     user-select: none;
     /* Previne zoom em double-tap */
-    touch-action: manipulation;
-    /* Remove bounce effect no iOS */
-    overscroll-behavior-y: none;
-    /* Força orientação portrait (opcional - pode ser removido se quiser landscape) */
-    /* orientation: portrait; */
+    touch-action: pan-y pinch-zoom;
   }
 
   #root {
@@ -152,8 +144,6 @@
     overflow-x: hidden;
     margin: 0;
     padding: 0;
-    /* Remove bounce effect */
-    overscroll-behavior-y: none;
   }
 
   /* Permite seleção de texto apenas em inputs e áreas de texto */
