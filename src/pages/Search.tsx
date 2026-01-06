@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search as SearchIcon, Music, Loader2, MoreVertical, Edit } from "lucide-react";
+import { Search as SearchIcon, Music, Loader2, MoreVertical, Edit, ExternalLink, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TrackFormModal } from "@/components/TrackFormModal";
+import { searchCifraClub, type CifraClubTrack, fetchCifraFromUrl } from "@/services/cifraClubService";
 
 type Track = {
   id: string;
@@ -19,6 +20,14 @@ type Track = {
   tag?: string;
   versao?: string;
   tom?: string;
+};
+
+// Função para normalizar texto (remover acentos e converter para minúsculas)
+const normalizeText = (text: string) => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 };
 
 const Search: React.FC = () => {
@@ -31,12 +40,44 @@ const Search: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
 
+  // Estado para busca no Cifra Club
+  const [cifraClubTracks, setCifraClubTracks] = useState<CifraClubTrack[]>([]);
+  const [isSearchingCifraClub, setIsSearchingCifraClub] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const resultsPerPage = 7;
+
   // Pega a origem da navegação (de onde o usuário veio)
   const from = (location.state as { from?: string })?.from;
 
   useEffect(() => {
     loadTracks();
   }, []);
+
+  // Busca no Cifra Club quando o usuário digita
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim().length >= 3) {
+        searchCifraClubTracks(searchQuery);
+      } else {
+        setCifraClubTracks([]);
+      }
+    }, 500); // Debounce de 500ms
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const searchCifraClubTracks = async (query: string) => {
+    setIsSearchingCifraClub(true);
+    setCurrentPage(1); // Reset para página 1 ao fazer nova busca
+    try {
+      const results = await searchCifraClub(query);
+      setCifraClubTracks(results);
+    } catch (error) {
+      console.error("Erro ao buscar no Cifra Club:", error);
+    } finally {
+      setIsSearchingCifraClub(false);
+    }
+  };
 
   const loadTracks = async () => {
     setIsLoading(true);
@@ -64,12 +105,12 @@ const Search: React.FC = () => {
       return tracks;
     }
 
-    const query = searchQuery.toLowerCase();
+    const query = normalizeText(searchQuery);
     return tracks.filter(
       (track) =>
-        track.titulo.toLowerCase().includes(query) ||
-        track.tag?.toLowerCase().includes(query) ||
-        track.versao?.toLowerCase().includes(query)
+        normalizeText(track.titulo).includes(query) ||
+        normalizeText(track.tag || '').includes(query) ||
+        normalizeText(track.versao || '').includes(query)
     );
   }, [tracks, searchQuery]);
 
@@ -133,6 +174,68 @@ const Search: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTrackId(null);
+  };
+
+  // Importa música do Cifra Club ou abre URL externa
+  const handleImportFromCifraClub = async (cifraTrack: CifraClubTrack) => {
+    try {
+      // Usa a URL completa
+      const url = cifraTrack.url.startsWith('http') ? cifraTrack.url : `https://www.cifraclub.com.br${cifraTrack.url}`;
+
+      // Verifica se é URL do Cifra Club
+      const isCifraClub = url.includes('cifraclub.com.br');
+
+      if (!isCifraClub) {
+        // Se não for Cifra Club, apenas abre em nova aba
+        window.open(url, '_blank');
+        toast.info("Abrindo cifra em nova aba...");
+        return;
+      }
+
+      // Se for Cifra Club, importa a cifra
+      toast.loading("Importando cifra do Cifra Club...");
+
+      // Busca a cifra completa
+      const cifraData = await fetchCifraFromUrl(url);
+
+      if (!cifraData) {
+        toast.dismiss();
+        toast.error("Não foi possível importar a cifra");
+        return;
+      }
+
+      // Cria a nova música no banco
+      const { data: newTrack, error } = await supabase
+        .from("tracks")
+        .insert({
+          titulo: cifraData.title,
+          tag: cifraData.artist,
+          tom: cifraData.key || null,
+          cifra_content: cifraData.cifra || null,
+          versao: null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.dismiss();
+      toast.success(`"${cifraData.title}" importada com sucesso!`);
+
+      // Recarrega a lista de músicas
+      await loadTracks();
+
+      // Navega para a música importada
+      setTimeout(() => {
+        const eventId = getSelectedEventId();
+        const targetEvent = eventId || "repertorio";
+        navigate(`/playlist/${targetEvent}/track/${newTrack.id}`);
+      }, 300);
+    } catch (error) {
+      toast.dismiss();
+      console.error("Erro ao processar resultado:", error);
+      toast.error("Erro ao processar música");
+    }
   };
 
   return (
@@ -296,6 +399,105 @@ const Search: React.FC = () => {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Resultados da Web (Cifra Club) */}
+            {searchQuery && searchQuery.length >= 3 && (
+              <div className="mt-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <Globe className="w-5 h-5 text-orange-400" />
+                  <h2 className="text-xl font-bold text-white">Buscar SetlistGO Web</h2>
+                  {isSearchingCifraClub && (
+                    <Loader2 className="w-4 h-4 animate-spin text-[#1DB954]" />
+                  )}
+                </div>
+
+                {cifraClubTracks.length === 0 && !isSearchingCifraClub ? (
+                  <div className="text-center py-8 border border-white/10 rounded-2xl bg-white/5">
+                    <Globe className="w-10 h-10 mx-auto mb-3 text-white/40" />
+                    <p className="text-white/60 text-sm">
+                      Nenhum resultado encontrado na web
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Card branco com resultados */}
+                    <div className="bg-white rounded-2xl p-6 shadow-lg">
+                      <div className="space-y-6">
+                        {cifraClubTracks
+                          .slice((currentPage - 1) * resultsPerPage, currentPage * resultsPerPage)
+                          .map((cifraTrack, index) => (
+                            <div
+                              key={`cifra-${index}`}
+                              className="group pb-6 border-b border-gray-200 last:border-0 last:pb-0"
+                            >
+                              {/* Título como link (estilo Google) */}
+                              <button
+                                onClick={() => handleImportFromCifraClub(cifraTrack)}
+                                className="text-left w-full"
+                              >
+                                <h3 className="text-lg text-[#1a0dab] hover:underline font-normal mb-1">
+                                  {cifraTrack.name}
+                                </h3>
+                              </button>
+
+                              {/* URL */}
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[#006621] text-sm">
+                                  {cifraTrack.url}
+                                </span>
+                              </div>
+
+                              {/* Descrição */}
+                              <p className="text-[#545454] text-sm leading-relaxed">
+                                {cifraTrack.description}
+                              </p>
+                            </div>
+                          ))}
+                      </div>
+
+                      {/* Paginação estilo Google */}
+                      {cifraClubTracks.length > resultsPerPage && (
+                        <div className="flex items-center justify-center gap-2 mt-8 pt-6 border-t border-gray-200">
+                          <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 rounded-md text-sm font-medium text-[#1a0dab] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                          >
+                            Anterior
+                          </button>
+
+                          {Array.from({ length: Math.ceil(cifraClubTracks.length / resultsPerPage) }, (_, i) => i + 1).map(page => (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+                                currentPage === page
+                                  ? 'bg-[#1a0dab] text-white'
+                                  : 'text-[#1a0dab] hover:bg-gray-100'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+
+                          <button
+                            onClick={() => setCurrentPage(p => Math.min(Math.ceil(cifraClubTracks.length / resultsPerPage), p + 1))}
+                            disabled={currentPage === Math.ceil(cifraClubTracks.length / resultsPerPage)}
+                            className="px-4 py-2 rounded-md text-sm font-medium text-[#1a0dab] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                          >
+                            Próxima
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-white/60 text-xs mt-4 text-center">
+                      Clique no título para importar cifras do Cifra Club ou abrir outros sites
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
