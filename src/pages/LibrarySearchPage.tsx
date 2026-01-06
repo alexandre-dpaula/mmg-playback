@@ -65,22 +65,11 @@ export const LibrarySearchPage: React.FC = () => {
     }
 
     const query = normalizeText(searchQuery);
-    console.log('🔍 LibrarySearch Debug:', {
-      searchQuery,
-      normalizedQuery: query,
-      tracksCount: tracks.length,
-      exampleTitle: tracks[0]?.titulo,
-      normalizedTitle: normalizeText(tracks[0]?.titulo || ''),
-    });
-
-    const filtered = tracks.filter((track) =>
+    return tracks.filter((track) =>
       normalizeText(track.titulo).includes(query) ||
       normalizeText(track.tag || '').includes(query) ||
       normalizeText(track.versao || '').includes(query)
     );
-
-    console.log('📊 Filtered results:', filtered.length);
-    return filtered;
   }, [tracks, searchQuery]);
 
   // Filtra apenas músicas com cifra cadastrada
