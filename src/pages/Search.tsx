@@ -35,7 +35,7 @@ const Search: React.FC = () => {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [tracks, setTracks] = useState<Track[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null);
@@ -49,9 +49,12 @@ const Search: React.FC = () => {
   // Pega a origem da navegação (de onde o usuário veio)
   const from = (location.state as { from?: string })?.from;
 
+  // Carrega tracks apenas quando usuário digitar 3+ caracteres
   useEffect(() => {
-    loadTracks();
-  }, []);
+    if (searchQuery.trim().length >= 3 && tracks.length === 0) {
+      loadTracks();
+    }
+  }, [searchQuery, tracks.length]);
 
   // Busca no Cifra Club quando o usuário digita
   useEffect(() => {
@@ -100,9 +103,9 @@ const Search: React.FC = () => {
 
   // Filtrar tracks com base na busca (mínimo 3 caracteres)
   const filteredTracks = useMemo(() => {
-    // Se não houver busca ou menos de 3 caracteres, mostra todas as músicas
+    // Se não houver busca ou menos de 3 caracteres, NÃO mostra nada
     if (!searchQuery.trim() || searchQuery.trim().length < 3) {
-      return tracks;
+      return [];
     }
 
     const query = normalizeText(searchQuery);
@@ -271,15 +274,10 @@ const Search: React.FC = () => {
           </div>
         ) : (
           <div>
-            {searchQuery && searchQuery.length >= 3 ? (
+            {searchQuery && searchQuery.length >= 3 && (
               <p className="text-white/60 text-sm mb-4">
                 {filteredTracks.length}{" "}
                 {filteredTracks.length === 1 ? "resultado encontrado" : "resultados encontrados"}
-              </p>
-            ) : (
-              <p className="text-white/60 text-sm mb-4">
-                {tracks.length}{" "}
-                {tracks.length === 1 ? "música disponível" : "músicas disponíveis"}
               </p>
             )}
 
@@ -287,10 +285,16 @@ const Search: React.FC = () => {
               <div className="text-center py-16">
                 <Music className="w-12 h-12 mx-auto mb-4 text-white/40" />
                 <h3 className="text-lg font-semibold mb-2">
-                  Nenhuma música encontrada
+                  {searchQuery.trim().length > 0 && searchQuery.trim().length < 3
+                    ? "Digite ao menos 3 caracteres"
+                    : searchQuery.trim().length >= 3
+                    ? "Nenhuma música encontrada"
+                    : "Digite para buscar músicas"}
                 </h3>
                 <p className="text-white/60 text-sm">
-                  Tente buscar por outro nome, tag ou versão
+                  {searchQuery.trim().length >= 3
+                    ? "Tente buscar por outro nome, tag ou versão"
+                    : "Digite o nome da música, artista ou versão para buscar"}
                 </p>
               </div>
             ) : (
