@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { X, Calendar, Music, Loader2, Search } from "lucide-react";
+import { X, Calendar, Music, Loader2, Search, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,21 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useRefresh } from "@/context/RefreshContext";
 import { useAuth } from "@/context/AuthContext";
+import { EventTeamModal } from "@/components/EventTeamModal";
 
 type Track = {
   id: string;
   titulo: string;
   tag?: string;
   versao?: string;
+};
+
+// Função para normalizar texto (remover acentos e converter para minúsculas)
+const normalizeText = (text: string) => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 };
 
 type EventFormModalProps = {
@@ -42,6 +51,8 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoadingEvent, setIsLoadingEvent] = useState(false);
   const [isEventWithoutChurch, setIsEventWithoutChurch] = useState(false);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState<Array<{profileId: string; role: string}>>([]);
 
   const isEditing = Boolean(eventId);
 
@@ -54,15 +65,24 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
     setSelectedTracks([]);
     setSearchQuery("");
     setIsEventWithoutChurch(false);
+    setAvailableTracks([]); // Limpa a lista de tracks ao resetar
   }, []);
 
   const isFormDisabled = isSaving || (isEditing && isLoadingEvent);
 
+  // Carrega tracks apenas em modo de edição (para mostrar tracks já selecionadas)
   React.useEffect(() => {
-    if (isOpen && availableTracks.length === 0) {
+    if (isOpen && isEditing && availableTracks.length === 0) {
       loadTracks();
     }
-  }, [isOpen, availableTracks.length]);
+  }, [isOpen, isEditing, availableTracks.length]);
+
+  // Carrega tracks quando usuário digitar 3+ caracteres em modo de criação
+  React.useEffect(() => {
+    if (isOpen && !isEditing && searchQuery.trim().length >= 3 && availableTracks.length === 0) {
+      loadTracks();
+    }
+  }, [isOpen, isEditing, searchQuery, availableTracks.length]);
 
   const loadTracks = async () => {
     setIsLoadingTracks(true);
@@ -163,21 +183,35 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   const hasSearchQuery = searchQuery.trim().length >= 3;
 
   const displayedTracks = useMemo(() => {
-    if (!isEditing) return availableTracks;
-    if (hasSearchQuery) return availableTracks;
-    return availableTracks.filter((track) => selectedTracks.includes(track.id));
+    // Em modo de criação: só mostra tracks se usuário digitou 3+ caracteres
+    if (!isEditing && !hasSearchQuery) {
+      return [];
+    }
+    // Em modo de edição sem busca: mostra apenas as tracks já selecionadas
+    if (isEditing && !hasSearchQuery) {
+      return availableTracks.filter((track) => selectedTracks.includes(track.id));
+    }
+    // Com busca válida: mostra todas as tracks disponíveis
+    return availableTracks;
   }, [availableTracks, isEditing, selectedTracks, hasSearchQuery]);
 
-  // Filtrar tracks com base na busca
+  // Filtrar tracks com base na busca e remover duplicatas
   const filteredTracks = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return displayedTracks;
-    return displayedTracks.filter(
-      (track) =>
-        track.titulo.toLowerCase().includes(query) ||
-        track.tag?.toLowerCase().includes(query) ||
-        track.versao?.toLowerCase().includes(query)
-    );
+    const query = normalizeText(searchQuery.trim());
+    let tracks = displayedTracks;
+
+    if (query) {
+      tracks = tracks.filter(
+        (track) =>
+          normalizeText(track.titulo).includes(query) ||
+          normalizeText(track.tag || '').includes(query) ||
+          normalizeText(track.versao || '').includes(query)
+      );
+    }
+
+    // Garantir que não há duplicatas usando Map
+    const uniqueTracksMap = new Map(tracks.map(track => [track.id, track]));
+    return Array.from(uniqueTracksMap.values());
   }, [displayedTracks, searchQuery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -329,6 +363,21 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
 
           if (tracksError) throw tracksError;
         }
+
+        // Adiciona membros da equipe ao criar novo evento
+        if (selectedMembers.length > 0) {
+          const eventMembers = selectedMembers.map((member) => ({
+            event_id: eventData.id,
+            profile_id: member.profileId,
+            role: member.role,
+          }));
+
+          const { error: membersError } = await supabase
+            .from("event_members")
+            .insert(eventMembers);
+
+          if (membersError) throw membersError;
+        }
       }
 
       toast.success(
@@ -357,9 +406,10 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <motion.div
+          key="event-form-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -367,6 +417,7 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
         >
           <motion.div
+            key="event-form-content"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -447,10 +498,23 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
 
             {/* Buscar Músicas */}
             <div className="space-y-3">
-              <Label className="text-white flex items-center gap-2">
-                <Music className="w-4 h-4" />
-                Músicas ({selectedTracks.length} selecionadas)
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-white flex items-center gap-2">
+                  <Music className="w-4 h-4" />
+                  Músicas ({selectedTracks.length} selecionadas)
+                </Label>
+
+                {/* Botão Equipe - ao lado do label */}
+                <button
+                  type="button"
+                  onClick={() => setIsTeamModalOpen(true)}
+                  disabled={isFormDisabled}
+                  className="flex items-center gap-1.5 rounded-full bg-[#1DB954]/10 hover:bg-[#1DB954]/20 px-3 py-1.5 text-xs font-semibold text-[#1DB954] transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Users className="w-4 h-4" />
+                  <span>{isEditing ? "Editar Equipes" : "Add Equipes"} {!isEditing && selectedMembers.length > 0 && `(${selectedMembers.length})`}</span>
+                </button>
+              </div>
 
               {/* Campo de Busca */}
               <div className="relative">
@@ -476,14 +540,14 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
                     {(() => {
                       const trimmed = searchQuery.trim();
                       if (trimmed.length > 0 && trimmed.length < 3) {
-                        return "Digite pelo menos 3 letras para buscar em todas as músicas.";
+                        return "Digite ao menos 3 caracteres para buscar músicas";
                       }
                       if (trimmed.length >= 3) {
                         return "Nenhuma música encontrada para sua busca.";
                       }
                       return isEditing
                         ? "Nenhuma música selecionada para este evento."
-                        : "Nenhuma música cadastrada.";
+                        : "Digite ao menos 3 caracteres para buscar músicas";
                     })()}
                   </div>
                 ) : (
@@ -560,6 +624,18 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({
           </motion.div>
         </motion.div>
       )}
+
+      {/* Modal de equipe */}
+      <EventTeamModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
+        eventId={eventId || "temp"}
+        selectedMembers={selectedMembers}
+        onMembersChange={(members) => setSelectedMembers(members)}
+        onSuccess={() => {
+          setIsTeamModalOpen(false);
+        }}
+      />
     </AnimatePresence>
   );
 };
