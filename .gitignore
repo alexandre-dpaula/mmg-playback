@@ -26,3 +26,8 @@ dist-ssr
 
 # Local pad assets (Dropbox-hosted in production)
 # public/pads/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
