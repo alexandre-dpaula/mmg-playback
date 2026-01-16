@@ -293,5 +293,5 @@ O Supabase fornece estas variáveis que podem ser usadas nos templates:
 
 No **Supabase Dashboard → Authentication → URL Configuration**, configure:
 
-- **Site URL**: `https://mmgplayback.com.br` (ou sua URL de produção)
+- **Site URL**: `https://setlistgo.com`
 - **Redirect URLs**: Adicione todas as URLs permitidas para redirect após confirmação/login

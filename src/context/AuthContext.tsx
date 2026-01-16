@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 export type UserRole = 'lider' | 'vocal' | 'instrumental' | 'multimidia' | 'pending';
 
 type AuthProfile = {
+  id: string | null;
   name: string;
   email: string;
   avatarUrl: string;
@@ -17,6 +18,7 @@ type AuthContextType = {
   user: User | null;
   profile: AuthProfile;
   isLoading: boolean;
+  isSigningOut: boolean;
   signInWithProvider: (provider: "google" | "apple") => Promise<void>;
   signOut: () => Promise<void>;
   signInFallback: () => void;
@@ -26,6 +28,7 @@ type AuthContextType = {
 };
 
 const DEFAULT_PROFILE: AuthProfile = {
+  id: null,
   name: "Alexandre Dpaula",
   email: "contato.m2bstudio@gmail.com",
   avatarUrl: "/perfil.jpg",
@@ -58,6 +61,7 @@ const getStoredProfile = (): AuthProfile => {
   try {
     const parsed = JSON.parse(raw) as AuthProfile;
     return {
+      id: parsed.id ?? null,
       name: parsed.name || DEFAULT_PROFILE.name,
       email: parsed.email || DEFAULT_PROFILE.email,
       avatarUrl: parsed.avatarUrl || DEFAULT_PROFILE.avatarUrl,
@@ -98,52 +102,100 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthProfile>(DEFAULT_PROFILE);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const applySession = async (session: Session | null) => {
-    if (session?.user) {
-      setUser(session.user);
+    console.log('[AuthContext] applySession iniciado', session?.user?.id);
 
-      // Buscar perfil do banco de dados
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .maybeSingle();
+    try {
+      if (session?.user) {
+        setUser(session.user);
+        console.log('[AuthContext] User setado:', session.user.id);
 
-      console.log('Perfil buscado do banco:', profileData);
-      if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
-      }
+        // Define perfil básico imediatamente para não travar UI
+        const basicProfile: AuthProfile = {
+          id: session.user.id,
+          name: session.user.user_metadata?.full_name || session.user.email || DEFAULT_PROFILE.name,
+          email: session.user.email || DEFAULT_PROFILE.email,
+          avatarUrl: session.user.user_metadata?.avatar_url || DEFAULT_PROFILE.avatarUrl,
+          role: DEFAULT_PROFILE.role,
+          churchId: null,
+          churchName: null,
+        };
 
-      const { data: userAppDataInitial, error: userAppError } = await supabase
-        .from('users_app')
-        .select('role, church_id')
-        .eq('auth_user_id', session.user.id)
-        .maybeSingle();
+        setProfile(basicProfile);
+        console.log('[AuthContext] Perfil básico setado');
 
-      let userAppData = userAppDataInitial;
+        // Buscar dados adicionais do banco de forma assíncrona (não bloqueia UI)
+        console.log('[AuthContext] Buscando dados do banco (assíncrono)...');
 
-      if (userAppError) {
-        console.error('Erro ao buscar role interno:', userAppError);
-      }
+        // Busca profile com timeout curto
+        const profileResult = await Promise.race([
+          supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle(),
+          new Promise<any>((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout')), 2000)
+          )
+        ]).catch(err => {
+          console.warn('[AuthContext] Timeout/erro ao buscar profile:', err.message);
+          return { data: null, error: err };
+        });
 
-      if (!userAppError && !userAppData) {
-        const { data: insertedUserApp, error: insertUserAppError } = await supabase
+        const profileData = profileResult?.data || null;
+        console.log('[AuthContext] Profile data:', profileData ? 'encontrado' : 'não encontrado');
+
+      // Busca users_app com timeout
+      console.log('[AuthContext] Buscando users_app...');
+      const userAppResult = await Promise.race([
+        supabase
           .from('users_app')
-          .insert({
-            auth_user_id: session.user.id,
-            full_name: profileData?.full_name || session.user.user_metadata?.full_name || session.user.email,
-            email: profileData?.email || session.user.email,
-            church_id: null,
-            role: 'pending',
-          })
           .select('role, church_id')
-          .single();
+          .eq('auth_user_id', session.user.id)
+          .maybeSingle(),
+        new Promise<any>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 2000)
+        )
+      ]).catch(err => {
+        console.warn('[AuthContext] Timeout/erro ao buscar users_app:', err.message);
+        return { data: null, error: err };
+      });
 
-        if (insertUserAppError) {
-          console.error('Erro ao registrar usuário interno:', insertUserAppError);
-        } else {
-          userAppData = insertedUserApp;
+      let userAppData = userAppResult?.data || null;
+      const userAppError = userAppResult?.error;
+
+      if (userAppError && !userAppError.message?.includes('Timeout')) {
+        console.error('[AuthContext] Erro ao buscar users_app:', userAppError);
+      }
+
+      // Se não existe users_app, cria um novo (sem bloquear)
+      if (!userAppError && !userAppData) {
+        console.log('[AuthContext] Criando novo users_app...');
+        const insertResult = await Promise.race([
+          supabase
+            .from('users_app')
+            .insert({
+              auth_user_id: session.user.id,
+              full_name: profileData?.full_name || session.user.user_metadata?.full_name || session.user.email,
+              email: profileData?.email || session.user.email,
+              church_id: null,
+              role: 'pending',
+            })
+            .select('role, church_id')
+            .single(),
+          new Promise<any>((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout')), 2000)
+          )
+        ]).catch(err => {
+          console.warn('[AuthContext] Timeout/erro ao criar users_app:', err.message);
+          return { data: null, error: err };
+        });
+
+        if (insertResult?.data) {
+          userAppData = insertResult.data;
+          console.log('[AuthContext] users_app criado com sucesso');
         }
       }
 
@@ -154,21 +206,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const resolvedChurchId = userAppData?.church_id ?? null;
       let resolvedChurchName: string | null = null;
 
+      // Busca nome da igreja com timeout (se tiver church_id)
       if (resolvedChurchId) {
-        const { data: churchData, error: churchFetchError } = await supabase
-          .from('churches')
-          .select('name')
-          .eq('id', resolvedChurchId)
-          .maybeSingle();
+        console.log('[AuthContext] Buscando nome da igreja...');
+        const churchResult = await Promise.race([
+          supabase
+            .from('churches')
+            .select('name')
+            .eq('id', resolvedChurchId)
+            .maybeSingle(),
+          new Promise<any>((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout')), 2000)
+          )
+        ]).catch(err => {
+          console.warn('[AuthContext] Timeout/erro ao buscar igreja:', err.message);
+          return { data: null, error: err };
+        });
 
-        if (churchFetchError) {
-          console.error('Erro ao buscar nome da igreja:', churchFetchError);
-        } else {
-          resolvedChurchName = churchData?.name ?? null;
+        if (churchResult?.data) {
+          resolvedChurchName = churchResult.data.name ?? null;
+          console.log('[AuthContext] Igreja encontrada:', resolvedChurchName);
         }
       }
 
       const profile: AuthProfile = {
+        id: session.user.id,
         name:
           profileData?.name ||
           profileData?.full_name ||
@@ -186,11 +248,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         churchName: resolvedChurchName,
       };
 
-      console.log('Profile criado:', profile);
       setProfile(profile);
+      console.log('[AuthContext] Perfil completo atualizado:', { role: profile.role, churchName: profile.churchName });
 
-      // Atualizar perfil no banco se não existir ou estiver desatualizado
+      // Atualizar perfil no banco se não existir (não bloqueia)
       if (!profileData) {
+        console.log('[AuthContext] Profile não existe, criando...');
+
         // Verificar se há dados de registro pendente
         const pendingReg = localStorage.getItem('pending_registration');
         const pendingAvatar = localStorage.getItem('pending_avatar');
@@ -203,65 +267,107 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const regData = JSON.parse(pendingReg);
             if (regData.name) finalName = regData.name;
             localStorage.removeItem('pending_registration');
+            console.log('[AuthContext] Registro pendente processado');
           } catch (e) {
-            console.error('Erro ao processar registro pendente:', e);
+            console.error('[AuthContext] Erro ao processar registro pendente:', e);
           }
         }
 
-        // Se houver avatar pendente, fazer upload
+        // Se houver avatar pendente, fazer upload (com timeout)
         if (pendingAvatar) {
+          console.log('[AuthContext] Fazendo upload de avatar pendente...');
           try {
-            // Converter base64 para blob
-            const response = await fetch(pendingAvatar);
-            const blob = await response.blob();
-            const file = new File([blob], 'avatar.jpg', { type: blob.type });
+            const uploadPromise = (async () => {
+              const response = await fetch(pendingAvatar);
+              const blob = await response.blob();
+              const file = new File([blob], 'avatar.jpg', { type: blob.type });
 
-            // Upload do avatar
-            const timestamp = Date.now();
-            const filePath = `avatars/${session.user.id}-${timestamp}.jpg`;
+              const timestamp = Date.now();
+              const filePath = `avatars/${session.user.id}-${timestamp}.jpg`;
 
-            const { error: uploadError } = await supabase.storage
-              .from('profiles')
-              .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: true,
-              });
-
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage
+              const { error: uploadError } = await supabase.storage
                 .from('profiles')
-                .getPublicUrl(filePath);
-              finalAvatar = urlData.publicUrl;
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: true,
+                });
+
+              if (!uploadError) {
+                const { data: urlData } = supabase.storage
+                  .from('profiles')
+                  .getPublicUrl(filePath);
+                return urlData.publicUrl;
+              }
+              return null;
+            })();
+
+            const uploadResult = await Promise.race([
+              uploadPromise,
+              new Promise<null>((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout')), 3000)
+              )
+            ]).catch(err => {
+              console.warn('[AuthContext] Timeout/erro ao fazer upload:', err.message);
+              return null;
+            });
+
+            if (uploadResult) {
+              finalAvatar = uploadResult;
+              console.log('[AuthContext] Avatar uploaded com sucesso');
             }
 
             localStorage.removeItem('pending_avatar');
           } catch (e) {
-            console.error('Erro ao fazer upload do avatar:', e);
+            console.error('[AuthContext] Erro ao fazer upload do avatar:', e);
           }
         }
 
-        await supabase.from('profiles').insert({
-          id: session.user.id,
-          email: profile.email,
-          full_name: finalName,
-          avatar_url: finalAvatar,
+        // Criar profile no banco (com timeout)
+        console.log('[AuthContext] Inserindo profile no banco...');
+        const insertProfileResult = await Promise.race([
+          supabase.from('profiles').insert({
+            id: session.user.id,
+            email: profile.email,
+            full_name: finalName,
+            avatar_url: finalAvatar,
+          }),
+          new Promise<any>((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout')), 2000)
+          )
+        ]).catch(err => {
+          console.warn('[AuthContext] Timeout/erro ao inserir profile:', err.message);
+          return { error: err };
         });
 
-        // Atualizar profile local com os dados finais
-        setProfile({
-          name: finalName,
-          email: profile.email,
-          avatarUrl: finalAvatar,
-          role: profile.role,
-          churchId: profile.churchId,
-          churchName: profile.churchName,
-        });
+        if (!insertProfileResult?.error) {
+          console.log('[AuthContext] Profile criado com sucesso');
+
+          // Atualizar profile local com os dados finais
+          setProfile({
+            id: session.user.id,
+            name: finalName,
+            email: profile.email,
+            avatarUrl: finalAvatar,
+            role: profile.role,
+            churchId: profile.churchId,
+            churchName: profile.churchName,
+          });
+        }
       }
     } else {
       setUser(null);
       setProfile(DEFAULT_PROFILE);
     }
-  };
+  } catch (error) {
+    console.error('Erro fatal em applySession:', error);
+    // Em caso de erro, define perfil padrão para não travar
+    setUser(null);
+    setProfile(DEFAULT_PROFILE);
+  } finally {
+    // Garante que sempre desativa o loading
+    setIsLoading(false);
+  }
+};
 
   // Função para verificar hierarquia de roles
   // lider > vocal > instrumental > multimidia > pending
@@ -291,12 +397,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(DEFAULT_PROFILE);
       }
       setIsLoading(false);
+      setIsSigningOut(false); // Reset isSigningOut ao inicializar
     };
 
     initAuth();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      applySession(session);
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log('[AuthContext] Auth state changed:', _event, session?.user?.id);
+
+      // Se o evento é SIGNED_OUT, garante que reseta o estado
+      if (_event === 'SIGNED_OUT') {
+        console.log('[AuthContext] SIGNED_OUT detectado');
+        setUser(null);
+        setProfile(DEFAULT_PROFILE);
+        setIsSigningOut(false);
+        setIsLoading(false);
+      } else {
+        console.log('[AuthContext] Chamando applySession...');
+        // Timeout máximo de 8 segundos para applySession
+        Promise.race([
+          applySession(session),
+          new Promise(resolve => setTimeout(() => {
+            console.error('[AuthContext] TIMEOUT GERAL - Forçando loading false');
+            setIsLoading(false);
+            setIsSigningOut(false);
+            resolve(null);
+          }, 8000))
+        ]);
+        setIsSigningOut(false);
+      }
     });
 
     return () => {
@@ -309,7 +438,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const redirectUrl = isLocalhost
       ? window.location.origin
-      : 'https://setlistgo.vercel.app';
+      : 'https://setlistgo.com';
 
     console.log('Tentando fazer login com redirect para:', redirectUrl);
 
@@ -340,12 +469,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      throw error;
+    try {
+      setIsSigningOut(true);
+
+      // Limpa o auth do Supabase
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Erro ao fazer signOut no Supabase:', error);
+      }
+
+      // Limpa todo localStorage relacionado à autenticação
+      localStorage.removeItem(LOCAL_AUTH_KEY);
+      localStorage.removeItem(LOCAL_PROFILE_KEY);
+      localStorage.removeItem('pending_registration');
+      localStorage.removeItem('pending_avatar');
+
+      // Limpa preferências de evento selecionado
+      localStorage.removeItem('selectedEventId');
+
+      // Limpar estado local
+      setUser(null);
+      setProfile(DEFAULT_PROFILE);
+      setIsLoading(false);
+
+    } catch (error) {
+      console.error('Erro durante logout:', error);
+      // Mesmo com erro, limpa os estados
+      setUser(null);
+      setProfile(DEFAULT_PROFILE);
+      setIsLoading(false);
+    } finally {
+      // NÃO define isSigningOut como false aqui
+      // Deixa como true para forçar o redirect no ProtectedRoute
     }
-    localStorage.removeItem(LOCAL_AUTH_KEY);
-    localStorage.removeItem(LOCAL_PROFILE_KEY);
   };
 
   const updateProfile = async (updates: Partial<AuthProfile>) => {
@@ -431,6 +587,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         profile,
         isLoading,
+        isSigningOut,
         signInWithProvider,
         signOut,
         signInFallback,

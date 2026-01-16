@@ -10,7 +10,7 @@
 
 **Valor de Produção:**
 ```
-https://mmgplayback.com.br
+https://setlistgo.com
 ```
 
 **Valor de Desenvolvimento (se necessário):**
@@ -27,11 +27,11 @@ http://localhost:5173
 Adicione TODAS estas URLs (uma por linha):
 
 ```
-https://mmgplayback.com.br/**
-https://mmgplayback.com.br/auth/callback
-https://mmgplayback.com.br/role-selection
-https://mmgplayback.com.br/waiting-invitation
-https://mmgplayback.com.br/reset-password
+https://setlistgo.com/**
+https://setlistgo.com/auth/callback
+https://setlistgo.com/role-selection
+https://setlistgo.com/waiting-invitation
+https://setlistgo.com/reset-password
 http://localhost:5173/**
 http://localhost:5173/auth/callback
 http://localhost:5173/role-selection
