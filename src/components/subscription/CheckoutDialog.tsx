@@ -92,71 +92,101 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">
-            {step === 'result' ? 'Pagamento' : (
-              <>
-                Assinar <BrandLogo variant="inline" inlineSize="md" className="inline-flex" /> PRO
-              </>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-b from-[#121212] to-black border-white/10">
+        <DialogHeader className="pb-6 border-b border-white/10">
+          <DialogTitle className="text-3xl font-bold">
+            {step === 'result' ? (
+              <span className="bg-gradient-to-r from-[#1DB954] to-emerald-400 bg-clip-text text-transparent">
+                Pagamento
+              </span>
+            ) : (
+              <span className="flex items-baseline gap-2">
+                <span className="text-white">Assinar</span>
+                <BrandLogo variant="inline" inlineSize="lg" className="inline-flex items-baseline" />
+                <span className="bg-gradient-to-r from-[#1DB954] to-emerald-400 bg-clip-text text-transparent">
+                  PRO
+                </span>
+              </span>
             )}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pt-4">
           {/* Step: Customer Info */}
           {step === 'customer' && (
-            <form onSubmit={handleCustomerSubmit} className="space-y-4">
-              <div className="p-4 bg-[#1DB954]/10 border border-[#1DB954]/20 rounded-lg">
-                <p className="text-2xl font-bold text-[#1DB954]">R$ 9,98/mês</p>
-                <p className="text-sm text-white/60 mt-1">Acesso total aos recursos PRO</p>
+            <form onSubmit={handleCustomerSubmit} className="space-y-6">
+              {/* Pricing Card */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1DB954]/20 to-emerald-500/10 border border-[#1DB954]/30 p-6">
+                <div className="relative">
+                  <p className="text-sm font-semibold text-[#1DB954] uppercase tracking-wide mb-2">Plano Mensal</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black text-white">R$ 9,98</span>
+                    <span className="text-xl text-white/60 font-medium">/mês</span>
+                  </div>
+                  <p className="text-sm text-white/70 mt-3">✨ Acesso total aos recursos PRO</p>
+                  <p className="text-xs text-white/50 mt-1">Cancele quando quiser</p>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="name">Nome Completo</Label>
-                <Input
-                  id="name"
-                  required
-                  value={customer.name}
-                  onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                />
+              {/* Form Fields */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-white/90 font-medium">Nome Completo</Label>
+                  <Input
+                    id="name"
+                    required
+                    value={customer.name}
+                    onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#1DB954]/50 focus:ring-[#1DB954]/20"
+                    placeholder="Digite seu nome completo"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-white/90 font-medium">E-mail</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    value={customer.email}
+                    onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#1DB954]/50 focus:ring-[#1DB954]/20"
+                    placeholder="seu@email.com"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cpf" className="text-white/90 font-medium">CPF</Label>
+                    <Input
+                      id="cpf"
+                      required
+                      placeholder="000.000.000-00"
+                      value={customer.cpfCnpj}
+                      onChange={(e) => setCustomer({ ...customer, cpfCnpj: e.target.value })}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#1DB954]/50 focus:ring-[#1DB954]/20"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-white/90 font-medium">Celular</Label>
+                    <Input
+                      id="phone"
+                      required
+                      placeholder="(00) 00000-0000"
+                      value={customer.mobilePhone}
+                      onChange={(e) => setCustomer({ ...customer, mobilePhone: e.target.value })}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-[#1DB954]/50 focus:ring-[#1DB954]/20"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  value={customer.email}
-                  onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="cpf">CPF</Label>
-                <Input
-                  id="cpf"
-                  required
-                  placeholder="000.000.000-00"
-                  value={customer.cpfCnpj}
-                  onChange={(e) => setCustomer({ ...customer, cpfCnpj: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="phone">Celular</Label>
-                <Input
-                  id="phone"
-                  required
-                  placeholder="(00) 00000-0000"
-                  value={customer.mobilePhone}
-                  onChange={(e) => setCustomer({ ...customer, mobilePhone: e.target.value })}
-                />
-              </div>
-
-              <Button type="submit" className="w-full bg-[#1DB954] hover:bg-[#1DB954]/90">
-                Continuar
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#1DB954] to-emerald-500 hover:from-[#1DB954]/90 hover:to-emerald-500/90 text-white font-semibold py-6 rounded-xl shadow-lg shadow-[#1DB954]/20 transition-all hover:shadow-xl hover:shadow-[#1DB954]/30 hover:scale-[1.02]"
+              >
+                Continuar para Pagamento
               </Button>
             </form>
           )}
@@ -168,7 +198,7 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
                 type="button"
                 variant="ghost"
                 onClick={() => setStep('customer')}
-                className="pl-0"
+                className="pl-0 text-white/70 hover:text-white hover:bg-white/5"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar
@@ -179,7 +209,7 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
               <Button
                 onClick={handlePaymentMethodNext}
                 disabled={isCreatingSubscription}
-                className="w-full bg-[#1DB954] hover:bg-[#1DB954]/90"
+                className="w-full bg-gradient-to-r from-[#1DB954] to-emerald-500 hover:from-[#1DB954]/90 hover:to-emerald-500/90 text-white font-semibold py-6 rounded-xl shadow-lg shadow-[#1DB954]/20 transition-all hover:shadow-xl hover:shadow-[#1DB954]/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {isCreatingSubscription ? (
                   <>
@@ -187,7 +217,7 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
                     Processando...
                   </>
                 ) : (
-                  'Continuar'
+                  'Continuar para Pagamento'
                 )}
               </Button>
             </div>
@@ -200,7 +230,7 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
                 type="button"
                 variant="ghost"
                 onClick={() => setStep('payment-method')}
-                className="pl-0"
+                className="pl-0 text-white/70 hover:text-white hover:bg-white/5"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar
@@ -211,7 +241,7 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
               <Button
                 onClick={handleFinalSubmit}
                 disabled={isCreatingSubscription}
-                className="w-full bg-[#1DB954] hover:bg-[#1DB954]/90"
+                className="w-full bg-gradient-to-r from-[#1DB954] to-emerald-500 hover:from-[#1DB954]/90 hover:to-emerald-500/90 text-black font-semibold py-6 rounded-xl shadow-lg shadow-[#1DB954]/20 transition-all hover:shadow-xl hover:shadow-[#1DB954]/30 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {isCreatingSubscription ? (
                   <>
@@ -219,7 +249,7 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
                     Processando...
                   </>
                 ) : (
-                  'Confirmar Pagamento'
+                  '🔒 Confirmar Pagamento'
                 )}
               </Button>
             </div>
@@ -247,16 +277,23 @@ export function CheckoutDialog({ open, onOpenChange }: CheckoutDialogProps) {
               )}
 
               {billingType === 'CREDIT_CARD' && (
-                <div className="text-center space-y-4">
-                  <div className="text-6xl">✅</div>
-                  <h3 className="text-xl font-bold text-white">Pagamento Aprovado!</h3>
-                  <p className="text-white/60">
-                    Sua assinatura foi ativada com sucesso.
-                  </p>
+                <div className="text-center space-y-6 py-8">
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-[#1DB954]/20 border-4 border-[#1DB954]">
+                    <div className="text-5xl">✅</div>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold text-white">Pagamento Aprovado!</h3>
+                    <p className="text-white/60 max-w-md mx-auto">
+                      Sua assinatura foi ativada com sucesso. Aproveite todos os recursos PRO!
+                    </p>
+                  </div>
                 </div>
               )}
 
-              <Button onClick={handleReset} className="w-full">
+              <Button
+                onClick={handleReset}
+                className="w-full bg-gradient-to-r from-[#1DB954] to-emerald-500 hover:from-[#1DB954]/90 hover:to-emerald-500/90 text-white font-semibold py-6 rounded-xl shadow-lg shadow-[#1DB954]/20 transition-all hover:shadow-xl hover:shadow-[#1DB954]/30 hover:scale-[1.02]"
+              >
                 Concluir
               </Button>
             </div>

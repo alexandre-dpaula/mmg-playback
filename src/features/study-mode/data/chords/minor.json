@@ -1,0 +1,1123 @@
+{
+  "$schema": "../schemas/chord.schema.json",
+  "version": "1.0.0",
+  "lastUpdated": "2026-01-05",
+  "source": "Baseado no padrão Cifra Club",
+
+  "chords": [
+    {
+      "id": "Cm-minor",
+      "name": "Cm",
+      "fullName": "C Minor",
+      "quality": "minor",
+      "root": "C",
+      "notes": ["C", "Eb", "G"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Cm-minor-A-form",
+          "position": "A",
+          "name": "Cm (Forma A)",
+          "baseFret": 3,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 3, "finger": 1 },
+            { "string": 4, "fret": 5, "finger": 3 },
+            { "string": 3, "fret": 5, "finger": 4 },
+            { "string": 2, "fret": 4, "finger": 2 },
+            { "string": 1, "fret": 3, "finger": 1 }
+          ],
+          "barre": { "fret": 3, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Cm-minor-E-form",
+          "position": "E",
+          "name": "Cm (Forma E)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 8, "finger": 1 },
+            { "string": 5, "fret": 10, "finger": 3 },
+            { "string": 4, "fret": 10, "finger": 4 },
+            { "string": 3, "fret": 8, "finger": 1 },
+            { "string": 2, "fret": 8, "finger": 1 },
+            { "string": 1, "fret": 8, "finger": 1 }
+          ],
+          "barre": { "fret": 8, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Cm-minor-D-form",
+          "position": "D",
+          "name": "Cm (Forma D)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 10, "finger": 1 },
+            { "string": 3, "fret": 12, "finger": 3 },
+            { "string": 2, "fret": 13, "finger": 4 },
+            { "string": 1, "fret": 11, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Cm-minor-G-form",
+          "position": "G",
+          "name": "Cm (Forma G)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 13, "finger": 4 },
+            { "string": 5, "fret": 11, "finger": 2 },
+            { "string": 4, "fret": 10, "finger": 1 },
+            { "string": 3, "fret": 10, "finger": 1 },
+            { "string": 2, "fret": 11, "finger": 3 },
+            { "string": 1, "fret": 13, "finger": 4 }
+          ]
+        },
+        {
+          "id": "Cm-minor-C-form",
+          "position": "C",
+          "name": "Cm (Forma C)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 3, "finger": 1 },
+            { "string": 4, "fret": 4, "finger": 2 },
+            { "string": 3, "fret": 5, "finger": 4 },
+            { "string": 2, "fret": 4, "finger": 3 },
+            { "string": 1, "fret": 3, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Dm-minor",
+      "name": "Dm",
+      "fullName": "D Minor",
+      "quality": "minor",
+      "root": "D",
+      "notes": ["D", "F", "A"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "Dm-minor-D-form",
+          "position": "D",
+          "name": "Dm (Forma D)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 0, "finger": 0 },
+            { "string": 3, "fret": 2, "finger": 2 },
+            { "string": 2, "fret": 3, "finger": 3 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Dm-minor-A-form",
+          "position": "A",
+          "name": "Dm (Forma A)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 5, "finger": 1 },
+            { "string": 4, "fret": 7, "finger": 3 },
+            { "string": 3, "fret": 7, "finger": 4 },
+            { "string": 2, "fret": 6, "finger": 2 },
+            { "string": 1, "fret": 5, "finger": 1 }
+          ],
+          "barre": { "fret": 5, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Dm-minor-E-form",
+          "position": "E",
+          "name": "Dm (Forma E)",
+          "baseFret": 10,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 10, "finger": 1 },
+            { "string": 5, "fret": 12, "finger": 3 },
+            { "string": 4, "fret": 12, "finger": 4 },
+            { "string": 3, "fret": 10, "finger": 1 },
+            { "string": 2, "fret": 10, "finger": 1 },
+            { "string": 1, "fret": 10, "finger": 1 }
+          ],
+          "barre": { "fret": 10, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Dm-minor-C-form",
+          "position": "C",
+          "name": "Dm (Forma C)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 5, "finger": 1 },
+            { "string": 4, "fret": 6, "finger": 2 },
+            { "string": 3, "fret": 7, "finger": 4 },
+            { "string": 2, "fret": 6, "finger": 3 },
+            { "string": 1, "fret": 5, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Dm-minor-G-form",
+          "position": "G",
+          "name": "Dm (Forma G)",
+          "baseFret": 12,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 15, "finger": 4 },
+            { "string": 5, "fret": 13, "finger": 2 },
+            { "string": 4, "fret": 12, "finger": 1 },
+            { "string": 3, "fret": 12, "finger": 1 },
+            { "string": 2, "fret": 13, "finger": 3 },
+            { "string": 1, "fret": 15, "finger": 4 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Em-minor",
+      "name": "Em",
+      "fullName": "E Minor",
+      "quality": "minor",
+      "root": "E",
+      "notes": ["E", "G", "B"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "Em-minor-E-form",
+          "position": "E",
+          "name": "Em (Forma E)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 0, "finger": 0 },
+            { "string": 5, "fret": 2, "finger": 2 },
+            { "string": 4, "fret": 2, "finger": 3 },
+            { "string": 3, "fret": 0, "finger": 0 },
+            { "string": 2, "fret": 0, "finger": 0 },
+            { "string": 1, "fret": 0, "finger": 0 }
+          ]
+        },
+        {
+          "id": "Em-minor-D-form",
+          "position": "D",
+          "name": "Em (Forma D)",
+          "baseFret": 2,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 2, "finger": 1 },
+            { "string": 3, "fret": 4, "finger": 3 },
+            { "string": 2, "fret": 5, "finger": 4 },
+            { "string": 1, "fret": 3, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Em-minor-A-form",
+          "position": "A",
+          "name": "Em (Forma A)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 7, "finger": 1 },
+            { "string": 4, "fret": 9, "finger": 3 },
+            { "string": 3, "fret": 9, "finger": 4 },
+            { "string": 2, "fret": 8, "finger": 2 },
+            { "string": 1, "fret": 7, "finger": 1 }
+          ],
+          "barre": { "fret": 7, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Em-minor-C-form",
+          "position": "C",
+          "name": "Em (Forma C)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 7, "finger": 1 },
+            { "string": 4, "fret": 8, "finger": 2 },
+            { "string": 3, "fret": 9, "finger": 4 },
+            { "string": 2, "fret": 8, "finger": 3 },
+            { "string": 1, "fret": 7, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Em-minor-G-form",
+          "position": "G",
+          "name": "Em (Forma G)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 5, "finger": 4 },
+            { "string": 5, "fret": 3, "finger": 2 },
+            { "string": 4, "fret": 2, "finger": 1 },
+            { "string": 3, "fret": 2, "finger": 1 },
+            { "string": 2, "fret": 3, "finger": 3 },
+            { "string": 1, "fret": 5, "finger": 4 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Fm-minor",
+      "name": "Fm",
+      "fullName": "F Minor",
+      "quality": "minor",
+      "root": "F",
+      "notes": ["F", "Ab", "C"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Fm-minor-E-form",
+          "position": "E",
+          "name": "Fm (Forma E)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 1, "finger": 1 },
+            { "string": 5, "fret": 3, "finger": 3 },
+            { "string": 4, "fret": 3, "finger": 4 },
+            { "string": 3, "fret": 1, "finger": 1 },
+            { "string": 2, "fret": 1, "finger": 1 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ],
+          "barre": { "fret": 1, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Fm-minor-D-form",
+          "position": "D",
+          "name": "Fm (Forma D)",
+          "baseFret": 3,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 3, "finger": 1 },
+            { "string": 3, "fret": 5, "finger": 3 },
+            { "string": 2, "fret": 6, "finger": 4 },
+            { "string": 1, "fret": 4, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Fm-minor-A-form",
+          "position": "A",
+          "name": "Fm (Forma A)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 8, "finger": 1 },
+            { "string": 4, "fret": 10, "finger": 3 },
+            { "string": 3, "fret": 10, "finger": 4 },
+            { "string": 2, "fret": 9, "finger": 2 },
+            { "string": 1, "fret": 8, "finger": 1 }
+          ],
+          "barre": { "fret": 8, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Fm-minor-C-form",
+          "position": "C",
+          "name": "Fm (Forma C)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 8, "finger": 1 },
+            { "string": 4, "fret": 9, "finger": 2 },
+            { "string": 3, "fret": 10, "finger": 4 },
+            { "string": 2, "fret": 9, "finger": 3 },
+            { "string": 1, "fret": 8, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Fm-minor-G-form",
+          "position": "G",
+          "name": "Fm (Forma G)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 6, "finger": 4 },
+            { "string": 5, "fret": 4, "finger": 2 },
+            { "string": 4, "fret": 3, "finger": 1 },
+            { "string": 3, "fret": 3, "finger": 1 },
+            { "string": 2, "fret": 4, "finger": 3 },
+            { "string": 1, "fret": 6, "finger": 4 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Gm-minor",
+      "name": "Gm",
+      "fullName": "G Minor",
+      "quality": "minor",
+      "root": "G",
+      "notes": ["G", "Bb", "D"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Gm-minor-E-form",
+          "position": "E",
+          "name": "Gm (Forma E)",
+          "baseFret": 3,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 3, "finger": 1 },
+            { "string": 5, "fret": 5, "finger": 3 },
+            { "string": 4, "fret": 5, "finger": 4 },
+            { "string": 3, "fret": 3, "finger": 1 },
+            { "string": 2, "fret": 3, "finger": 1 },
+            { "string": 1, "fret": 3, "finger": 1 }
+          ],
+          "barre": { "fret": 3, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Gm-minor-D-form",
+          "position": "D",
+          "name": "Gm (Forma D)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 5, "finger": 1 },
+            { "string": 3, "fret": 7, "finger": 3 },
+            { "string": 2, "fret": 8, "finger": 4 },
+            { "string": 1, "fret": 6, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Gm-minor-A-form",
+          "position": "A",
+          "name": "Gm (Forma A)",
+          "baseFret": 10,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 10, "finger": 1 },
+            { "string": 4, "fret": 12, "finger": 3 },
+            { "string": 3, "fret": 12, "finger": 4 },
+            { "string": 2, "fret": 11, "finger": 2 },
+            { "string": 1, "fret": 10, "finger": 1 }
+          ],
+          "barre": { "fret": 10, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Gm-minor-C-form",
+          "position": "C",
+          "name": "Gm (Forma C)",
+          "baseFret": 10,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 10, "finger": 1 },
+            { "string": 4, "fret": 11, "finger": 2 },
+            { "string": 3, "fret": 12, "finger": 4 },
+            { "string": 2, "fret": 11, "finger": 3 },
+            { "string": 1, "fret": 10, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Gm-minor-G-form",
+          "position": "G",
+          "name": "Gm (Forma G)",
+          "baseFret": 5,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 8, "finger": 4 },
+            { "string": 5, "fret": 6, "finger": 2 },
+            { "string": 4, "fret": 5, "finger": 1 },
+            { "string": 3, "fret": 5, "finger": 1 },
+            { "string": 2, "fret": 6, "finger": 3 },
+            { "string": 1, "fret": 8, "finger": 4 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Am-minor",
+      "name": "Am",
+      "fullName": "A Minor",
+      "quality": "minor",
+      "root": "A",
+      "notes": ["A", "C", "E"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "Am-minor-A-form",
+          "position": "A",
+          "name": "Am (Forma A)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 0, "finger": 0 },
+            { "string": 4, "fret": 2, "finger": 2 },
+            { "string": 3, "fret": 2, "finger": 3 },
+            { "string": 2, "fret": 1, "finger": 1 },
+            { "string": 1, "fret": 0, "finger": 0 }
+          ]
+        },
+        {
+          "id": "Am-minor-G-form",
+          "position": "G",
+          "name": "Am (Forma G)",
+          "baseFret": 7,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 10, "finger": 4 },
+            { "string": 5, "fret": 8, "finger": 2 },
+            { "string": 4, "fret": 7, "finger": 1 },
+            { "string": 3, "fret": 7, "finger": 1 },
+            { "string": 2, "fret": 8, "finger": 3 },
+            { "string": 1, "fret": 10, "finger": 4 }
+          ]
+        },
+        {
+          "id": "Am-minor-E-form",
+          "position": "E",
+          "name": "Am (Forma E)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 5, "finger": 1 },
+            { "string": 5, "fret": 7, "finger": 3 },
+            { "string": 4, "fret": 7, "finger": 4 },
+            { "string": 3, "fret": 5, "finger": 1 },
+            { "string": 2, "fret": 5, "finger": 1 },
+            { "string": 1, "fret": 5, "finger": 1 }
+          ],
+          "barre": { "fret": 5, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Am-minor-D-form",
+          "position": "D",
+          "name": "Am (Forma D)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 7, "finger": 1 },
+            { "string": 3, "fret": 9, "finger": 3 },
+            { "string": 2, "fret": 10, "finger": 4 },
+            { "string": 1, "fret": 8, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Am-minor-C-form",
+          "position": "C",
+          "name": "Am (Forma C)",
+          "baseFret": 12,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 12, "finger": 1 },
+            { "string": 4, "fret": 13, "finger": 2 },
+            { "string": 3, "fret": 14, "finger": 4 },
+            { "string": 2, "fret": 13, "finger": 3 },
+            { "string": 1, "fret": 12, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Bm-minor",
+      "name": "Bm",
+      "fullName": "B Minor",
+      "quality": "minor",
+      "root": "B",
+      "notes": ["B", "D", "F#"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Bm-minor-A-form",
+          "position": "A",
+          "name": "Bm (Forma A)",
+          "baseFret": 2,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 2, "finger": 1 },
+            { "string": 4, "fret": 4, "finger": 3 },
+            { "string": 3, "fret": 4, "finger": 4 },
+            { "string": 2, "fret": 3, "finger": 2 },
+            { "string": 1, "fret": 2, "finger": 1 }
+          ],
+          "barre": { "fret": 2, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Bm-minor-G-form",
+          "position": "G",
+          "name": "Bm (Forma G)",
+          "baseFret": 9,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 12, "finger": 4 },
+            { "string": 5, "fret": 10, "finger": 2 },
+            { "string": 4, "fret": 9, "finger": 1 },
+            { "string": 3, "fret": 9, "finger": 1 },
+            { "string": 2, "fret": 10, "finger": 3 },
+            { "string": 1, "fret": 12, "finger": 4 }
+          ]
+        },
+        {
+          "id": "Bm-minor-E-form",
+          "position": "E",
+          "name": "Bm (Forma E)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 7, "finger": 1 },
+            { "string": 5, "fret": 9, "finger": 3 },
+            { "string": 4, "fret": 9, "finger": 4 },
+            { "string": 3, "fret": 7, "finger": 1 },
+            { "string": 2, "fret": 7, "finger": 1 },
+            { "string": 1, "fret": 7, "finger": 1 }
+          ],
+          "barre": { "fret": 7, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Bm-minor-D-form",
+          "position": "D",
+          "name": "Bm (Forma D)",
+          "baseFret": 9,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 9, "finger": 1 },
+            { "string": 3, "fret": 11, "finger": 3 },
+            { "string": 2, "fret": 12, "finger": 4 },
+            { "string": 1, "fret": 10, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Bm-minor-C-form",
+          "position": "C",
+          "name": "Bm (Forma C)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 2, "finger": 1 },
+            { "string": 4, "fret": 3, "finger": 2 },
+            { "string": 3, "fret": 4, "finger": 4 },
+            { "string": 2, "fret": 3, "finger": 3 },
+            { "string": 1, "fret": 2, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Dbm-minor",
+      "name": "C#m",
+      "fullName": "C# Minor",
+      "quality": "minor",
+      "root": "C#",
+      "notes": ["C#", "E", "G#"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Dbm-minor-A-form",
+          "position": "A",
+          "name": "C#m (Forma A)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 4, "finger": 1 },
+            { "string": 4, "fret": 6, "finger": 3 },
+            { "string": 3, "fret": 6, "finger": 4 },
+            { "string": 2, "fret": 5, "finger": 2 },
+            { "string": 1, "fret": 4, "finger": 1 }
+          ],
+          "barre": { "fret": 4, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Dbm-minor-E-form",
+          "position": "E",
+          "name": "C#m (Forma E)",
+          "baseFret": 9,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 9, "finger": 1 },
+            { "string": 5, "fret": 11, "finger": 3 },
+            { "string": 4, "fret": 11, "finger": 4 },
+            { "string": 3, "fret": 9, "finger": 1 },
+            { "string": 2, "fret": 9, "finger": 1 },
+            { "string": 1, "fret": 9, "finger": 1 }
+          ],
+          "barre": { "fret": 9, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Dbm-minor-D-form",
+          "position": "D",
+          "name": "C#m (Forma D)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 11, "finger": 1 },
+            { "string": 3, "fret": 13, "finger": 3 },
+            { "string": 2, "fret": 14, "finger": 4 },
+            { "string": 1, "fret": 12, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Dbm-minor-G-form",
+          "position": "G",
+          "name": "C#m (Forma G)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 14, "finger": 4 },
+            { "string": 5, "fret": 12, "finger": 2 },
+            { "string": 4, "fret": 11, "finger": 1 },
+            { "string": 3, "fret": 11, "finger": 1 },
+            { "string": 2, "fret": 12, "finger": 3 },
+            { "string": 1, "fret": 14, "finger": 4 }
+          ]
+        },
+        {
+          "id": "Dbm-minor-C-form",
+          "position": "C",
+          "name": "C#m (Forma C)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 4, "finger": 1 },
+            { "string": 4, "fret": 5, "finger": 2 },
+            { "string": 3, "fret": 6, "finger": 4 },
+            { "string": 2, "fret": 5, "finger": 3 },
+            { "string": 1, "fret": 4, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Ebm-minor",
+      "name": "Ebm",
+      "fullName": "E♭ Minor",
+      "quality": "minor",
+      "root": "Eb",
+      "notes": ["Eb", "Gb", "Bb"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Ebm-minor-E-form",
+          "position": "E",
+          "name": "Ebm (Forma E)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 6, "finger": 1 },
+            { "string": 5, "fret": 8, "finger": 3 },
+            { "string": 4, "fret": 8, "finger": 4 },
+            { "string": 3, "fret": 6, "finger": 1 },
+            { "string": 2, "fret": 6, "finger": 1 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ],
+          "barre": { "fret": 6, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Ebm-minor-A-form",
+          "position": "A",
+          "name": "Ebm (Forma A)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 6, "finger": 1 },
+            { "string": 4, "fret": 8, "finger": 3 },
+            { "string": 3, "fret": 8, "finger": 4 },
+            { "string": 2, "fret": 7, "finger": 2 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ],
+          "barre": { "fret": 6, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Ebm-minor-D-form",
+          "position": "D",
+          "name": "Ebm (Forma D)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 1, "finger": 1 },
+            { "string": 3, "fret": 3, "finger": 3 },
+            { "string": 2, "fret": 4, "finger": 4 },
+            { "string": 1, "fret": 2, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Ebm-minor-C-form",
+          "position": "C",
+          "name": "Ebm (Forma C)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 6, "finger": 1 },
+            { "string": 4, "fret": 7, "finger": 2 },
+            { "string": 3, "fret": 8, "finger": 4 },
+            { "string": 2, "fret": 7, "finger": 3 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Ebm-minor-G-form",
+          "position": "G",
+          "name": "Ebm (Forma G)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 4, "finger": 4 },
+            { "string": 5, "fret": 2, "finger": 2 },
+            { "string": 4, "fret": 1, "finger": 1 },
+            { "string": 3, "fret": 1, "finger": 1 },
+            { "string": 2, "fret": 2, "finger": 3 },
+            { "string": 1, "fret": 4, "finger": 4 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Gbm-minor",
+      "name": "F#m",
+      "fullName": "F# Minor",
+      "quality": "minor",
+      "root": "F#",
+      "notes": ["F#", "A", "C#"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Gbm-minor-E-form",
+          "position": "E",
+          "name": "F#m (Forma E)",
+          "baseFret": 2,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 2, "finger": 1 },
+            { "string": 5, "fret": 4, "finger": 3 },
+            { "string": 4, "fret": 4, "finger": 4 },
+            { "string": 3, "fret": 2, "finger": 1 },
+            { "string": 2, "fret": 2, "finger": 1 },
+            { "string": 1, "fret": 2, "finger": 1 }
+          ],
+          "barre": { "fret": 2, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Gbm-minor-D-form",
+          "position": "D",
+          "name": "F#m (Forma D)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 4, "finger": 1 },
+            { "string": 3, "fret": 6, "finger": 3 },
+            { "string": 2, "fret": 7, "finger": 4 },
+            { "string": 1, "fret": 5, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Gbm-minor-A-form",
+          "position": "A",
+          "name": "F#m (Forma A)",
+          "baseFret": 9,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 9, "finger": 1 },
+            { "string": 4, "fret": 11, "finger": 3 },
+            { "string": 3, "fret": 11, "finger": 4 },
+            { "string": 2, "fret": 10, "finger": 2 },
+            { "string": 1, "fret": 9, "finger": 1 }
+          ],
+          "barre": { "fret": 9, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Gbm-minor-C-form",
+          "position": "C",
+          "name": "F#m (Forma C)",
+          "baseFret": 9,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 9, "finger": 1 },
+            { "string": 4, "fret": 10, "finger": 2 },
+            { "string": 3, "fret": 11, "finger": 4 },
+            { "string": 2, "fret": 10, "finger": 3 },
+            { "string": 1, "fret": 9, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Gbm-minor-G-form",
+          "position": "G",
+          "name": "F#m (Forma G)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 7, "finger": 4 },
+            { "string": 5, "fret": 5, "finger": 2 },
+            { "string": 4, "fret": 4, "finger": 1 },
+            { "string": 3, "fret": 4, "finger": 1 },
+            { "string": 2, "fret": 5, "finger": 3 },
+            { "string": 1, "fret": 7, "finger": 4 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Abm-minor",
+      "name": "Abm",
+      "fullName": "A♭ Minor",
+      "quality": "minor",
+      "root": "Ab",
+      "notes": ["Ab", "Cb", "Eb"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre"],
+
+      "guitarShapes": [
+        {
+          "id": "Abm-minor-E-form",
+          "position": "E",
+          "name": "Abm (Forma E)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 4, "finger": 1 },
+            { "string": 5, "fret": 6, "finger": 3 },
+            { "string": 4, "fret": 6, "finger": 4 },
+            { "string": 3, "fret": 4, "finger": 1 },
+            { "string": 2, "fret": 4, "finger": 1 },
+            { "string": 1, "fret": 4, "finger": 1 }
+          ],
+          "barre": { "fret": 4, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Abm-minor-A-form",
+          "position": "A",
+          "name": "Abm (Forma A)",
+          "baseFret": 11,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 11, "finger": 1 },
+            { "string": 4, "fret": 13, "finger": 3 },
+            { "string": 3, "fret": 13, "finger": 4 },
+            { "string": 2, "fret": 12, "finger": 2 },
+            { "string": 1, "fret": 11, "finger": 1 }
+          ],
+          "barre": { "fret": 11, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Abm-minor-D-form",
+          "position": "D",
+          "name": "Abm (Forma D)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 6, "finger": 1 },
+            { "string": 3, "fret": 8, "finger": 3 },
+            { "string": 2, "fret": 9, "finger": 4 },
+            { "string": 1, "fret": 7, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Abm-minor-C-form",
+          "position": "C",
+          "name": "Abm (Forma C)",
+          "baseFret": 11,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 11, "finger": 1 },
+            { "string": 4, "fret": 12, "finger": 2 },
+            { "string": 3, "fret": 13, "finger": 4 },
+            { "string": 2, "fret": 12, "finger": 3 },
+            { "string": 1, "fret": 11, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Abm-minor-G-form",
+          "position": "G",
+          "name": "Abm (Forma G)",
+          "baseFret": 6,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 9, "finger": 4 },
+            { "string": 5, "fret": 7, "finger": 2 },
+            { "string": 4, "fret": 6, "finger": 1 },
+            { "string": 3, "fret": 6, "finger": 1 },
+            { "string": 2, "fret": 7, "finger": 3 },
+            { "string": 1, "fret": 9, "finger": 4 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Bbm-minor",
+      "name": "Bbm",
+      "fullName": "B♭ Minor",
+      "quality": "minor",
+      "root": "Bb",
+      "notes": ["Bb", "Db", "F"],
+      "intervals": ["1", "♭3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre", "common"],
+
+      "guitarShapes": [
+        {
+          "id": "Bbm-minor-A-form",
+          "position": "A",
+          "name": "Bbm (Forma A)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 1, "finger": 1 },
+            { "string": 4, "fret": 3, "finger": 3 },
+            { "string": 3, "fret": 3, "finger": 4 },
+            { "string": 2, "fret": 2, "finger": 2 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ],
+          "barre": { "fret": 1, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Bbm-minor-E-form",
+          "position": "E",
+          "name": "Bbm (Forma E)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 6, "finger": 1 },
+            { "string": 5, "fret": 8, "finger": 3 },
+            { "string": 4, "fret": 8, "finger": 4 },
+            { "string": 3, "fret": 6, "finger": 1 },
+            { "string": 2, "fret": 6, "finger": 1 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ],
+          "barre": { "fret": 6, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Bbm-minor-D-form",
+          "position": "D",
+          "name": "Bbm (Forma D)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 8, "finger": 1 },
+            { "string": 3, "fret": 10, "finger": 3 },
+            { "string": 2, "fret": 11, "finger": 4 },
+            { "string": 1, "fret": 9, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Bbm-minor-C-form",
+          "position": "C",
+          "name": "Bbm (Forma C)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 1, "finger": 1 },
+            { "string": 4, "fret": 2, "finger": 2 },
+            { "string": 3, "fret": 3, "finger": 4 },
+            { "string": 2, "fret": 2, "finger": 3 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Bbm-minor-G-form",
+          "position": "G",
+          "name": "Bbm (Forma G)",
+          "baseFret": 8,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 11, "finger": 4 },
+            { "string": 5, "fret": 9, "finger": 2 },
+            { "string": 4, "fret": 8, "finger": 1 },
+            { "string": 3, "fret": 8, "finger": 1 },
+            { "string": 2, "fret": 9, "finger": 3 },
+            { "string": 1, "fret": 11, "finger": 4 }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

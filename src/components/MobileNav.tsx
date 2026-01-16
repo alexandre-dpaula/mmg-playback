@@ -12,6 +12,7 @@ import {
   Building2,
   User as UserIcon,
   Bell,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -51,7 +52,7 @@ const ROLE_TAG_STYLES: Record<
 export const MobileNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [playlistPath, setPlaylistPath] = React.useState(
     "/playlist/repertorio"
   );
@@ -64,6 +65,11 @@ export const MobileNav: React.FC = () => {
   const roleTag =
     ROLE_TAG_STYLES[profile.role] ??
     ROLE_TAG_STYLES.member;
+
+  // Reset avatar error quando avatarUrl mudar
+  React.useEffect(() => {
+    setAvatarError(false);
+  }, [profile.avatarUrl]);
 
   React.useEffect(() => {
     const updatePath = () => {
@@ -85,17 +91,34 @@ export const MobileNav: React.FC = () => {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
     setIsMenuOpen(false);
+
+    try {
+      // Limpa estado primeiro
+      await signOut();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    } finally {
+      // Sempre navega para login após logout (sucesso ou erro)
+      // Usa setTimeout para garantir que o estado foi limpo
+      setTimeout(() => {
+        window.location.href = "/login"; // Força reload completo da página
+      }, 100);
+    }
   };
 
   const baseTabs = [
     {
-      name: "Eventos",
+      name: "Modos",
       icon: Home,
-      path: "/",
-      isActive: location.pathname === "/",
+      path: "/dashboard",
+      isActive: location.pathname === "/" || location.pathname === "/dashboard",
+    },
+    {
+      name: "Eventos",
+      icon: Calendar,
+      path: "/events",
+      isActive: location.pathname === "/events",
     },
     {
       name: "Playlist",
@@ -135,8 +158,10 @@ export const MobileNav: React.FC = () => {
     if (targetPath === "/add" || targetPath === "/search") {
       if (location.pathname.startsWith("/playlist")) {
         return { from: "playlist" };
-      } else if (location.pathname === "/") {
+      } else if (location.pathname === "/events") {
         return { from: "events" };
+      } else if (location.pathname === "/" || location.pathname === "/dashboard") {
+        return { from: "dashboard" };
       }
     }
     return undefined;
@@ -156,10 +181,12 @@ export const MobileNav: React.FC = () => {
     <>
       {/* Top Bar Mobile - Fixed positioning com altura fixa */}
       <div
-        className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10"
+        className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a] border-b border-white/10 shadow-lg shadow-black/30"
         style={{
           paddingTop: safeAreaTop,
           height: combinedHeight,
+          position: 'fixed',
+          willChange: 'transform',
         }}
       >
         <div
@@ -205,12 +232,15 @@ export const MobileNav: React.FC = () => {
           </div>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition text-white flex-shrink-0 ml-2"
+            className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition text-white flex-shrink-0 ml-2 relative"
           >
             {isMenuOpen ? (
               <X className="w-5 h-5 sm:w-6 sm:h-6" />
             ) : (
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+              <>
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+                <NotificationBadge count={unreadCount} className="top-0 right-0" />
+              </>
             )}
           </button>
         </div>

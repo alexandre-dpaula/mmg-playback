@@ -12,6 +12,8 @@ import {
   Building2,
   User as UserIcon,
   Users,
+  Bell,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -35,7 +37,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [playlistPath, setPlaylistPath] = React.useState(
     "/playlist/repertorio"
   );
@@ -44,6 +46,11 @@ export const Sidebar: React.FC = () => {
   const [avatarError, setAvatarError] = React.useState(false);
   const showFallbackAvatar = avatarError || !profile.avatarUrl;
   const { unreadCount } = useUnreadNotifications();
+
+  // Reset avatar error quando avatarUrl mudar
+  React.useEffect(() => {
+    setAvatarError(false);
+  }, [profile.avatarUrl]);
 
   React.useEffect(() => {
     const updatePath = () => {
@@ -65,16 +72,30 @@ export const Sidebar: React.FC = () => {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    try {
+      // Limpa estado primeiro
+      await signOut();
+      // Depois navega
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      // Mesmo com erro, navega para login
+      navigate("/login", { replace: true });
+    }
   };
 
   const baseTabs = [
     {
-      name: "Eventos",
+      name: "Modos",
       icon: Home,
-      path: "/",
-      isActive: location.pathname === "/",
+      path: "/dashboard",
+      isActive: location.pathname === "/" || location.pathname === "/dashboard",
+    },
+    {
+      name: "Eventos",
+      icon: Calendar,
+      path: "/events",
+      isActive: location.pathname === "/events",
     },
     {
       name: "Playlist",
@@ -114,10 +135,17 @@ export const Sidebar: React.FC = () => {
   }
 
   tabs.push({
+    name: "Notificações",
+    icon: Bell,
+    path: "/settings/notifications",
+    isActive: location.pathname === "/settings/notifications",
+  });
+
+  tabs.push({
     name: "Configurações",
     icon: Settings,
     path: "/settings",
-    isActive: location.pathname.startsWith("/settings"),
+    isActive: location.pathname === "/settings" && location.pathname !== "/settings/notifications",
   });
 
   // Determina a origem para navegação (de onde o usuário está vindo)
@@ -126,8 +154,10 @@ export const Sidebar: React.FC = () => {
     if (targetPath === "/add" || targetPath === "/search") {
       if (location.pathname.startsWith("/playlist")) {
         return { from: "playlist" };
-      } else if (location.pathname === "/") {
+      } else if (location.pathname === "/events") {
         return { from: "events" };
+      } else if (location.pathname === "/" || location.pathname === "/dashboard") {
+        return { from: "dashboard" };
       }
     }
     return undefined;
@@ -221,7 +251,7 @@ export const Sidebar: React.FC = () => {
                         : "text-white/70 group-hover:text-white"
                     )}
                   />
-                  {tab.name === "Configurações" && (
+                  {tab.name === "Notificações" && (
                     <NotificationBadge count={unreadCount} />
                   )}
                 </div>

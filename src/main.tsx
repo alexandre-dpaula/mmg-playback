@@ -1,6 +1,18 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./globals.css";
+import { initViewportFix } from "./utils/viewport-fix";
+import { initPerformanceUtils } from "./utils/performance";
+import { initAndroidFixes } from "./utils/android-fixes";
+
+// Fix crítico para Safari iOS - viewport height
+initViewportFix();
+
+// Fixes específicos para Android Chrome
+initAndroidFixes();
+
+// Inicializa utilitários de performance e limpeza automática
+initPerformanceUtils();
 
 createRoot(document.getElementById("root")!).render(<App />);
 

@@ -37,6 +37,7 @@ interface BrandLogoProps {
   size?: BrandDisplaySize;
   inlineSize?: BrandInlineSize;
   className?: string;
+  showIcon?: boolean;
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
@@ -44,25 +45,29 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   size = "sm",
   inlineSize = "md",
   className,
+  showIcon = false,
 }) => {
   if (variant === "inline") {
     return (
       <span
         className={cn(
-          "inline-flex items-baseline tracking-normal text-white leading-none font-light",
+          "inline-flex items-center gap-2 tracking-normal text-white leading-none font-light",
           INLINE_SIZES[inlineSize],
           className
         )}
       >
-        Setlist
-        <span className="font-semibold leading-none">GO</span>
-        <span
-          className={cn(
-            "leading-none ml-[0.15em] align-text-top text-white/80",
-            INLINE_TM_SIZES[inlineSize]
-          )}
-        >
-          ™
+        {showIcon && <img src="/icon-logo.png" alt="Logo" className="w-5 h-5" />}
+        <span className="inline-flex items-baseline">
+          Setlist
+          <span className="font-semibold leading-none">GO</span>
+          <span
+            className={cn(
+              "leading-none ml-[0.15em] align-text-top text-white/80",
+              INLINE_TM_SIZES[inlineSize]
+            )}
+          >
+            ™
+          </span>
         </span>
       </span>
     );
@@ -71,20 +76,23 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   return (
     <span
       className={cn(
-        "inline-flex items-baseline tracking-normal text-white leading-none font-light mt-[10px] mb-[20px]",
+        "inline-flex items-center gap-2 tracking-normal text-white leading-none font-light mt-[10px] mb-[20px]",
         DISPLAY_SIZES[size],
         className
       )}
     >
-      Setlist
-      <span className="font-semibold text-white leading-none">GO</span>
-      <span
-        className={cn(
-          "text-white/80 leading-none self-start",
-          DISPLAY_TM_SIZES[size]
-        )}
-      >
-        ™
+      {showIcon && <img src="/icon-logo.png" alt="Logo" className="w-5 h-5" />}
+      <span className="inline-flex items-baseline">
+        Setlist
+        <span className="font-semibold text-white leading-none">GO</span>
+        <span
+          className={cn(
+            "text-white/80 leading-none self-start",
+            DISPLAY_TM_SIZES[size]
+          )}
+        >
+          ™
+        </span>
       </span>
     </span>
   );

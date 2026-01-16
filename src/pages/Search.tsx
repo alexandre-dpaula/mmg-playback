@@ -157,9 +157,9 @@ const Search: React.FC = () => {
 
       toast.success(`"${track.titulo}" adicionada à playlist atual!`);
 
-      // Sempre redireciona para a playlist atual
+      // Redireciona para o modal de cifras da música adicionada
       setTimeout(() => {
-        navigate(`/playlist/${selectedEventId}`);
+        window.location.href = `/playlist/${selectedEventId}/track/${track.id}`;
       }, 300);
     } catch (error) {
       console.error("Erro ao adicionar música à playlist:", error);
@@ -228,11 +228,11 @@ const Search: React.FC = () => {
       // Recarrega a lista de músicas
       await loadTracks();
 
-      // Navega para a música importada
+      // Navega para a música importada com reload completo
       setTimeout(() => {
         const eventId = getSelectedEventId();
         const targetEvent = eventId || "repertorio";
-        navigate(`/playlist/${targetEvent}/track/${newTrack.id}`);
+        window.location.href = `/playlist/${targetEvent}/track/${newTrack.id}`;
       }, 300);
     } catch (error) {
       toast.dismiss();

@@ -56,18 +56,28 @@ export const useUnreadNotifications = () => {
   };
 
   const subscribeToNotifications = () => {
+    if (!profile?.churchId) return () => {};
+
     const channel = supabase
-      .channel("unread-notifications-channel")
+      .channel(`unread-notifications-${profile.churchId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "notifications",
+          filter: `church_id=eq.${profile.churchId}`,
         },
-        () => {
-          // Recarrega o contador quando houver mudanças, mas só se churchId existir
-          if (profile?.churchId) {
+        (payload) => {
+          // Atualiza o contador baseado no tipo de evento
+          if (payload.eventType === "INSERT") {
+            // Nova notificação não lida
+            setUnreadCount((prev) => prev + 1);
+          } else if (payload.eventType === "UPDATE") {
+            // Se foi marcada como lida, recarrega o contador
+            loadUnreadCount();
+          } else if (payload.eventType === "DELETE") {
+            // Se uma notificação não lida foi deletada, recarrega
             loadUnreadCount();
           }
         }

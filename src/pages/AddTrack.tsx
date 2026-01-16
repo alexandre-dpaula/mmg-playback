@@ -7,6 +7,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { supabase, addTrackToSupabase, processCifraClub, fetchCifraPreview } from "@/lib/supabase";
 import { getSelectedEventId } from "@/lib/preferences";
+import { useAddTrack } from "@/hooks/useAddTrack";
+import { DuplicateTrackDialog } from "@/components/DuplicateTrackDialog";
 import {
   Form,
   FormControl,
@@ -65,6 +67,37 @@ const AddTrackPage: React.FC = () => {
 
   // Pega a origem da navegação (de onde o usuário veio)
   const from = (location.state as { from?: string })?.from;
+
+  // Hook unificado com detecção de duplicatas
+  const {
+    addTrack,
+    confirmUseExisting,
+    confirmCreateNew,
+    cancelDuplicate,
+    loading: addTrackLoading,
+    duplicateFound,
+    pendingTrack,
+  } = useAddTrack({
+    onSuccess: (trackId) => {
+      const selectedEventId = getSelectedEventId();
+      toast.success("Música adicionada com sucesso!");
+      form.reset(DEFAULT_VALUES);
+
+      setTimeout(() => {
+        if (selectedEventId && trackId) {
+          // Se tem trackId, abre direto no modal de cifras com reload
+          window.location.href = `/playlist/${selectedEventId}/track/${trackId}`;
+        } else if (selectedEventId) {
+          navigate(`/playlist/${selectedEventId}`);
+        } else {
+          navigate(`/`);
+        }
+      }, 500);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao adicionar música");
+    },
+  });
 
   const cifraUrlValue = form.watch("pauta");
 
@@ -158,71 +191,35 @@ const AddTrackPage: React.FC = () => {
   };
 
 
-  const maybeAddTrackToCurrentEvent = async (trackId: string, trackTitle: string) => {
+  const handleSubmit = async (values: FormValues) => {
     const selectedEventId = getSelectedEventId();
+
     if (!selectedEventId) {
-      // Sem evento selecionado, apenas informa
-      console.log("Nenhum evento selecionado, música criada apenas no banco geral");
+      toast.error("Nenhum evento selecionado. Selecione um evento primeiro.");
       return;
     }
-
-    try {
-      // Adiciona automaticamente à playlist atual sem perguntar
-      const { count, error } = await supabase
-        .from("event_tracks")
-        .select("*", { count: "exact", head: true })
-        .eq("event_id", selectedEventId);
-
-      if (error) throw error;
-
-      const orderIndex = count ?? 0;
-
-      const { error: linkError } = await supabase.from("event_tracks").insert({
-        event_id: selectedEventId,
-        track_id: trackId,
-        order_index: orderIndex,
-      });
-
-      if (linkError) throw linkError;
-
-      toast.success(`"${trackTitle}" adicionada à playlist atual!`);
-    } catch (error) {
-      console.error("Erro ao vincular faixa ao evento:", error);
-      toast.error("Não foi possível adicionar a faixa na playlist atual.");
-    }
-  };
-
-  const handleSubmit = async (values: FormValues) => {
-    const trackData = {
-      evento: "",
-      titulo: values.title.trim(),
-      versao: values.versao?.trim() || "",
-      tom: values.tom || "",
-      tag: "",
-      cifra_url: values.pauta?.trim() || "",
-      audio_url: "",
-      referencia: values.referencia?.trim() || "",
-    };
 
     const submissionToast = toast.loading("Adicionando faixa...");
 
     try {
-      // 2. Salvar no Supabase (principal)
-      const trackId = await addTrackToSupabase(trackData);
+      // Busca o maior order_index para calcular a próxima posição
+      const { data: maxOrderData } = await supabase
+        .from("event_tracks")
+        .select("order_index")
+        .eq("event_id", selectedEventId)
+        .order("order_index", { ascending: false })
+        .limit(1);
 
-      // 3. Processar cifra do CifraClub se necessário
-      if (trackData.cifra_url && trackData.cifra_url.includes('cifraclub.com')) {
-        await processCifraClub(trackId, trackData.cifra_url);
-      }
+      const nextOrderIndex = maxOrderData?.[0]?.order_index ?? -1;
 
-      // 4. Backup no Google Sheets (em segundo plano)
+      // Backup no Google Sheets (em segundo plano, não crítico)
       if (scriptUrl) {
         const payload = {
-          playlistTitle: trackData.evento,
-          title: trackData.titulo,
+          playlistTitle: "",
+          title: values.title.trim(),
           url: "",
-          tag: "",
-          pauta: trackData.cifra_url,
+          tag: values.versao?.trim() || "",
+          pauta: values.pauta?.trim() || "",
         };
 
         fetch(scriptUrl, {
@@ -237,25 +234,21 @@ const AddTrackPage: React.FC = () => {
         });
       }
 
-      toast.success("Faixa adicionada com sucesso!", { id: submissionToast });
+      toast.dismiss(submissionToast);
 
-      // Adiciona à playlist atual se houver evento selecionado
-      const selectedEventId = getSelectedEventId();
-      await maybeAddTrackToCurrentEvent(trackId, trackData.titulo);
+      // USA O HOOK UNIFICADO - detecta duplicatas automaticamente!
+      await addTrack({
+        title: values.title.trim(),
+        artist: values.versao?.trim(), // Usa versão como artista temporariamente
+        cifraUrl: values.pauta?.trim() || undefined,
+        context: 'event',
+        contextId: selectedEventId,
+        order: nextOrderIndex + 1,
+      });
 
-      // Limpar completamente todos os campos
-      form.reset(DEFAULT_VALUES);
+      // Se duplicata for encontrada, o modal aparecerá automaticamente
+      // onSuccess() será chamado quando a música for adicionada com sucesso
 
-      // Redireciona para a playlist atual ou para a página inicial
-      setTimeout(() => {
-        if (selectedEventId) {
-          // Redireciona para a playlist atual para ver a música adicionada
-          navigate(`/playlist/${selectedEventId}`);
-        } else {
-          // Se não tem playlist, vai para a página inicial
-          navigate(`/`);
-        }
-      }, 500);
     } catch (error) {
       console.error("Erro ao enviar faixa:", error);
       const message =
@@ -415,16 +408,28 @@ const AddTrackPage: React.FC = () => {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || addTrackLoading}
               className="h-10 w-full bg-[#1DB954] text-black text-sm font-semibold hover:bg-[#1ed760] mt-6"
             >
-              {isSubmitting && (
+              {(isSubmitting || addTrackLoading) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
               Adicionar Faixa
             </Button>
           </form>
         </Form>
+
+        {/* Modal de Duplicata - aparece automaticamente quando necessário */}
+        <DuplicateTrackDialog
+          open={!!duplicateFound}
+          onOpenChange={(open) => {
+            if (!open) cancelDuplicate();
+          }}
+          searchResult={duplicateFound!}
+          newTrackTitle={pendingTrack?.title || ''}
+          onConfirmUseExisting={confirmUseExisting}
+          onConfirmCreateNew={confirmCreateNew}
+        />
       </div>
     </div>
   );

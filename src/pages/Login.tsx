@@ -47,12 +47,6 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
 
-  React.useEffect(() => {
-    if (!isLoading && user) {
-      navigate("/", { replace: true });
-    }
-  }, [isLoading, user, navigate]);
-
   const handleGoogleLogin = async () => {
     try {
       await signInWithProvider("google");
@@ -81,12 +75,15 @@ const Login: React.FC = () => {
       if (error) throw error;
 
       toast.success("Login realizado com sucesso!");
-      navigate("/", { replace: true });
+
+      // Aguarda 2s para AuthContext processar e então navega
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 2000);
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       toast.error(error instanceof Error ? error.message : "Email ou senha incorretos");
-    } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Só limpa o estado se houver erro
     }
   };
 
@@ -172,7 +169,7 @@ const Login: React.FC = () => {
                   transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200 }}
                   className="flex justify-center mb-5"
                 >
-                  <BrandLogo size="xl" className="drop-shadow-2xl" />
+                  <BrandLogo size="xl" showIcon={true} className="drop-shadow-2xl" />
                 </motion.div>
               </motion.div>
 

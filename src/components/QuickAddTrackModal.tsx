@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { X, Search, Plus, Loader2 } from "lucide-react";
+import { X, Search, Plus, Loader2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { searchCifraClub, fetchCifraFromUrl, type CifraClubTrack } from "@/services/cifraClubService";
+import { useAddTrack } from "@/hooks/useAddTrack";
+import { DuplicateTrackDialog } from "@/components/DuplicateTrackDialog";
 
 interface QuickAddTrackModalProps {
   isOpen: boolean;
@@ -32,11 +35,42 @@ export const QuickAddTrackModal: React.FC<QuickAddTrackModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [addingTrackId, setAddingTrackId] = useState<string | null>(null);
 
+  // Estado para busca web
+  const [cifraClubTracks, setCifraClubTracks] = useState<CifraClubTrack[]>([]);
+  const [isSearchingCifraClub, setIsSearchingCifraClub] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const resultsPerPage = 7;
+
+  // Hook unificado de adicionar músicas com detecção de duplicatas
+  const {
+    addTrack,
+    confirmUseExisting,
+    confirmCreateNew,
+    cancelDuplicate,
+    loading: addTrackLoading,
+    duplicateFound,
+    pendingTrack,
+  } = useAddTrack({
+    onSuccess: (trackId) => {
+      onSuccess();
+      // Se tem trackId, navega para a página de detalhes (modal de cifras)
+      // Isso acontece quando adiciona da busca web
+      if (trackId) {
+        // Força reload completo da página para garantir que os dados estão atualizados
+        window.location.href = `/playlist/${eventId}/track/${trackId}`;
+      } else {
+        // Caso contrário, apenas volta para a playlist
+        navigate(`/playlist/${eventId}`);
+      }
+    },
+  });
+
   // Busca músicas disponíveis quando o modal abre ou a busca muda
   useEffect(() => {
     if (!isOpen) {
       setSearchQuery("");
       setAvailableTracks([]);
+      setCifraClubTracks([]);
       return;
     }
 
@@ -77,6 +111,29 @@ export const QuickAddTrackModal: React.FC<QuickAddTrackModalProps> = ({
     fetchTracks();
   }, [isOpen, eventId]);
 
+  // Busca web (debounced)
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 3) {
+      setCifraClubTracks([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingCifraClub(true);
+      setCurrentPage(1);
+      try {
+        const results = await searchCifraClub(searchQuery);
+        setCifraClubTracks(results);
+      } catch (error) {
+        console.error("Erro ao buscar na web:", error);
+      } finally {
+        setIsSearchingCifraClub(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const filteredTracks = React.useMemo(() => {
     if (!searchQuery.trim()) return availableTracks;
 
@@ -91,8 +148,16 @@ export const QuickAddTrackModal: React.FC<QuickAddTrackModalProps> = ({
 
   const handleAddTrack = async (trackId: string) => {
     setAddingTrackId(trackId);
+
     try {
-      // Busca o maior order_index atual do evento
+      // Busca dados da música
+      const track = availableTracks.find(t => t.id === trackId);
+      if (!track) {
+        toast.error("Música não encontrada");
+        return;
+      }
+
+      // Busca o maior order_index para calcular a próxima posição
       const { data: maxOrderData } = await supabase
         .from("event_tracks")
         .select("order_index")
@@ -102,7 +167,8 @@ export const QuickAddTrackModal: React.FC<QuickAddTrackModalProps> = ({
 
       const nextOrderIndex = maxOrderData?.[0]?.order_index ?? -1;
 
-      // Adiciona a música ao evento
+      // Usa o hook unificado que já adiciona diretamente ao evento
+      // (não precisa detecção de duplicata aqui pois a música JÁ existe na biblioteca)
       const { error } = await supabase.from("event_tracks").insert({
         event_id: eventId,
         track_id: trackId,
@@ -115,16 +181,65 @@ export const QuickAddTrackModal: React.FC<QuickAddTrackModalProps> = ({
       setAvailableTracks((prev) => prev.filter((t) => t.id !== trackId));
 
       toast.success("Música adicionada à playlist!");
-
-      // Redireciona para a playlist atual
-      setTimeout(() => {
-        navigate(`/playlist/${eventId}`);
-      }, 300);
+      onSuccess();
     } catch (error) {
       console.error("Erro ao adicionar música:", error);
       toast.error("Não foi possível adicionar a música");
     } finally {
       setAddingTrackId(null);
+    }
+  };
+
+  // Importa música do Cifra Club ou abre URL externa
+  const handleImportFromCifraClub = async (cifraTrack: CifraClubTrack) => {
+    try {
+      const url = cifraTrack.url.startsWith('http') ? cifraTrack.url : `https://www.cifraclub.com.br${cifraTrack.url}`;
+      const isCifraClub = url.includes('cifraclub.com.br');
+
+      if (!isCifraClub) {
+        window.open(url, '_blank');
+        toast.info("Abrindo cifra em nova aba...");
+        return;
+      }
+
+      toast.loading("Importando cifra do Cifra Club...");
+      const cifraData = await fetchCifraFromUrl(url);
+
+      if (!cifraData) {
+        toast.dismiss();
+        toast.error("Não foi possível importar a cifra");
+        return;
+      }
+
+      toast.dismiss();
+
+      // Busca o maior order_index para calcular a próxima posição
+      const { data: maxOrderData } = await supabase
+        .from("event_tracks")
+        .select("order_index")
+        .eq("event_id", eventId)
+        .order("order_index", { ascending: false })
+        .limit(1);
+
+      const nextOrderIndex = maxOrderData?.[0]?.order_index ?? -1;
+
+      // USA O HOOK UNIFICADO - detecta duplicatas automaticamente!
+      await addTrack({
+        title: cifraData.title,
+        artist: cifraData.artist,
+        cifraUrl: url,
+        context: 'event',
+        contextId: eventId,
+        order: nextOrderIndex + 1,
+      });
+
+      // Se duplicata for encontrada, o modal aparecerá automaticamente
+      // onSuccess() será chamado quando a música for adicionada
+
+    } catch (error) {
+      toast.dismiss();
+      console.error("Erro ao processar resultado:", error);
+      toast.error("Erro ao processar música");
     }
   };
 
@@ -169,59 +284,164 @@ export const QuickAddTrackModal: React.FC<QuickAddTrackModalProps> = ({
             <div className="flex items-center justify-center h-48">
               <Loader2 className="h-8 w-8 animate-spin text-[#1DB954]" />
             </div>
-          ) : filteredTracks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-center">
-              <Search className="h-12 w-12 text-white/20 mb-3" />
-              <p className="text-white/60">
-                {searchQuery
-                  ? "Nenhuma música encontrada"
-                  : availableTracks.length === 0
-                  ? "Todas as músicas já estão nesta playlist"
-                  : "Digite para buscar músicas"}
-              </p>
-            </div>
           ) : (
-            <div className="space-y-2">
-              {filteredTracks.map((track) => (
-                <div
-                  key={track.id}
-                  className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
-                >
-                  <div className="flex-1 min-w-0 mr-4">
-                    <h3 className="text-white font-medium truncate">
-                      {track.titulo}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      {track.versao && (
-                        <span className="text-xs text-white/60">
-                          {track.versao}
-                        </span>
-                      )}
-                      {track.tom && (
-                        <span className="text-xs px-2 py-0.5 rounded bg-[#1DB954]/20 text-[#1DB954]">
-                          {track.tom}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => handleAddTrack(track.id)}
-                    disabled={addingTrackId === track.id}
-                    size="sm"
-                    className="bg-[#1DB954] text-black hover:bg-[#1ed760] flex-shrink-0"
-                  >
-                    {addingTrackId === track.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Adicionar
-                      </>
-                    )}
-                  </Button>
+            <>
+              {/* Resultados locais */}
+              {filteredTracks.length === 0 && !searchQuery ? (
+                <div className="flex flex-col items-center justify-center h-48 text-center">
+                  <Search className="h-12 w-12 text-white/20 mb-3" />
+                  <p className="text-white/60">
+                    {availableTracks.length === 0
+                      ? "Todas as músicas já estão nesta playlist"
+                      : "Digite para buscar músicas"}
+                  </p>
                 </div>
-              ))}
-            </div>
+              ) : filteredTracks.length > 0 ? (
+                <>
+                  <h3 className="text-sm font-semibold text-white/60 mb-3">
+                    Músicas Salvas
+                  </h3>
+                  <div className="space-y-2">
+                    {filteredTracks.map((track) => (
+                      <div
+                        key={track.id}
+                        className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0 mr-4">
+                          <h3 className="text-white font-medium truncate">
+                            {track.titulo}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            {track.versao && (
+                              <span className="text-xs text-white/60">
+                                {track.versao}
+                              </span>
+                            )}
+                            {track.tom && (
+                              <span className="text-xs px-2 py-0.5 rounded bg-[#1DB954]/20 text-[#1DB954]">
+                                {track.tom}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => handleAddTrack(track.id)}
+                          disabled={addingTrackId === track.id}
+                          size="sm"
+                          className="bg-[#1DB954] text-black hover:bg-[#1ed760] flex-shrink-0"
+                        >
+                          {addingTrackId === track.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-1" />
+                              Adicionar
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : null}
+
+              {/* Resultados web (SetlistGO) */}
+              {searchQuery && searchQuery.length >= 3 && (
+                <div className={filteredTracks.length > 0 ? "mt-6" : ""}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Globe className="w-4 h-4 text-orange-400" />
+                    <h3 className="text-sm font-semibold text-white/60">
+                      Buscar SetlistGO Web
+                    </h3>
+                    {isSearchingCifraClub && (
+                      <Loader2 className="w-4 h-4 animate-spin text-[#1DB954]" />
+                    )}
+                  </div>
+
+                  {cifraClubTracks.length === 0 && !isSearchingCifraClub ? (
+                    <div className="text-center py-6 border border-white/10 rounded-xl bg-white/5">
+                      <Globe className="w-8 h-8 mx-auto mb-2 text-white/40" />
+                      <p className="text-white/60 text-sm">
+                        Nenhum resultado encontrado na web
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-white rounded-xl p-4 shadow-lg">
+                        <div className="space-y-4">
+                          {cifraClubTracks
+                            .slice((currentPage - 1) * resultsPerPage, currentPage * resultsPerPage)
+                            .map((cifraTrack, index) => (
+                              <div
+                                key={`cifra-${index}`}
+                                className="group pb-4 border-b border-gray-200 last:border-0 last:pb-0"
+                              >
+                                <button
+                                  onClick={() => handleImportFromCifraClub(cifraTrack)}
+                                  className="text-left w-full"
+                                >
+                                  <h3 className="text-base text-[#1a0dab] hover:underline font-normal mb-1">
+                                    {cifraTrack.name}
+                                  </h3>
+                                </button>
+
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-[#006621] text-xs">
+                                    {cifraTrack.url}
+                                  </span>
+                                </div>
+
+                                <p className="text-[#545454] text-xs leading-relaxed">
+                                  {cifraTrack.description}
+                                </p>
+                              </div>
+                            ))}
+                        </div>
+
+                        {/* Paginação */}
+                        {cifraClubTracks.length > resultsPerPage && (
+                          <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-gray-200">
+                            <button
+                              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                              disabled={currentPage === 1}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium text-[#1a0dab] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              Anterior
+                            </button>
+
+                            {Array.from({ length: Math.ceil(cifraClubTracks.length / resultsPerPage) }, (_, i) => i + 1).map(page => (
+                              <button
+                                key={page}
+                                onClick={() => setCurrentPage(page)}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                                  currentPage === page
+                                    ? 'bg-[#1a0dab] text-white'
+                                    : 'text-[#1a0dab] hover:bg-gray-100'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            ))}
+
+                            <button
+                              onClick={() => setCurrentPage(p => Math.min(Math.ceil(cifraClubTracks.length / resultsPerPage), p + 1))}
+                              disabled={currentPage === Math.ceil(cifraClubTracks.length / resultsPerPage)}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium text-[#1a0dab] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              Próxima
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="text-white/60 text-xs mt-3 text-center">
+                        Clique no título para importar cifras do Cifra Club ou abrir outros sites
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -235,6 +455,20 @@ export const QuickAddTrackModal: React.FC<QuickAddTrackModalProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Modal de Duplicata - aparece automaticamente quando necessário */}
+      {duplicateFound && (
+        <DuplicateTrackDialog
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) cancelDuplicate();
+          }}
+          searchResult={duplicateFound}
+          newTrackTitle={pendingTrack?.title || ''}
+          onConfirmUseExisting={confirmUseExisting}
+          onConfirmCreateNew={confirmCreateNew}
+        />
+      )}
     </div>
   );
 };

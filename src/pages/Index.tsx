@@ -1,13 +1,13 @@
 import React from "react";
 import SpotifyPlayer from "@/components/SpotifyPlayer";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useRefresh } from "@/context/RefreshContext";
 import { FooterBrand } from "@/components/FooterBrand";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/PullToRefresh";
 import { toast } from "sonner";
-import { Share2 } from "lucide-react";
+import { Share2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const CLOCK_TEXT_COLOR = "rgb(255 255 255 / 16%)";
@@ -15,6 +15,7 @@ const CLOCK_TEXT_COLOR = "rgb(255 255 255 / 16%)";
 const Index = () => {
   const { eventId: routeEventId } = useParams<{ eventId: string }>();
   const { refreshKey } = useRefresh();
+  const navigate = useNavigate();
   const playlistEventId =
     routeEventId && routeEventId !== "repertorio" ? routeEventId : null;
   const {
@@ -184,7 +185,8 @@ const Index = () => {
       />
       <div
         ref={containerRef}
-        className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden overflow-y-auto"
+        data-pull-to-refresh
+        className="min-h-screen bg-[#121212] text-white pt-20 md:pt-0 pb-32 md:pb-12 overflow-x-hidden overflow-y-auto safari-smooth-scroll"
       >
       {/* Indicador de loading discreto para refreshes */}
       {isLoading && (
@@ -192,6 +194,15 @@ const Index = () => {
       )}
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:gap-6 md:gap-8 px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4">
+        {/* Botão Voltar */}
+        <button
+          onClick={() => navigate("/")}
+          className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors mb-4 self-start"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Voltar</span>
+        </button>
+
         <header className="text-center space-y-2 sm:space-y-3">
           <div
             className="flex flex-wrap items-baseline justify-center gap-2 sm:gap-3 text-xs sm:text-sm font-medium tracking-wide"

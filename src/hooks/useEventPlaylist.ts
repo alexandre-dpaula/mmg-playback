@@ -39,6 +39,10 @@ type EventTracksResponse = {
   date: string;
   event_tracks: {
     order_index: number | null;
+    custom_key: string | null;
+    custom_capo: number | null;
+    custom_cifra_content: string | null;
+    custom_notes: string | null;
     track: {
       id: string;
       titulo: string;
@@ -54,11 +58,13 @@ type EventTracksResponse = {
 };
 
 const mapTrackRow = (
-  row: NonNullable<EventTracksResponse["event_tracks"][number]["track"]>,
+  eventTrackItem: EventTracksResponse["event_tracks"][number],
   orderIndex: number,
 ): PlaylistTrack => {
+  const row = eventTrackItem.track!;
   const cifraUrl = row.cifra_url || undefined;
 
+  // Lógica de prioridade: customizações do evento sobrescrevem dados globais
   return {
     id: row.id,
     title: row.titulo,
@@ -67,10 +73,10 @@ const mapTrackRow = (
     versao: row.versao || undefined,
     order: orderIndex,
     coverUrl: row.artist_photo || undefined,
-    tom: row.tom || undefined,
+    tom: eventTrackItem.custom_key || row.tom || undefined, // Prioridade: custom > global
     cifra: cifraUrl,
     pauta: cifraUrl,
-    cifraContent: row.cifra_content || undefined,
+    cifraContent: eventTrackItem.custom_cifra_content || row.cifra_content || undefined, // Prioridade: custom > global
     url: row.audio_url || undefined,
   };
 };
@@ -85,6 +91,10 @@ const fetchPlaylistFromSupabase = async (eventId: string): Promise<PlaylistData>
         date,
         event_tracks (
           order_index,
+          custom_key,
+          custom_capo,
+          custom_cifra_content,
+          custom_notes,
           track:tracks (
             id,
             titulo,
@@ -113,7 +123,7 @@ const fetchPlaylistFromSupabase = async (eventId: string): Promise<PlaylistData>
       const orderB = b.order_index ?? 0;
       return orderA - orderB;
     })
-    .map((item, index) => mapTrackRow(item.track!, item.order_index ?? index));
+    .map((item, index) => mapTrackRow(item, item.order_index ?? index));
 
   return {
     eventId: data.id,
@@ -130,8 +140,10 @@ export const useEventPlaylist = (eventId?: string) =>
     queryKey: ["playlist", eventId],
     queryFn: () => fetchPlaylistFromSupabase(eventId!),
     enabled: Boolean(eventId),
-    staleTime: 0,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Sempre considera os dados stale
+    gcTime: 5 * 60 * 1000, // Mantém em cache por 5 minutos para navegação rápida
+    refetchOnWindowFocus: true, // Atualiza quando volta para a página
+    refetchOnMount: true, // Atualiza quando monta o componente
     retry: 1,
   });
 

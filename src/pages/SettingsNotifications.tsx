@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "@/context/AuthContext";
 import { Switch } from "@/components/ui/switch";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Notification = {
   id: string;
@@ -26,6 +27,10 @@ const getNotificationIcon = (type: string) => {
       return <Music className="w-5 h-5 text-blue-400" />;
     case "updated_track":
       return <Edit3 className="w-5 h-5 text-yellow-400" />;
+    case "track_key_changed":
+      return <Music className="w-5 h-5 text-cyan-400" />;
+    case "track_cifra_changed":
+      return <Edit3 className="w-5 h-5 text-amber-400" />;
     case "new_member":
       return <Users className="w-5 h-5 text-purple-400" />;
     case "new_event":
@@ -43,6 +48,10 @@ const getNotificationColor = (type: string) => {
       return "from-blue-500/10 to-blue-500/5 border-blue-500/20";
     case "updated_track":
       return "from-yellow-500/10 to-yellow-500/5 border-yellow-500/20";
+    case "track_key_changed":
+      return "from-cyan-500/10 to-cyan-500/5 border-cyan-500/20";
+    case "track_cifra_changed":
+      return "from-amber-500/10 to-amber-500/5 border-amber-500/20";
     case "new_member":
       return "from-purple-500/10 to-purple-500/5 border-purple-500/20";
     case "new_event":
@@ -114,21 +123,26 @@ const SettingsNotifications: React.FC = () => {
   };
 
   const subscribeToNotifications = () => {
+    if (!profile?.churchId) return () => {};
+
     const channel = supabase
-      .channel("notifications-channel")
+      .channel(`notifications-${profile.churchId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "notifications",
+          filter: `church_id=eq.${profile.churchId}`,
         },
         (payload) => {
           if (payload.eventType === "INSERT") {
-            setNotifications((prev) => [payload.new as Notification, ...prev]);
+            const newNotification = payload.new as Notification;
+            setNotifications((prev) => [newNotification, ...prev]);
             toast.success("Nova notificação recebida!");
           } else if (payload.eventType === "DELETE") {
-            setNotifications((prev) => prev.filter((n) => n.id !== payload.old.id));
+            const deletedId = payload.old.id;
+            setNotifications((prev) => prev.filter((n) => n.id !== deletedId));
           }
         }
       )
@@ -214,6 +228,9 @@ const SettingsNotifications: React.FC = () => {
   };
 
   const handleDeleteNotification = async (id: string) => {
+    // Atualiza o estado local imediatamente para feedback instantâneo
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
     try {
       const { error } = await supabase
         .from("notifications")
@@ -225,6 +242,8 @@ const SettingsNotifications: React.FC = () => {
     } catch (error) {
       console.error("Erro ao deletar notificação:", error);
       toast.error("Erro ao remover notificação");
+      // Reverte o estado local em caso de erro
+      loadNotifications();
     }
   };
 
@@ -292,9 +311,15 @@ const SettingsNotifications: React.FC = () => {
         </div>
 
         {/* Lista de Notificações */}
-        <div className="space-y-3">
+        <AnimatePresence mode="popLayout">
           {notifications.length === 0 ? (
-            <div className="text-center py-16">
+            <motion.div
+              key="empty-state"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-16"
+            >
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
                 <Bell className="w-8 h-8 text-white/40" />
               </div>
@@ -302,15 +327,21 @@ const SettingsNotifications: React.FC = () => {
               <p className="text-white/60 text-sm max-w-sm mx-auto">
                 Quando houver novidades na equipe, você verá as notificações aqui.
               </p>
-            </div>
+            </motion.div>
           ) : (
-            notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br p-4 sm:p-5 transition-all duration-200 hover:scale-[1.01] ${getNotificationColor(
-                  notification.type
-                )}`}
-              >
+            <div className="space-y-3">
+              {notifications.map((notification) => (
+                <motion.div
+                  key={notification.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: -20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, x: 100 }}
+                  transition={{ duration: 0.2 }}
+                  className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br p-4 sm:p-5 transition-all duration-200 hover:scale-[1.01] ${getNotificationColor(
+                    notification.type
+                  )}`}
+                >
                 <div className="flex items-start gap-4">
                   {/* Ícone */}
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-black/20 flex items-center justify-center">
@@ -341,10 +372,11 @@ const SettingsNotifications: React.FC = () => {
                     </button>
                   )}
                 </div>
-              </div>
-            ))
+              </motion.div>
+            ))}
+            </div>
           )}
-        </div>
+        </AnimatePresence>
 
         {/* Info */}
         <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/10">

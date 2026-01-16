@@ -8,10 +8,10 @@ interface YouTubePlayerProps {
   className?: string;
   onTimeUpdate?: (currentTime: number) => void; // Callback para atualizar scroll da cifra
   sectionTimestamps?: Record<string, number> | null; // Timestamps das seções para cores
-  bpm?: number; // BPM para o metrônomo
-  onMetronomeToggle?: () => void; // Callback para toggle do metrônomo
-  isMetronomePlaying?: boolean; // Estado do metrônomo
-  onBpmChange?: (bpm: number) => void; // Callback para alterar BPM via TAP
+  bpm?: number; // BPM para exibição
+  isMetronomePlaying?: boolean; // Estado do metrônomo (para indicador visual)
+  isPadPlaying?: boolean; // Estado do PAD (para indicador visual)
+  onLiveControlsClick?: () => void; // Callback para abrir o modal "Ao Vivo"
 }
 
 export interface YouTubePlayerRef {
@@ -35,9 +35,9 @@ export const YouTubePlayer = forwardRef<YouTubePlayerRef, YouTubePlayerProps>(({
   onTimeUpdate,
   sectionTimestamps,
   bpm = 120,
-  onMetronomeToggle,
   isMetronomePlaying = false,
-  onBpmChange,
+  isPadPlaying = false,
+  onLiveControlsClick,
 }, ref) => {
   useEffect(() => {
     console.log('[YouTubePlayer] Props recebidas:', { youtubeUrl, trackTitle, trackVersion });
@@ -55,10 +55,6 @@ export const YouTubePlayer = forwardRef<YouTubePlayerRef, YouTubePlayerProps>(({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
-
-  // TAP Tempo - refs para calcular BPM
-  const tapTimesRef = useRef<number[]>([]);
-  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Expõe métodos para o componente pai controlar o player
   useImperativeHandle(ref, () => ({
@@ -266,54 +262,6 @@ export const YouTubePlayer = forwardRef<YouTubePlayerRef, YouTubePlayerProps>(({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  // Função TAP Tempo - calcula BPM baseado nos cliques E liga/desliga metrônomo
-  const handleMetronomeClick = () => {
-    const now = Date.now();
-
-    // Adiciona o timestamp do clique
-    tapTimesRef.current.push(now);
-
-    // Limpa o timeout anterior
-    if (tapTimeoutRef.current) {
-      clearTimeout(tapTimeoutRef.current);
-    }
-
-    // Se ficou mais de 2 segundos sem clicar, reseta
-    tapTimeoutRef.current = setTimeout(() => {
-      tapTimesRef.current = [];
-    }, 2000);
-
-    // Precisa de pelo menos 2 cliques para calcular BPM
-    if (tapTimesRef.current.length >= 2) {
-      // Calcula a média dos intervalos entre cliques
-      const intervals: number[] = [];
-      for (let i = 1; i < tapTimesRef.current.length; i++) {
-        intervals.push(tapTimesRef.current[i] - tapTimesRef.current[i - 1]);
-      }
-
-      const averageInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-      const calculatedBpm = Math.round(60000 / averageInterval);
-
-      // Limita BPM entre 40 e 240
-      const validBpm = Math.max(40, Math.min(240, calculatedBpm));
-
-      // Atualiza o BPM
-      if (onBpmChange) {
-        onBpmChange(validBpm);
-      }
-
-      // Se não estiver tocando, liga o metrônomo após calcular o BPM
-      if (!isMetronomePlaying && onMetronomeToggle) {
-        onMetronomeToggle();
-      }
-    } else {
-      // Primeiro clique - apenas toggle do metrônomo
-      if (onMetronomeToggle) {
-        onMetronomeToggle();
-      }
-    }
-  };
-
   // Função para obter a cor da seção baseado no tipo (mesmas cores do SongMap)
   const getSectionColor = (sectionId: string): string => {
     // Remove "section-" prefix se existir
@@ -449,22 +397,32 @@ export const YouTubePlayer = forwardRef<YouTubePlayerRef, YouTubePlayerProps>(({
             )}
           </div>
 
-          {/* Metronome button */}
-          {onMetronomeToggle && (
+          {/* Botão "Ao Vivo" - abre modal com PAD e Metrônomo */}
+          {onLiveControlsClick && (
             <button
-              onClick={handleMetronomeClick}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all duration-200 ${
-                isMetronomePlaying
-                  ? 'bg-[#1DB954] text-black border-[#1DB954]'
-                  : 'bg-white/10 text-white border-white/20 hover:bg-white/15'
-              }`}
-              title="TAP Tempo - Clique no ritmo para ajustar o BPM"
+              onClick={onLiveControlsClick}
+              className={`
+                px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all duration-200 relative
+                ${
+                  isMetronomePlaying || isPadPlaying
+                    ? 'bg-[#1DB954] text-black border-[#1DB954]'
+                    : 'bg-white/10 text-white border-white/20 hover:bg-white/15'
+                }
+              `}
+              title="Abrir controles ao vivo (PAD e Metrônomo)"
             >
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] opacity-70 font-semibold uppercase tracking-wide">TAP</span>
-                <span className="text-sm font-extrabold">{bpm}</span>
-                <span className="text-[9px] opacity-70 font-semibold uppercase tracking-wide">BPM</span>
-              </div>
+              {/* Indicadores de atividade */}
+              {(isMetronomePlaying || isPadPlaying) && (
+                <div className="absolute -top-1 -right-1 flex gap-0.5">
+                  {isMetronomePlaying && (
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" title="Metrônomo ativo" />
+                  )}
+                  {isPadPlaying && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" title="PAD ativo" />
+                  )}
+                </div>
+              )}
+              <span className="uppercase tracking-wide">Ao Vivo</span>
             </button>
           )}
         </div>

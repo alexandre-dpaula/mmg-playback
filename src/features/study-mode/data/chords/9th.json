@@ -1,0 +1,1155 @@
+{
+  "chords": [
+    {
+      "id": "C9-ninth",
+      "name": "C9",
+      "fullName": "C Dominant 9th",
+      "quality": "ninth",
+      "root": "C",
+      "notes": ["C", "E", "G", "Bb", "D"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "C9-ninth-C-form",
+          "position": "C",
+          "name": "C9 (Forma C)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 3, "finger": 2},
+            {"string": 4, "fret": 2, "finger": 1},
+            {"string": 3, "fret": 3, "finger": 3},
+            {"string": 2, "fret": 3, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        },
+        {
+          "id": "C9-ninth-A-form",
+          "position": "A",
+          "name": "C9 (Forma A)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 3, "finger": 1},
+            {"string": 4, "fret": 5, "finger": 3},
+            {"string": 3, "fret": 3, "finger": 1},
+            {"string": 2, "fret": 5, "finger": 4},
+            {"string": 1, "fret": 3, "finger": 1}
+          ],
+          "barre": {"fret": 3, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "C9-ninth-G-form",
+          "position": "G",
+          "name": "C9 (Forma G)",
+          "baseFret": 8,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 8, "finger": 1},
+            {"string": 5, "fret": 10, "finger": 3},
+            {"string": 4, "fret": 8, "finger": 1},
+            {"string": 3, "fret": 10, "finger": 4},
+            {"string": 2, "fret": 10, "finger": 4},
+            {"string": 1, "fret": 10, "finger": 4}
+          ]
+        },
+        {
+          "id": "C9-ninth-E-form",
+          "position": "E",
+          "name": "C9 (Forma E)",
+          "baseFret": 8,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 8, "finger": 1},
+            {"string": 5, "fret": 10, "finger": 3},
+            {"string": 4, "fret": 8, "finger": 1},
+            {"string": 3, "fret": 9, "finger": 2},
+            {"string": 2, "fret": 8, "finger": 1},
+            {"string": 1, "fret": 10, "finger": 4}
+          ]
+        },
+        {
+          "id": "C9-ninth-D-form",
+          "position": "D",
+          "name": "C9 (Forma D)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 10, "finger": 1},
+            {"string": 4, "fret": 12, "finger": 3},
+            {"string": 3, "fret": 10, "finger": 1},
+            {"string": 2, "fret": 12, "finger": 4},
+            {"string": 1, "fret": 10, "finger": 1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D9-ninth",
+      "name": "D9",
+      "fullName": "D Dominant 9th",
+      "quality": "ninth",
+      "root": "D",
+      "notes": ["D", "F#", "A", "C", "E"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "medium",
+      "tags": ["ninth", "jazz", "extended", "open"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "D9-ninth-D-form",
+          "position": "D",
+          "name": "D9 (Forma D)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 0},
+            {"string": 4, "fret": 0},
+            {"string": 3, "fret": 2, "finger": 2},
+            {"string": 2, "fret": 1, "finger": 1},
+            {"string": 1, "fret": 0}
+          ]
+        },
+        {
+          "id": "D9-ninth-C-form",
+          "position": "C",
+          "name": "D9 (Forma C)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 5, "finger": 2},
+            {"string": 4, "fret": 4, "finger": 1},
+            {"string": 3, "fret": 5, "finger": 3},
+            {"string": 2, "fret": 5, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        },
+        {
+          "id": "D9-ninth-A-form",
+          "position": "A",
+          "name": "D9 (Forma A)",
+          "baseFret": 5,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 5, "finger": 1},
+            {"string": 4, "fret": 7, "finger": 3},
+            {"string": 3, "fret": 5, "finger": 1},
+            {"string": 2, "fret": 7, "finger": 4},
+            {"string": 1, "fret": 5, "finger": 1}
+          ],
+          "barre": {"fret": 5, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "D9-ninth-G-form",
+          "position": "G",
+          "name": "D9 (Forma G)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 10, "finger": 1},
+            {"string": 5, "fret": 12, "finger": 3},
+            {"string": 4, "fret": 10, "finger": 1},
+            {"string": 3, "fret": 12, "finger": 4},
+            {"string": 2, "fret": 12, "finger": 4},
+            {"string": 1, "fret": 12, "finger": 4}
+          ]
+        },
+        {
+          "id": "D9-ninth-E-form",
+          "position": "E",
+          "name": "D9 (Forma E)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 10, "finger": 1},
+            {"string": 5, "fret": 12, "finger": 3},
+            {"string": 4, "fret": 10, "finger": 1},
+            {"string": 3, "fret": 11, "finger": 2},
+            {"string": 2, "fret": 10, "finger": 1},
+            {"string": 1, "fret": 12, "finger": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E9-ninth",
+      "name": "E9",
+      "fullName": "E Dominant 9th",
+      "quality": "ninth",
+      "root": "E",
+      "notes": ["E", "G#", "B", "D", "F#"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "medium",
+      "tags": ["ninth", "jazz", "extended", "open"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "E9-ninth-E-form",
+          "position": "E",
+          "name": "E9 (Forma E)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": 0},
+            {"string": 5, "fret": 2, "finger": 2},
+            {"string": 4, "fret": 0},
+            {"string": 3, "fret": 1, "finger": 1},
+            {"string": 2, "fret": 0},
+            {"string": 1, "fret": 2, "finger": 3}
+          ]
+        },
+        {
+          "id": "E9-ninth-D-form",
+          "position": "D",
+          "name": "E9 (Forma D)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 2, "finger": 1},
+            {"string": 4, "fret": 4, "finger": 3},
+            {"string": 3, "fret": 2, "finger": 1},
+            {"string": 2, "fret": 4, "finger": 4},
+            {"string": 1, "fret": 2, "finger": 1}
+          ]
+        },
+        {
+          "id": "E9-ninth-C-form",
+          "position": "C",
+          "name": "E9 (Forma C)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 7, "finger": 2},
+            {"string": 4, "fret": 6, "finger": 1},
+            {"string": 3, "fret": 7, "finger": 3},
+            {"string": 2, "fret": 7, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        },
+        {
+          "id": "E9-ninth-A-form",
+          "position": "A",
+          "name": "E9 (Forma A)",
+          "baseFret": 7,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 7, "finger": 1},
+            {"string": 4, "fret": 9, "finger": 3},
+            {"string": 3, "fret": 7, "finger": 1},
+            {"string": 2, "fret": 9, "finger": 4},
+            {"string": 1, "fret": 7, "finger": 1}
+          ],
+          "barre": {"fret": 7, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "E9-ninth-G-form",
+          "position": "G",
+          "name": "E9 (Forma G)",
+          "baseFret": 12,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 12, "finger": 1},
+            {"string": 5, "fret": 14, "finger": 3},
+            {"string": 4, "fret": 12, "finger": 1},
+            {"string": 3, "fret": 14, "finger": 4},
+            {"string": 2, "fret": 14, "finger": 4},
+            {"string": 1, "fret": 14, "finger": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "F9-ninth",
+      "name": "F9",
+      "fullName": "F Dominant 9th",
+      "quality": "ninth",
+      "root": "F",
+      "notes": ["F", "A", "C", "Eb", "G"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "F9-ninth-E-form",
+          "position": "E",
+          "name": "F9 (Forma E)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": 1, "finger": 1},
+            {"string": 5, "fret": 3, "finger": 3},
+            {"string": 4, "fret": 1, "finger": 1},
+            {"string": 3, "fret": 2, "finger": 2},
+            {"string": 2, "fret": 1, "finger": 1},
+            {"string": 1, "fret": 3, "finger": 4}
+          ]
+        },
+        {
+          "id": "F9-ninth-D-form",
+          "position": "D",
+          "name": "F9 (Forma D)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 3, "finger": 1},
+            {"string": 4, "fret": 5, "finger": 3},
+            {"string": 3, "fret": 3, "finger": 1},
+            {"string": 2, "fret": 5, "finger": 4},
+            {"string": 1, "fret": 3, "finger": 1}
+          ]
+        },
+        {
+          "id": "F9-ninth-C-form",
+          "position": "C",
+          "name": "F9 (Forma C)",
+          "baseFret": 5,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 8, "finger": 2},
+            {"string": 4, "fret": 7, "finger": 1},
+            {"string": 3, "fret": 8, "finger": 3},
+            {"string": 2, "fret": 8, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        },
+        {
+          "id": "F9-ninth-A-form",
+          "position": "A",
+          "name": "F9 (Forma A)",
+          "baseFret": 8,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 8, "finger": 1},
+            {"string": 4, "fret": 10, "finger": 3},
+            {"string": 3, "fret": 8, "finger": 1},
+            {"string": 2, "fret": 10, "finger": 4},
+            {"string": 1, "fret": 8, "finger": 1}
+          ],
+          "barre": {"fret": 8, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "F9-ninth-G-form",
+          "position": "G",
+          "name": "F9 (Forma G)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 1, "finger": 1},
+            {"string": 5, "fret": 3, "finger": 3},
+            {"string": 4, "fret": 1, "finger": 1},
+            {"string": 3, "fret": 3, "finger": 4},
+            {"string": 2, "fret": 3, "finger": 4},
+            {"string": 1, "fret": 3, "finger": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G9-ninth",
+      "name": "G9",
+      "fullName": "G Dominant 9th",
+      "quality": "ninth",
+      "root": "G",
+      "notes": ["G", "B", "D", "F", "A"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "medium",
+      "tags": ["ninth", "jazz", "extended", "open"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "G9-ninth-G-form",
+          "position": "G",
+          "name": "G9 (Forma G)",
+          "baseFret": 3,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": 3, "finger": 2},
+            {"string": 5, "fret": 0},
+            {"string": 4, "fret": 0},
+            {"string": 3, "fret": 0},
+            {"string": 2, "fret": 0},
+            {"string": 1, "fret": 1, "finger": 1}
+          ]
+        },
+        {
+          "id": "G9-ninth-E-form",
+          "position": "E",
+          "name": "G9 (Forma E)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 3, "finger": 1},
+            {"string": 5, "fret": 5, "finger": 3},
+            {"string": 4, "fret": 3, "finger": 1},
+            {"string": 3, "fret": 4, "finger": 2},
+            {"string": 2, "fret": 3, "finger": 1},
+            {"string": 1, "fret": 5, "finger": 4}
+          ]
+        },
+        {
+          "id": "G9-ninth-D-form",
+          "position": "D",
+          "name": "G9 (Forma D)",
+          "baseFret": 5,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 5, "finger": 1},
+            {"string": 4, "fret": 7, "finger": 3},
+            {"string": 3, "fret": 5, "finger": 1},
+            {"string": 2, "fret": 7, "finger": 4},
+            {"string": 1, "fret": 5, "finger": 1}
+          ]
+        },
+        {
+          "id": "G9-ninth-C-form",
+          "position": "C",
+          "name": "G9 (Forma C)",
+          "baseFret": 7,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 10, "finger": 2},
+            {"string": 4, "fret": 9, "finger": 1},
+            {"string": 3, "fret": 10, "finger": 3},
+            {"string": 2, "fret": 10, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        },
+        {
+          "id": "G9-ninth-A-form",
+          "position": "A",
+          "name": "G9 (Forma A)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 10, "finger": 1},
+            {"string": 4, "fret": 12, "finger": 3},
+            {"string": 3, "fret": 10, "finger": 1},
+            {"string": 2, "fret": 12, "finger": 4},
+            {"string": 1, "fret": 10, "finger": 1}
+          ],
+          "barre": {"fret": 10, "fromString": 5, "toString": 1}
+        }
+      ]
+    },
+    {
+      "id": "A9-ninth",
+      "name": "A9",
+      "fullName": "A Dominant 9th",
+      "quality": "ninth",
+      "root": "A",
+      "notes": ["A", "C#", "E", "G", "B"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "medium",
+      "tags": ["ninth", "jazz", "extended", "open"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "A9-ninth-A-form",
+          "position": "A",
+          "name": "A9 (Forma A)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 0},
+            {"string": 4, "fret": 2, "finger": 2},
+            {"string": 3, "fret": 0},
+            {"string": 2, "fret": 2, "finger": 3},
+            {"string": 1, "fret": 0}
+          ]
+        },
+        {
+          "id": "A9-ninth-G-form",
+          "position": "G",
+          "name": "A9 (Forma G)",
+          "baseFret": 5,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 5, "finger": 1},
+            {"string": 5, "fret": 7, "finger": 3},
+            {"string": 4, "fret": 5, "finger": 1},
+            {"string": 3, "fret": 7, "finger": 4},
+            {"string": 2, "fret": 7, "finger": 4},
+            {"string": 1, "fret": 7, "finger": 4}
+          ]
+        },
+        {
+          "id": "A9-ninth-E-form",
+          "position": "E",
+          "name": "A9 (Forma E)",
+          "baseFret": 5,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 5, "finger": 1},
+            {"string": 5, "fret": 7, "finger": 3},
+            {"string": 4, "fret": 5, "finger": 1},
+            {"string": 3, "fret": 6, "finger": 2},
+            {"string": 2, "fret": 5, "finger": 1},
+            {"string": 1, "fret": 7, "finger": 4}
+          ]
+        },
+        {
+          "id": "A9-ninth-D-form",
+          "position": "D",
+          "name": "A9 (Forma D)",
+          "baseFret": 7,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 7, "finger": 1},
+            {"string": 4, "fret": 9, "finger": 3},
+            {"string": 3, "fret": 7, "finger": 1},
+            {"string": 2, "fret": 9, "finger": 4},
+            {"string": 1, "fret": 7, "finger": 1}
+          ]
+        },
+        {
+          "id": "A9-ninth-C-form",
+          "position": "C",
+          "name": "A9 (Forma C)",
+          "baseFret": 9,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 12, "finger": 2},
+            {"string": 4, "fret": 11, "finger": 1},
+            {"string": 3, "fret": 12, "finger": 3},
+            {"string": 2, "fret": 12, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B9-ninth",
+      "name": "B9",
+      "fullName": "B Dominant 9th",
+      "quality": "ninth",
+      "root": "B",
+      "notes": ["B", "D#", "F#", "A", "C#"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "B9-ninth-A-form",
+          "position": "A",
+          "name": "B9 (Forma A)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 2, "finger": 1},
+            {"string": 4, "fret": 4, "finger": 3},
+            {"string": 3, "fret": 2, "finger": 1},
+            {"string": 2, "fret": 4, "finger": 4},
+            {"string": 1, "fret": 2, "finger": 1}
+          ],
+          "barre": {"fret": 2, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "B9-ninth-G-form",
+          "position": "G",
+          "name": "B9 (Forma G)",
+          "baseFret": 7,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 7, "finger": 1},
+            {"string": 5, "fret": 9, "finger": 3},
+            {"string": 4, "fret": 7, "finger": 1},
+            {"string": 3, "fret": 9, "finger": 4},
+            {"string": 2, "fret": 9, "finger": 4},
+            {"string": 1, "fret": 9, "finger": 4}
+          ]
+        },
+        {
+          "id": "B9-ninth-E-form",
+          "position": "E",
+          "name": "B9 (Forma E)",
+          "baseFret": 7,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 7, "finger": 1},
+            {"string": 5, "fret": 9, "finger": 3},
+            {"string": 4, "fret": 7, "finger": 1},
+            {"string": 3, "fret": 8, "finger": 2},
+            {"string": 2, "fret": 7, "finger": 1},
+            {"string": 1, "fret": 9, "finger": 4}
+          ]
+        },
+        {
+          "id": "B9-ninth-D-form",
+          "position": "D",
+          "name": "B9 (Forma D)",
+          "baseFret": 9,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 9, "finger": 1},
+            {"string": 4, "fret": 11, "finger": 3},
+            {"string": 3, "fret": 9, "finger": 1},
+            {"string": 2, "fret": 11, "finger": 4},
+            {"string": 1, "fret": 9, "finger": 1}
+          ]
+        },
+        {
+          "id": "B9-ninth-C-form",
+          "position": "C",
+          "name": "B9 (Forma C)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 14, "finger": 2},
+            {"string": 4, "fret": 13, "finger": 1},
+            {"string": 3, "fret": 14, "finger": 3},
+            {"string": 2, "fret": 14, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Db9-ninth",
+      "name": "Db9",
+      "fullName": "Db Dominant 9th",
+      "quality": "ninth",
+      "root": "Db",
+      "notes": ["Db", "F", "Ab", "Cb", "Eb"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "Db9-ninth-A-form",
+          "position": "A",
+          "name": "Db9 (Forma A)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 4, "finger": 1},
+            {"string": 4, "fret": 6, "finger": 3},
+            {"string": 3, "fret": 4, "finger": 1},
+            {"string": 2, "fret": 6, "finger": 4},
+            {"string": 1, "fret": 4, "finger": 1}
+          ],
+          "barre": {"fret": 4, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "Db9-ninth-G-form",
+          "position": "G",
+          "name": "Db9 (Forma G)",
+          "baseFret": 9,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 9, "finger": 1},
+            {"string": 5, "fret": 11, "finger": 3},
+            {"string": 4, "fret": 9, "finger": 1},
+            {"string": 3, "fret": 11, "finger": 4},
+            {"string": 2, "fret": 11, "finger": 4},
+            {"string": 1, "fret": 11, "finger": 4}
+          ]
+        },
+        {
+          "id": "Db9-ninth-E-form",
+          "position": "E",
+          "name": "Db9 (Forma E)",
+          "baseFret": 9,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 9, "finger": 1},
+            {"string": 5, "fret": 11, "finger": 3},
+            {"string": 4, "fret": 9, "finger": 1},
+            {"string": 3, "fret": 10, "finger": 2},
+            {"string": 2, "fret": 9, "finger": 1},
+            {"string": 1, "fret": 11, "finger": 4}
+          ]
+        },
+        {
+          "id": "Db9-ninth-D-form",
+          "position": "D",
+          "name": "Db9 (Forma D)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 11, "finger": 1},
+            {"string": 4, "fret": 13, "finger": 3},
+            {"string": 3, "fret": 11, "finger": 1},
+            {"string": 2, "fret": 13, "finger": 4},
+            {"string": 1, "fret": 11, "finger": 1}
+          ]
+        },
+        {
+          "id": "Db9-ninth-C-form",
+          "position": "C",
+          "name": "Db9 (Forma C)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 4, "finger": 2},
+            {"string": 4, "fret": 3, "finger": 1},
+            {"string": 3, "fret": 4, "finger": 3},
+            {"string": 2, "fret": 4, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Eb9-ninth",
+      "name": "Eb9",
+      "fullName": "Eb Dominant 9th",
+      "quality": "ninth",
+      "root": "Eb",
+      "notes": ["Eb", "G", "Bb", "Db", "F"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "Eb9-ninth-A-form",
+          "position": "A",
+          "name": "Eb9 (Forma A)",
+          "baseFret": 6,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 6, "finger": 1},
+            {"string": 4, "fret": 8, "finger": 3},
+            {"string": 3, "fret": 6, "finger": 1},
+            {"string": 2, "fret": 8, "finger": 4},
+            {"string": 1, "fret": 6, "finger": 1}
+          ],
+          "barre": {"fret": 6, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "Eb9-ninth-G-form",
+          "position": "G",
+          "name": "Eb9 (Forma G)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 11, "finger": 1},
+            {"string": 5, "fret": 13, "finger": 3},
+            {"string": 4, "fret": 11, "finger": 1},
+            {"string": 3, "fret": 13, "finger": 4},
+            {"string": 2, "fret": 13, "finger": 4},
+            {"string": 1, "fret": 13, "finger": 4}
+          ]
+        },
+        {
+          "id": "Eb9-ninth-E-form",
+          "position": "E",
+          "name": "Eb9 (Forma E)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 11, "finger": 1},
+            {"string": 5, "fret": 13, "finger": 3},
+            {"string": 4, "fret": 11, "finger": 1},
+            {"string": 3, "fret": 12, "finger": 2},
+            {"string": 2, "fret": 11, "finger": 1},
+            {"string": 1, "fret": 13, "finger": 4}
+          ]
+        },
+        {
+          "id": "Eb9-ninth-D-form",
+          "position": "D",
+          "name": "Eb9 (Forma D)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 1, "finger": 1},
+            {"string": 4, "fret": 3, "finger": 3},
+            {"string": 3, "fret": 1, "finger": 1},
+            {"string": 2, "fret": 3, "finger": 4},
+            {"string": 1, "fret": 1, "finger": 1}
+          ]
+        },
+        {
+          "id": "Eb9-ninth-C-form",
+          "position": "C",
+          "name": "Eb9 (Forma C)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 6, "finger": 2},
+            {"string": 4, "fret": 5, "finger": 1},
+            {"string": 3, "fret": 6, "finger": 3},
+            {"string": 2, "fret": 6, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Fsh9-ninth",
+      "name": "F#9",
+      "fullName": "F# Dominant 9th",
+      "quality": "ninth",
+      "root": "F#",
+      "notes": ["F#", "A#", "C#", "E", "G#"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "Fsh9-ninth-E-form",
+          "position": "E",
+          "name": "F#9 (Forma E)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": 2, "finger": 1},
+            {"string": 5, "fret": 4, "finger": 3},
+            {"string": 4, "fret": 2, "finger": 1},
+            {"string": 3, "fret": 3, "finger": 2},
+            {"string": 2, "fret": 2, "finger": 1},
+            {"string": 1, "fret": 4, "finger": 4}
+          ]
+        },
+        {
+          "id": "Fsh9-ninth-D-form",
+          "position": "D",
+          "name": "F#9 (Forma D)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 4, "finger": 1},
+            {"string": 4, "fret": 6, "finger": 3},
+            {"string": 3, "fret": 4, "finger": 1},
+            {"string": 2, "fret": 6, "finger": 4},
+            {"string": 1, "fret": 4, "finger": 1}
+          ]
+        },
+        {
+          "id": "Fsh9-ninth-C-form",
+          "position": "C",
+          "name": "F#9 (Forma C)",
+          "baseFret": 6,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 9, "finger": 2},
+            {"string": 4, "fret": 8, "finger": 1},
+            {"string": 3, "fret": 9, "finger": 3},
+            {"string": 2, "fret": 9, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        },
+        {
+          "id": "Fsh9-ninth-A-form",
+          "position": "A",
+          "name": "F#9 (Forma A)",
+          "baseFret": 9,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 9, "finger": 1},
+            {"string": 4, "fret": 11, "finger": 3},
+            {"string": 3, "fret": 9, "finger": 1},
+            {"string": 2, "fret": 11, "finger": 4},
+            {"string": 1, "fret": 9, "finger": 1}
+          ],
+          "barre": {"fret": 9, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "Fsh9-ninth-G-form",
+          "position": "G",
+          "name": "F#9 (Forma G)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 2, "finger": 1},
+            {"string": 5, "fret": 4, "finger": 3},
+            {"string": 4, "fret": 2, "finger": 1},
+            {"string": 3, "fret": 4, "finger": 4},
+            {"string": 2, "fret": 4, "finger": 4},
+            {"string": 1, "fret": 4, "finger": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Ab9-ninth",
+      "name": "Ab9",
+      "fullName": "Ab Dominant 9th",
+      "quality": "ninth",
+      "root": "Ab",
+      "notes": ["Ab", "C", "Eb", "Gb", "Bb"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "Ab9-ninth-E-form",
+          "position": "E",
+          "name": "Ab9 (Forma E)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": 4, "finger": 1},
+            {"string": 5, "fret": 6, "finger": 3},
+            {"string": 4, "fret": 4, "finger": 1},
+            {"string": 3, "fret": 5, "finger": 2},
+            {"string": 2, "fret": 4, "finger": 1},
+            {"string": 1, "fret": 6, "finger": 4}
+          ]
+        },
+        {
+          "id": "Ab9-ninth-D-form",
+          "position": "D",
+          "name": "Ab9 (Forma D)",
+          "baseFret": 6,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 6, "finger": 1},
+            {"string": 4, "fret": 8, "finger": 3},
+            {"string": 3, "fret": 6, "finger": 1},
+            {"string": 2, "fret": 8, "finger": 4},
+            {"string": 1, "fret": 6, "finger": 1}
+          ]
+        },
+        {
+          "id": "Ab9-ninth-C-form",
+          "position": "C",
+          "name": "Ab9 (Forma C)",
+          "baseFret": 8,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 11, "finger": 2},
+            {"string": 4, "fret": 10, "finger": 1},
+            {"string": 3, "fret": 11, "finger": 3},
+            {"string": 2, "fret": 11, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        },
+        {
+          "id": "Ab9-ninth-A-form",
+          "position": "A",
+          "name": "Ab9 (Forma A)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 11, "finger": 1},
+            {"string": 4, "fret": 13, "finger": 3},
+            {"string": 3, "fret": 11, "finger": 1},
+            {"string": 2, "fret": 13, "finger": 4},
+            {"string": 1, "fret": 11, "finger": 1}
+          ],
+          "barre": {"fret": 11, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "Ab9-ninth-G-form",
+          "position": "G",
+          "name": "Ab9 (Forma G)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 4, "finger": 1},
+            {"string": 5, "fret": 6, "finger": 3},
+            {"string": 4, "fret": 4, "finger": 1},
+            {"string": 3, "fret": 6, "finger": 4},
+            {"string": 2, "fret": 6, "finger": 4},
+            {"string": 1, "fret": 6, "finger": 4}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "Bb9-ninth",
+      "name": "Bb9",
+      "fullName": "Bb Dominant 9th",
+      "quality": "ninth",
+      "root": "Bb",
+      "notes": ["Bb", "D", "F", "Ab", "C"],
+      "intervals": ["1", "3", "5", "♭7", "9"],
+      "difficulty": "hard",
+      "tags": ["ninth", "jazz", "extended"],
+      "substitutes": [],
+      "relatedChords": [],
+      "guitarShapes": [
+        {
+          "id": "Bb9-ninth-A-form",
+          "position": "A",
+          "name": "Bb9 (Forma A)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "isDefault": true,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 1, "finger": 1},
+            {"string": 4, "fret": 3, "finger": 3},
+            {"string": 3, "fret": 1, "finger": 1},
+            {"string": 2, "fret": 3, "finger": 4},
+            {"string": 1, "fret": 1, "finger": 1}
+          ],
+          "barre": {"fret": 1, "fromString": 5, "toString": 1}
+        },
+        {
+          "id": "Bb9-ninth-G-form",
+          "position": "G",
+          "name": "Bb9 (Forma G)",
+          "baseFret": 6,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 6, "finger": 1},
+            {"string": 5, "fret": 8, "finger": 3},
+            {"string": 4, "fret": 6, "finger": 1},
+            {"string": 3, "fret": 8, "finger": 4},
+            {"string": 2, "fret": 8, "finger": 4},
+            {"string": 1, "fret": 8, "finger": 4}
+          ]
+        },
+        {
+          "id": "Bb9-ninth-E-form",
+          "position": "E",
+          "name": "Bb9 (Forma E)",
+          "baseFret": 6,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": 6, "finger": 1},
+            {"string": 5, "fret": 8, "finger": 3},
+            {"string": 4, "fret": 6, "finger": 1},
+            {"string": 3, "fret": 7, "finger": 2},
+            {"string": 2, "fret": 6, "finger": 1},
+            {"string": 1, "fret": 8, "finger": 4}
+          ]
+        },
+        {
+          "id": "Bb9-ninth-D-form",
+          "position": "D",
+          "name": "Bb9 (Forma D)",
+          "baseFret": 8,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 8, "finger": 1},
+            {"string": 4, "fret": 10, "finger": 3},
+            {"string": 3, "fret": 8, "finger": 1},
+            {"string": 2, "fret": 10, "finger": 4},
+            {"string": 1, "fret": 8, "finger": 1}
+          ]
+        },
+        {
+          "id": "Bb9-ninth-C-form",
+          "position": "C",
+          "name": "Bb9 (Forma C)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "isDefault": false,
+          "notes": [
+            {"string": 6, "fret": -1},
+            {"string": 5, "fret": 13, "finger": 2},
+            {"string": 4, "fret": 12, "finger": 1},
+            {"string": 3, "fret": 13, "finger": 3},
+            {"string": 2, "fret": 13, "finger": 4},
+            {"string": 1, "fret": -1}
+          ]
+        }
+      ]
+    }
+  ]
+}

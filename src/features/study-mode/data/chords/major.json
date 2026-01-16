@@ -1,0 +1,1133 @@
+{
+  "$schema": "../schemas/chord.schema.json",
+  "version": "1.0.0",
+  "lastUpdated": "2026-01-05",
+  "source": "Baseado no padrão Cifra Club",
+
+  "chords": [
+    {
+      "id": "C-major",
+      "name": "C",
+      "fullName": "C Major",
+      "quality": "major",
+      "root": "C",
+      "notes": ["C", "E", "G"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "C-major-C-form",
+          "position": "C",
+          "name": "C (Forma C)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 3, "finger": 3 },
+            { "string": 4, "fret": 2, "finger": 2 },
+            { "string": 3, "fret": 0, "finger": 0 },
+            { "string": 2, "fret": 1, "finger": 1 },
+            { "string": 1, "fret": 0, "finger": 0 }
+          ]
+        },
+        {
+          "id": "C-major-A-form",
+          "position": "A",
+          "name": "C (Forma A)",
+          "baseFret": 3,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 3, "finger": 1 },
+            { "string": 4, "fret": 5, "finger": 3 },
+            { "string": 3, "fret": 5, "finger": 4 },
+            { "string": 2, "fret": 5, "finger": 2 },
+            { "string": 1, "fret": 3, "finger": 1 }
+          ],
+          "barre": { "fret": 3, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "C-major-G-form",
+          "position": "G",
+          "name": "C (Forma G)",
+          "baseFret": 5,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 8, "finger": 4 },
+            { "string": 5, "fret": 7, "finger": 3 },
+            { "string": 4, "fret": 5, "finger": 1 },
+            { "string": 3, "fret": 5, "finger": 1 },
+            { "string": 2, "fret": 5, "finger": 1 },
+            { "string": 1, "fret": 8, "finger": 4 }
+          ],
+          "barre": { "fret": 5, "fromString": 2, "toString": 4 }
+        },
+        {
+          "id": "C-major-E-form",
+          "position": "E",
+          "name": "C (Forma E)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 8, "finger": 1 },
+            { "string": 5, "fret": 10, "finger": 3 },
+            { "string": 4, "fret": 10, "finger": 4 },
+            { "string": 3, "fret": 9, "finger": 2 },
+            { "string": 2, "fret": 8, "finger": 1 },
+            { "string": 1, "fret": 8, "finger": 1 }
+          ],
+          "barre": { "fret": 8, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "C-major-D-form",
+          "position": "D",
+          "name": "C (Forma D)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 10, "finger": 1 },
+            { "string": 3, "fret": 12, "finger": 3 },
+            { "string": 2, "fret": 13, "finger": 4 },
+            { "string": 1, "fret": 12, "finger": 2 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "D-major",
+      "name": "D",
+      "fullName": "D Major",
+      "quality": "major",
+      "root": "D",
+      "notes": ["D", "F#", "A"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "D-major-D-form",
+          "position": "D",
+          "name": "D (Forma D)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 0, "finger": 0 },
+            { "string": 3, "fret": 2, "finger": 1 },
+            { "string": 2, "fret": 3, "finger": 3 },
+            { "string": 1, "fret": 2, "finger": 2 }
+          ]
+        },
+        {
+          "id": "D-major-C-form",
+          "position": "C",
+          "name": "D (Forma C)",
+          "baseFret": 2,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 5, "finger": 4 },
+            { "string": 4, "fret": 4, "finger": 3 },
+            { "string": 3, "fret": 2, "finger": 1 },
+            { "string": 2, "fret": 3, "finger": 2 },
+            { "string": 1, "fret": 2, "finger": 1 }
+          ]
+        },
+        {
+          "id": "D-major-A-form",
+          "position": "A",
+          "name": "D (Forma A)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 5, "finger": 1 },
+            { "string": 4, "fret": 7, "finger": 3 },
+            { "string": 3, "fret": 7, "finger": 4 },
+            { "string": 2, "fret": 7, "finger": 2 },
+            { "string": 1, "fret": 5, "finger": 1 }
+          ],
+          "barre": { "fret": 5, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "D-major-G-form",
+          "position": "G",
+          "name": "D (Forma G)",
+          "baseFret": 7,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 10, "finger": 4 },
+            { "string": 5, "fret": 9, "finger": 3 },
+            { "string": 4, "fret": 7, "finger": 1 },
+            { "string": 3, "fret": 7, "finger": 1 },
+            { "string": 2, "fret": 7, "finger": 1 },
+            { "string": 1, "fret": 10, "finger": 4 }
+          ],
+          "barre": { "fret": 7, "fromString": 2, "toString": 4 }
+        },
+        {
+          "id": "D-major-E-form",
+          "position": "E",
+          "name": "D (Forma E)",
+          "baseFret": 10,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 10, "finger": 1 },
+            { "string": 5, "fret": 12, "finger": 3 },
+            { "string": 4, "fret": 12, "finger": 4 },
+            { "string": 3, "fret": 11, "finger": 2 },
+            { "string": 2, "fret": 10, "finger": 1 },
+            { "string": 1, "fret": 10, "finger": 1 }
+          ],
+          "barre": { "fret": 10, "fromString": 1, "toString": 6 }
+        }
+      ]
+    },
+
+    {
+      "id": "E-major",
+      "name": "E",
+      "fullName": "E Major",
+      "quality": "major",
+      "root": "E",
+      "notes": ["E", "G#", "B"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "E-major-E-form",
+          "position": "E",
+          "name": "E (Forma E)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 0, "finger": 0 },
+            { "string": 5, "fret": 2, "finger": 2 },
+            { "string": 4, "fret": 2, "finger": 3 },
+            { "string": 3, "fret": 1, "finger": 1 },
+            { "string": 2, "fret": 0, "finger": 0 },
+            { "string": 1, "fret": 0, "finger": 0 }
+          ]
+        },
+        {
+          "id": "E-major-D-form",
+          "position": "D",
+          "name": "E (Forma D)",
+          "baseFret": 2,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 2, "finger": 1 },
+            { "string": 3, "fret": 4, "finger": 2 },
+            { "string": 2, "fret": 5, "finger": 4 },
+            { "string": 1, "fret": 4, "finger": 3 }
+          ]
+        },
+        {
+          "id": "E-major-C-form",
+          "position": "C",
+          "name": "E (Forma C)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 7, "finger": 4 },
+            { "string": 4, "fret": 6, "finger": 3 },
+            { "string": 3, "fret": 4, "finger": 1 },
+            { "string": 2, "fret": 5, "finger": 2 },
+            { "string": 1, "fret": 4, "finger": 1 }
+          ]
+        },
+        {
+          "id": "E-major-A-form",
+          "position": "A",
+          "name": "E (Forma A)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 7, "finger": 1 },
+            { "string": 4, "fret": 9, "finger": 3 },
+            { "string": 3, "fret": 9, "finger": 4 },
+            { "string": 2, "fret": 9, "finger": 2 },
+            { "string": 1, "fret": 7, "finger": 1 }
+          ],
+          "barre": { "fret": 7, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "E-major-G-form",
+          "position": "G",
+          "name": "E (Forma G)",
+          "baseFret": 9,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 12, "finger": 4 },
+            { "string": 5, "fret": 11, "finger": 3 },
+            { "string": 4, "fret": 9, "finger": 1 },
+            { "string": 3, "fret": 9, "finger": 1 },
+            { "string": 2, "fret": 9, "finger": 1 },
+            { "string": 1, "fret": 12, "finger": 4 }
+          ],
+          "barre": { "fret": 9, "fromString": 2, "toString": 4 }
+        }
+      ]
+    },
+
+    {
+      "id": "F-major",
+      "name": "F",
+      "fullName": "F Major",
+      "quality": "major",
+      "root": "F",
+      "notes": ["F", "A", "C"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "F-major-E-form",
+          "position": "E",
+          "name": "F (Forma E)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 1, "finger": 1 },
+            { "string": 5, "fret": 3, "finger": 3 },
+            { "string": 4, "fret": 3, "finger": 4 },
+            { "string": 3, "fret": 2, "finger": 2 },
+            { "string": 2, "fret": 1, "finger": 1 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ],
+          "barre": { "fret": 1, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "F-major-D-form",
+          "position": "D",
+          "name": "F (Forma D)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 3, "finger": 1 },
+            { "string": 3, "fret": 5, "finger": 3 },
+            { "string": 2, "fret": 6, "finger": 4 },
+            { "string": 1, "fret": 5, "finger": 2 }
+          ]
+        },
+        {
+          "id": "F-major-C-form",
+          "position": "C",
+          "name": "F (Forma C)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 8, "finger": 4 },
+            { "string": 4, "fret": 7, "finger": 3 },
+            { "string": 3, "fret": 5, "finger": 1 },
+            { "string": 2, "fret": 6, "finger": 2 },
+            { "string": 1, "fret": 5, "finger": 1 }
+          ]
+        },
+        {
+          "id": "F-major-A-form",
+          "position": "A",
+          "name": "F (Forma A)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 8, "finger": 1 },
+            { "string": 4, "fret": 10, "finger": 3 },
+            { "string": 3, "fret": 10, "finger": 4 },
+            { "string": 2, "fret": 10, "finger": 2 },
+            { "string": 1, "fret": 8, "finger": 1 }
+          ],
+          "barre": { "fret": 8, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "F-major-G-form",
+          "position": "G",
+          "name": "F (Forma G)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 13, "finger": 4 },
+            { "string": 5, "fret": 12, "finger": 3 },
+            { "string": 4, "fret": 10, "finger": 1 },
+            { "string": 3, "fret": 10, "finger": 1 },
+            { "string": 2, "fret": 10, "finger": 1 },
+            { "string": 1, "fret": 13, "finger": 4 }
+          ],
+          "barre": { "fret": 10, "fromString": 2, "toString": 4 }
+        }
+      ]
+    },
+
+    {
+      "id": "G-major",
+      "name": "G",
+      "fullName": "G Major",
+      "quality": "major",
+      "root": "G",
+      "notes": ["G", "B", "D"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "G-major-G-form",
+          "position": "G",
+          "name": "G (Forma G)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 3, "finger": 3 },
+            { "string": 5, "fret": 2, "finger": 2 },
+            { "string": 4, "fret": 0, "finger": 0 },
+            { "string": 3, "fret": 0, "finger": 0 },
+            { "string": 2, "fret": 0, "finger": 0 },
+            { "string": 1, "fret": 3, "finger": 4 }
+          ]
+        },
+        {
+          "id": "G-major-E-form",
+          "position": "E",
+          "name": "G (Forma E)",
+          "baseFret": 3,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 3, "finger": 1 },
+            { "string": 5, "fret": 5, "finger": 3 },
+            { "string": 4, "fret": 5, "finger": 4 },
+            { "string": 3, "fret": 4, "finger": 2 },
+            { "string": 2, "fret": 3, "finger": 1 },
+            { "string": 1, "fret": 3, "finger": 1 }
+          ],
+          "barre": { "fret": 3, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "G-major-D-form",
+          "position": "D",
+          "name": "G (Forma D)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 5, "finger": 1 },
+            { "string": 3, "fret": 7, "finger": 3 },
+            { "string": 2, "fret": 8, "finger": 4 },
+            { "string": 1, "fret": 7, "finger": 2 }
+          ]
+        },
+        {
+          "id": "G-major-C-form",
+          "position": "C",
+          "name": "G (Forma C)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 10, "finger": 4 },
+            { "string": 4, "fret": 9, "finger": 3 },
+            { "string": 3, "fret": 7, "finger": 1 },
+            { "string": 2, "fret": 8, "finger": 2 },
+            { "string": 1, "fret": 7, "finger": 1 }
+          ]
+        },
+        {
+          "id": "G-major-A-form",
+          "position": "A",
+          "name": "G (Forma A)",
+          "baseFret": 10,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 10, "finger": 1 },
+            { "string": 4, "fret": 12, "finger": 3 },
+            { "string": 3, "fret": 12, "finger": 4 },
+            { "string": 2, "fret": 12, "finger": 2 },
+            { "string": 1, "fret": 10, "finger": 1 }
+          ],
+          "barre": { "fret": 10, "fromString": 1, "toString": 5 }
+        }
+      ]
+    },
+
+    {
+      "id": "A-major",
+      "name": "A",
+      "fullName": "A Major",
+      "quality": "major",
+      "root": "A",
+      "notes": ["A", "C#", "E"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "easy",
+      "tags": ["beginner", "common", "open"],
+
+      "guitarShapes": [
+        {
+          "id": "A-major-A-form",
+          "position": "A",
+          "name": "A (Forma A)",
+          "baseFret": 1,
+          "difficulty": "easy",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 0, "finger": 0 },
+            { "string": 4, "fret": 2, "finger": 2 },
+            { "string": 3, "fret": 2, "finger": 3 },
+            { "string": 2, "fret": 2, "finger": 1 },
+            { "string": 1, "fret": 0, "finger": 0 }
+          ]
+        },
+        {
+          "id": "A-major-G-form",
+          "position": "G",
+          "name": "A (Forma G)",
+          "baseFret": 2,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 5, "finger": 4 },
+            { "string": 5, "fret": 4, "finger": 3 },
+            { "string": 4, "fret": 2, "finger": 1 },
+            { "string": 3, "fret": 2, "finger": 1 },
+            { "string": 2, "fret": 2, "finger": 1 },
+            { "string": 1, "fret": 5, "finger": 4 }
+          ],
+          "barre": { "fret": 2, "fromString": 2, "toString": 4 }
+        },
+        {
+          "id": "A-major-E-form",
+          "position": "E",
+          "name": "A (Forma E)",
+          "baseFret": 5,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 5, "finger": 1 },
+            { "string": 5, "fret": 7, "finger": 3 },
+            { "string": 4, "fret": 7, "finger": 4 },
+            { "string": 3, "fret": 6, "finger": 2 },
+            { "string": 2, "fret": 5, "finger": 1 },
+            { "string": 1, "fret": 5, "finger": 1 }
+          ],
+          "barre": { "fret": 5, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "A-major-D-form",
+          "position": "D",
+          "name": "A (Forma D)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 7, "finger": 1 },
+            { "string": 3, "fret": 9, "finger": 3 },
+            { "string": 2, "fret": 10, "finger": 4 },
+            { "string": 1, "fret": 9, "finger": 2 }
+          ]
+        },
+        {
+          "id": "A-major-C-form",
+          "position": "C",
+          "name": "A (Forma C)",
+          "baseFret": 9,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 12, "finger": 4 },
+            { "string": 4, "fret": 11, "finger": 3 },
+            { "string": 3, "fret": 9, "finger": 1 },
+            { "string": 2, "fret": 10, "finger": 2 },
+            { "string": 1, "fret": 9, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "B-major",
+      "name": "B",
+      "fullName": "B Major",
+      "quality": "major",
+      "root": "B",
+      "notes": ["B", "D#", "F#"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "medium",
+      "tags": ["common", "barre"],
+
+      "guitarShapes": [
+        {
+          "id": "B-major-A-form",
+          "position": "A",
+          "name": "B (Forma A)",
+          "baseFret": 2,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 2, "finger": 1 },
+            { "string": 4, "fret": 4, "finger": 3 },
+            { "string": 3, "fret": 4, "finger": 4 },
+            { "string": 2, "fret": 4, "finger": 2 },
+            { "string": 1, "fret": 2, "finger": 1 }
+          ],
+          "barre": { "fret": 2, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "B-major-G-form",
+          "position": "G",
+          "name": "B (Forma G)",
+          "baseFret": 4,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 7, "finger": 4 },
+            { "string": 5, "fret": 6, "finger": 3 },
+            { "string": 4, "fret": 4, "finger": 1 },
+            { "string": 3, "fret": 4, "finger": 1 },
+            { "string": 2, "fret": 4, "finger": 1 },
+            { "string": 1, "fret": 7, "finger": 4 }
+          ],
+          "barre": { "fret": 4, "fromString": 2, "toString": 4 }
+        },
+        {
+          "id": "B-major-E-form",
+          "position": "E",
+          "name": "B (Forma E)",
+          "baseFret": 7,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 7, "finger": 1 },
+            { "string": 5, "fret": 9, "finger": 3 },
+            { "string": 4, "fret": 9, "finger": 4 },
+            { "string": 3, "fret": 8, "finger": 2 },
+            { "string": 2, "fret": 7, "finger": 1 },
+            { "string": 1, "fret": 7, "finger": 1 }
+          ],
+          "barre": { "fret": 7, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "B-major-D-form",
+          "position": "D",
+          "name": "B (Forma D)",
+          "baseFret": 9,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 9, "finger": 1 },
+            { "string": 3, "fret": 11, "finger": 3 },
+            { "string": 2, "fret": 12, "finger": 4 },
+            { "string": 1, "fret": 11, "finger": 2 }
+          ]
+        },
+        {
+          "id": "B-major-C-form",
+          "position": "C",
+          "name": "B (Forma C)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 14, "finger": 4 },
+            { "string": 4, "fret": 13, "finger": 3 },
+            { "string": 3, "fret": 11, "finger": 1 },
+            { "string": 2, "fret": 12, "finger": 2 },
+            { "string": 1, "fret": 11, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Db-major",
+      "name": "Db",
+      "fullName": "D♭ Major",
+      "quality": "major",
+      "root": "Db",
+      "notes": ["Db", "F", "Ab"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre", "common"],
+
+      "guitarShapes": [
+        {
+          "id": "Db-major-A-form",
+          "position": "A",
+          "name": "Db (Forma A)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 4, "finger": 1 },
+            { "string": 4, "fret": 6, "finger": 3 },
+            { "string": 3, "fret": 6, "finger": 4 },
+            { "string": 2, "fret": 6, "finger": 2 },
+            { "string": 1, "fret": 4, "finger": 1 }
+          ],
+          "barre": { "fret": 4, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Db-major-G-form",
+          "position": "G",
+          "name": "Db (Forma G)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 4, "finger": 3 },
+            { "string": 5, "fret": 3, "finger": 2 },
+            { "string": 4, "fret": 1, "finger": 1 },
+            { "string": 3, "fret": 1, "finger": 1 },
+            { "string": 2, "fret": 1, "finger": 1 },
+            { "string": 1, "fret": 4, "finger": 4 }
+          ],
+          "barre": { "fret": 1, "fromString": 2, "toString": 4 }
+        },
+        {
+          "id": "Db-major-E-form",
+          "position": "E",
+          "name": "Db (Forma E)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 4, "finger": 1 },
+            { "string": 5, "fret": 6, "finger": 3 },
+            { "string": 4, "fret": 6, "finger": 4 },
+            { "string": 3, "fret": 5, "finger": 2 },
+            { "string": 2, "fret": 4, "finger": 1 },
+            { "string": 1, "fret": 4, "finger": 1 }
+          ],
+          "barre": { "fret": 4, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Db-major-D-form",
+          "position": "D",
+          "name": "Db (Forma D)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 1, "finger": 1 },
+            { "string": 3, "fret": 3, "finger": 3 },
+            { "string": 2, "fret": 4, "finger": 4 },
+            { "string": 1, "fret": 3, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Db-major-C-form",
+          "position": "C",
+          "name": "Db (Forma C)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 4, "finger": 4 },
+            { "string": 4, "fret": 3, "finger": 3 },
+            { "string": 3, "fret": 1, "finger": 1 },
+            { "string": 2, "fret": 2, "finger": 2 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Eb-major",
+      "name": "Eb",
+      "fullName": "E♭ Major",
+      "quality": "major",
+      "root": "Eb",
+      "notes": ["Eb", "G", "Bb"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre", "common"],
+
+      "guitarShapes": [
+        {
+          "id": "Eb-major-E-form",
+          "position": "E",
+          "name": "Eb (Forma E)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 6, "finger": 1 },
+            { "string": 5, "fret": 8, "finger": 3 },
+            { "string": 4, "fret": 8, "finger": 4 },
+            { "string": 3, "fret": 7, "finger": 2 },
+            { "string": 2, "fret": 6, "finger": 1 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ],
+          "barre": { "fret": 6, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Eb-major-D-form",
+          "position": "D",
+          "name": "Eb (Forma D)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 1, "finger": 1 },
+            { "string": 3, "fret": 3, "finger": 2 },
+            { "string": 2, "fret": 4, "finger": 4 },
+            { "string": 1, "fret": 3, "finger": 3 }
+          ]
+        },
+        {
+          "id": "Eb-major-C-form",
+          "position": "C",
+          "name": "Eb (Forma C)",
+          "baseFret": 3,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 6, "finger": 4 },
+            { "string": 4, "fret": 5, "finger": 3 },
+            { "string": 3, "fret": 3, "finger": 1 },
+            { "string": 2, "fret": 4, "finger": 2 },
+            { "string": 1, "fret": 3, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Eb-major-A-form",
+          "position": "A",
+          "name": "Eb (Forma A)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 6, "finger": 1 },
+            { "string": 4, "fret": 8, "finger": 3 },
+            { "string": 3, "fret": 8, "finger": 4 },
+            { "string": 2, "fret": 8, "finger": 2 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ],
+          "barre": { "fret": 6, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Eb-major-G-form",
+          "position": "G",
+          "name": "Eb (Forma G)",
+          "baseFret": 8,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 11, "finger": 4 },
+            { "string": 5, "fret": 10, "finger": 3 },
+            { "string": 4, "fret": 8, "finger": 1 },
+            { "string": 3, "fret": 8, "finger": 1 },
+            { "string": 2, "fret": 8, "finger": 1 },
+            { "string": 1, "fret": 11, "finger": 4 }
+          ],
+          "barre": { "fret": 8, "fromString": 2, "toString": 4 }
+        }
+      ]
+    },
+
+    {
+      "id": "Gb-major",
+      "name": "F#",
+      "fullName": "F# Major",
+      "quality": "major",
+      "root": "F#",
+      "notes": ["F#", "A#", "C#"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre", "common"],
+
+      "guitarShapes": [
+        {
+          "id": "Gb-major-E-form",
+          "position": "E",
+          "name": "F# (Forma E)",
+          "baseFret": 2,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": 2, "finger": 1 },
+            { "string": 5, "fret": 4, "finger": 3 },
+            { "string": 4, "fret": 4, "finger": 4 },
+            { "string": 3, "fret": 3, "finger": 2 },
+            { "string": 2, "fret": 2, "finger": 1 },
+            { "string": 1, "fret": 2, "finger": 1 }
+          ],
+          "barre": { "fret": 2, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Gb-major-D-form",
+          "position": "D",
+          "name": "F# (Forma D)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 4, "finger": 1 },
+            { "string": 3, "fret": 6, "finger": 3 },
+            { "string": 2, "fret": 7, "finger": 4 },
+            { "string": 1, "fret": 6, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Gb-major-C-form",
+          "position": "C",
+          "name": "F# (Forma C)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 9, "finger": 4 },
+            { "string": 4, "fret": 8, "finger": 3 },
+            { "string": 3, "fret": 6, "finger": 1 },
+            { "string": 2, "fret": 7, "finger": 2 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ]
+        },
+        {
+          "id": "Gb-major-A-form",
+          "position": "A",
+          "name": "F# (Forma A)",
+          "baseFret": 9,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 9, "finger": 1 },
+            { "string": 4, "fret": 11, "finger": 3 },
+            { "string": 3, "fret": 11, "finger": 4 },
+            { "string": 2, "fret": 11, "finger": 2 },
+            { "string": 1, "fret": 9, "finger": 1 }
+          ],
+          "barre": { "fret": 9, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Gb-major-G-form",
+          "position": "G",
+          "name": "F# (Forma G)",
+          "baseFret": 11,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 14, "finger": 4 },
+            { "string": 5, "fret": 13, "finger": 3 },
+            { "string": 4, "fret": 11, "finger": 1 },
+            { "string": 3, "fret": 11, "finger": 1 },
+            { "string": 2, "fret": 11, "finger": 1 },
+            { "string": 1, "fret": 14, "finger": 4 }
+          ],
+          "barre": { "fret": 11, "fromString": 2, "toString": 4 }
+        }
+      ]
+    },
+
+    {
+      "id": "Ab-major",
+      "name": "Ab",
+      "fullName": "A♭ Major",
+      "quality": "major",
+      "root": "Ab",
+      "notes": ["Ab", "C", "Eb"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre", "common"],
+
+      "guitarShapes": [
+        {
+          "id": "Ab-major-A-form",
+          "position": "A",
+          "name": "Ab (Forma A)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 1, "finger": 1 },
+            { "string": 4, "fret": 3, "finger": 3 },
+            { "string": 3, "fret": 3, "finger": 4 },
+            { "string": 2, "fret": 3, "finger": 2 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ],
+          "barre": { "fret": 1, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Ab-major-G-form",
+          "position": "G",
+          "name": "Ab (Forma G)",
+          "baseFret": 1,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 4, "finger": 4 },
+            { "string": 5, "fret": 3, "finger": 3 },
+            { "string": 4, "fret": 1, "finger": 1 },
+            { "string": 3, "fret": 1, "finger": 1 },
+            { "string": 2, "fret": 1, "finger": 1 },
+            { "string": 1, "fret": 4, "finger": 4 }
+          ],
+          "barre": { "fret": 1, "fromString": 2, "toString": 4 }
+        },
+        {
+          "id": "Ab-major-E-form",
+          "position": "E",
+          "name": "Ab (Forma E)",
+          "baseFret": 4,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 4, "finger": 1 },
+            { "string": 5, "fret": 6, "finger": 3 },
+            { "string": 4, "fret": 6, "finger": 4 },
+            { "string": 3, "fret": 5, "finger": 2 },
+            { "string": 2, "fret": 4, "finger": 1 },
+            { "string": 1, "fret": 4, "finger": 1 }
+          ],
+          "barre": { "fret": 4, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Ab-major-D-form",
+          "position": "D",
+          "name": "Ab (Forma D)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 6, "finger": 1 },
+            { "string": 3, "fret": 8, "finger": 3 },
+            { "string": 2, "fret": 9, "finger": 4 },
+            { "string": 1, "fret": 8, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Ab-major-C-form",
+          "position": "C",
+          "name": "Ab (Forma C)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 11, "finger": 4 },
+            { "string": 4, "fret": 10, "finger": 3 },
+            { "string": 3, "fret": 8, "finger": 1 },
+            { "string": 2, "fret": 9, "finger": 2 },
+            { "string": 1, "fret": 8, "finger": 1 }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "Bb-major",
+      "name": "Bb",
+      "fullName": "B♭ Major",
+      "quality": "major",
+      "root": "Bb",
+      "notes": ["Bb", "D", "F"],
+      "intervals": ["1", "3", "5"],
+      "difficulty": "medium",
+      "tags": ["barre", "common"],
+
+      "guitarShapes": [
+        {
+          "id": "Bb-major-A-form",
+          "position": "A",
+          "name": "Bb (Forma A)",
+          "baseFret": 1,
+          "difficulty": "medium",
+          "isDefault": true,
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 1, "finger": 1 },
+            { "string": 4, "fret": 3, "finger": 3 },
+            { "string": 3, "fret": 3, "finger": 4 },
+            { "string": 2, "fret": 3, "finger": 2 },
+            { "string": 1, "fret": 1, "finger": 1 }
+          ],
+          "barre": { "fret": 1, "fromString": 1, "toString": 5 }
+        },
+        {
+          "id": "Bb-major-G-form",
+          "position": "G",
+          "name": "Bb (Forma G)",
+          "baseFret": 3,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": 6, "finger": 4 },
+            { "string": 5, "fret": 5, "finger": 3 },
+            { "string": 4, "fret": 3, "finger": 1 },
+            { "string": 3, "fret": 3, "finger": 1 },
+            { "string": 2, "fret": 3, "finger": 1 },
+            { "string": 1, "fret": 6, "finger": 4 }
+          ],
+          "barre": { "fret": 3, "fromString": 2, "toString": 4 }
+        },
+        {
+          "id": "Bb-major-E-form",
+          "position": "E",
+          "name": "Bb (Forma E)",
+          "baseFret": 6,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": 6, "finger": 1 },
+            { "string": 5, "fret": 8, "finger": 3 },
+            { "string": 4, "fret": 8, "finger": 4 },
+            { "string": 3, "fret": 7, "finger": 2 },
+            { "string": 2, "fret": 6, "finger": 1 },
+            { "string": 1, "fret": 6, "finger": 1 }
+          ],
+          "barre": { "fret": 6, "fromString": 1, "toString": 6 }
+        },
+        {
+          "id": "Bb-major-D-form",
+          "position": "D",
+          "name": "Bb (Forma D)",
+          "baseFret": 8,
+          "difficulty": "medium",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": -1 },
+            { "string": 4, "fret": 8, "finger": 1 },
+            { "string": 3, "fret": 10, "finger": 3 },
+            { "string": 2, "fret": 11, "finger": 4 },
+            { "string": 1, "fret": 10, "finger": 2 }
+          ]
+        },
+        {
+          "id": "Bb-major-C-form",
+          "position": "C",
+          "name": "Bb (Forma C)",
+          "baseFret": 10,
+          "difficulty": "hard",
+          "notes": [
+            { "string": 6, "fret": -1 },
+            { "string": 5, "fret": 13, "finger": 4 },
+            { "string": 4, "fret": 12, "finger": 3 },
+            { "string": 3, "fret": 10, "finger": 1 },
+            { "string": 2, "fret": 11, "finger": 2 },
+            { "string": 1, "fret": 10, "finger": 1 }
+          ]
+        }
+      ]
+    }
+  ]
+}

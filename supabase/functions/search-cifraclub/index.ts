@@ -1,11 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 interface SearchResult {
   title: string;
-  artist: string;
   url: string;
-  imageUrl?: string;
+  description: string;
 }
 
 serve(async (req) => {
@@ -29,89 +27,74 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[search-cifraclub] Buscando: ${query}`);
+    console.log(`[search-cifraclub] Buscador Web - Pesquisando: "${query}"`);
 
-    // Usa o Google para buscar no site do CifraClub
-    const googleSearchUrl = `https://www.google.com/search?q=site:cifraclub.com.br+${encodeURIComponent(query)}`;
+    const results: SearchResult[] = [];
 
-    const response = await fetch(googleSearchUrl, {
+    // Busca usando DuckDuckGo HTML (mais amigável que Google)
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query + ' cifra')}`;
+
+    const response = await fetch(searchUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Erro na busca do Google: ${response.status}`);
+      console.error(`[search-cifraclub] Erro ao buscar: ${response.status}`);
+      return new Response(
+        JSON.stringify({ results: [] }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     const html = await response.text();
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+    console.log(`[search-cifraclub] HTML recebido: ${html.length} caracteres`);
 
-    if (!doc) {
-      throw new Error('Erro ao parsear HTML');
-    }
+    // Extrai links dos resultados (DuckDuckGo usa class="result__url")
+    const linkPattern = /<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/g;
+    const snippetPattern = /<a[^>]+class="result__snippet"[^>]*>([^<]+)<\/a>/g;
 
-    const results: SearchResult[] = [];
-    const seen = new Set<string>();
+    const linkMatches = [...html.matchAll(linkPattern)];
+    const snippetMatches = [...html.matchAll(snippetPattern)];
 
-    // Procura por links nos resultados do Google
-    const allLinks = doc.querySelectorAll('a');
+    console.log(`[search-cifraclub] Links encontrados: ${linkMatches.length}`);
 
-    console.log(`[search-cifraclub] Processando ${allLinks.length} links do Google`);
+    // Processa resultados do DuckDuckGo
+    for (let i = 0; i < Math.min(linkMatches.length, 15); i++) {
+      const linkMatch = linkMatches[i];
+      let url = linkMatch[1];
+      const title = linkMatch[2];
+      const description = snippetMatches[i] ? snippetMatches[i][1] : `Resultado da busca por: ${query}`;
 
-    for (const linkEl of allLinks) {
-      try {
-        const href = linkEl.getAttribute('href');
-        if (!href) continue;
-
-        // Extrai URL do formato do Google: /url?q=URL_REAL
-        let realUrl = '';
-        if (href.includes('/url?q=')) {
-          const urlMatch = href.match(/\/url\?q=([^&]+)/);
-          if (urlMatch && urlMatch[1]) {
-            realUrl = decodeURIComponent(urlMatch[1]);
+      // Extrai a URL real do redirecionamento do DuckDuckGo
+      // URLs do DuckDuckGo vêm como: //duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cifraclub.com.br%2F...
+      if (url.includes('uddg=')) {
+        try {
+          const uddgMatch = url.match(/uddg=([^&]+)/);
+          if (uddgMatch) {
+            url = decodeURIComponent(uddgMatch[1]);
+            console.log(`[search-cifraclub] URL decodificada: ${url}`);
           }
-        } else if (href.includes('cifraclub.com.br/cifra/')) {
-          realUrl = href;
+        } catch (e) {
+          console.error(`[search-cifraclub] Erro ao decodificar URL: ${e}`);
         }
-
-        // Verifica se é uma URL válida do CifraClub com cifra
-        if (!realUrl || !realUrl.includes('cifraclub.com.br/cifra/') || seen.has(realUrl)) {
-          continue;
-        }
-
-        seen.add(realUrl);
-
-        // Extrai informações da URL
-        // Formato: https://www.cifraclub.com.br/cifra/ARTISTA/MUSICA/
-        const urlParts = realUrl.split('/').filter(p => p);
-        let artist = '';
-        let title = '';
-
-        // Encontra os índices de 'cifra', artista e música
-        const cifraIndex = urlParts.findIndex(p => p === 'cifra');
-        if (cifraIndex >= 0 && urlParts.length > cifraIndex + 2) {
-          artist = urlParts[cifraIndex + 1].replace(/-/g, ' ');
-          title = urlParts[cifraIndex + 2].replace(/-/g, ' ');
-        }
-
-        if (title && results.length < 15) {
-          results.push({
-            title: title.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-            artist: artist.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-            url: realUrl,
-            imageUrl: undefined, // Pode adicionar depois se necessário
-          });
-        }
-      } catch (error) {
-        console.error('[search-cifraclub] Erro ao processar link:', error);
-        continue;
       }
+
+      console.log(`[search-cifraclub] Resultado ${i + 1}: ${title}`);
+      console.log(`[search-cifraclub] URL final: ${url}`);
+
+      results.push({
+        title: title,
+        url: url,
+        description: description
+      });
     }
 
-    console.log(`[search-cifraclub] Encontrados ${results.length} resultados`);
+    console.log(`[search-cifraclub] Retornando ${results.length} resultados para o frontend`);
 
     return new Response(
       JSON.stringify({ results }),
@@ -124,8 +107,8 @@ serve(async (req) => {
   } catch (error) {
     console.error('[search-cifraclub] Erro:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Erro ao buscar músicas' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error.message || 'Erro ao buscar músicas', results: [] }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Settings } from "lucide-react";
+import { ArrowLeft, Loader2, Settings, GraduationCap } from "lucide-react";
 import { supabase, getPadUrl, fetchCifraPreview } from "@/lib/supabase";
 import { CifraDisplay } from "@/components/CifraDisplay";
 import { CifraEditor } from "@/components/CifraEditor";
@@ -17,6 +17,9 @@ import {
 } from "@/utils/chordTransposer";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/PullToRefresh";
+import { createNotification } from "@/utils/notifications";
+import { useAuth } from "@/context/AuthContext";
+import { LiveControlsModal } from "@/components/LiveControlsModal";
 
 const PAD_FILE_MAP: Record<string, string> = {
   C: getPadUrl("C Guitar Pads.m4a"),
@@ -93,6 +96,7 @@ const TrackDetails: React.FC = () => {
     trackId: string;
   }>();
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [track, setTrack] = useState<TrackRecord | null>(null);
   const [eventInfo, setEventInfo] = useState<EventRecord | null>(null);
   const [selectedKey, setSelectedKey] = useState<string>("C");
@@ -103,6 +107,7 @@ const TrackDetails: React.FC = () => {
   const [isEditingTrack, setIsEditingTrack] = useState(false);
   const [resolvedCifraContent, setResolvedCifraContent] = useState("");
   const [editorInitialContent, setEditorInitialContent] = useState("");
+  const [showStudyModeDialog, setShowStudyModeDialog] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showSongMap, setShowSongMap] = useState(true);
   const [showSectionOutlines, setShowSectionOutlines] = useState(true);
@@ -115,6 +120,8 @@ const TrackDetails: React.FC = () => {
   const [lyricsOnly, setLyricsOnly] = useState(false); // Somente letras (sem acordes)
   const [isMetronomePlaying, setIsMetronomePlaying] = useState(false); // Estado do metrônomo
   const [metronomeBpm, setMetronomeBpm] = useState(120); // BPM do metrônomo
+  const [isLiveControlsOpen, setIsLiveControlsOpen] = useState(false); // Modal "Ao Vivo"
+  const [selectedPadKey, setSelectedPadKey] = useState<string | null>(null); // Tom do PAD selecionado manualmente
   const metronomeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioContextUnlockedRef = useRef<boolean>(false); // Track se o AudioContext foi desbloqueado
@@ -144,8 +151,18 @@ const TrackDetails: React.FC = () => {
               .single<EventRecord>()
           : Promise.resolve({ data: null, error: null } as any);
 
+        // Busca customizações específicas do evento (custom_key, custom_cifra_content, etc)
+        const eventTrackCustomizationsPromise = shouldFetchEvent
+          ? supabase
+              .from("event_tracks")
+              .select("custom_key, custom_capo, custom_cifra_content, custom_notes")
+              .eq("event_id", eventId)
+              .eq("track_id", trackId)
+              .maybeSingle()
+          : Promise.resolve({ data: null, error: null } as any);
+
         // Busca todas as músicas do evento/playlist para navegação
-        const playlistPromise = eventId && eventId !== "repertorio"
+        const playlistPromise = shouldFetchEvent
           ? supabase
               .from("event_tracks")
               .select("track_id, order_index, tracks(id, titulo, tag, versao, cifra_url)")
@@ -153,14 +170,24 @@ const TrackDetails: React.FC = () => {
               .order("order_index")
           : Promise.resolve({ data: null, error: null } as any);
 
-        const [{ data: trackData, error: trackError }, { data: eventData }, { data: playlistData }] =
-          await Promise.all([trackPromise, eventPromise, playlistPromise]);
+        const [
+          { data: trackData, error: trackError },
+          { data: eventData },
+          { data: customizations },
+          { data: playlistData }
+        ] = await Promise.all([
+          trackPromise,
+          eventPromise,
+          eventTrackCustomizationsPromise,
+          playlistPromise
+        ]);
 
         if (trackError || !trackData) {
           throw trackError || new Error("Faixa não encontrada");
         }
 
-        let resolvedKey = trackData.tom || "";
+        // Aplica lógica de prioridade: customizações do evento sobrescrevem dados globais
+        let resolvedKey = customizations?.custom_key || trackData.tom || "";
         let originalKey = trackData.original_tom || "";
         let shouldPersistKeys = false;
 
@@ -220,10 +247,14 @@ const TrackDetails: React.FC = () => {
           }
         }
 
+        // Aplica lógica de prioridade para cifra também
+        const resolvedCifraContent = customizations?.custom_cifra_content || trackData.cifra_content || "";
+
         setTrack({
           ...trackData,
           tom: normalizedKey,
           original_tom: normalizedOriginalKey,
+          cifra_content: resolvedCifraContent,
         });
         setSelectedKey(normalizedKey);
 
@@ -289,29 +320,68 @@ const TrackDetails: React.FC = () => {
   }, [track?.cifra_content]);
 
 
-  // Função para alterar o tom (salva apenas o tom, não a cifra transposta)
+  // Função para alterar o tom (salva customização por evento, não global)
   const handleKeyChange = async (newKey: string) => {
     if (!trackId || !track) return;
 
     setSelectedKey(newKey);
 
     try {
-      // Salva apenas o tom selecionado, NÃO a cifra transposta
-      const { error } = await supabase
-        .from("tracks")
-        .update({ tom: newKey })
-        .eq("id", trackId);
+      // Se estamos no contexto de um evento, salva a customização em event_tracks
+      // Se não (repertório geral), salva globalmente em tracks
+      if (eventId && eventId !== "repertorio") {
+        const { error } = await supabase
+          .from("event_tracks")
+          .update({ custom_key: newKey })
+          .eq("event_id", eventId)
+          .eq("track_id", trackId);
 
-      if (error) {
-        console.error("Erro ao salvar tom:", error);
+        if (error) {
+          console.error("Erro ao salvar tom customizado:", error);
+          toast.error("Erro ao salvar tom");
+        } else {
+          setTrack((prev) => (prev ? { ...prev, tom: newKey } : prev));
+          // Invalida e força refetch imediato da playlist
+          await queryClient.invalidateQueries({ queryKey: ["playlist", eventId] });
+          await queryClient.refetchQueries({ queryKey: ["playlist", eventId] });
+          toast.success("Tom salvo para este evento");
+
+          // Cria notificação para a equipe
+          if (profile?.churchId) {
+            await createNotification({
+              churchId: profile.churchId,
+              type: "track_key_changed",
+              title: "Tom alterado",
+              message: `${profile.full_name || "Alguém"} alterou o tom de "${track.titulo}" para ${newKey}${eventInfo?.name ? ` no evento "${eventInfo.name}"` : ""}`,
+              metadata: {
+                trackId,
+                trackTitle: track.titulo,
+                newKey,
+                oldKey: track.tom,
+                eventId,
+                eventName: eventInfo?.name,
+              },
+              createdBy: profile.id,
+            });
+          }
+        }
       } else {
-        setTrack((prev) => (prev ? { ...prev, tom: newKey } : prev));
-        if (eventId) {
-          queryClient.invalidateQueries({ queryKey: ["playlist", eventId] });
+        // Repertório geral: salva globalmente
+        const { error } = await supabase
+          .from("tracks")
+          .update({ tom: newKey })
+          .eq("id", trackId);
+
+        if (error) {
+          console.error("Erro ao salvar tom:", error);
+          toast.error("Erro ao salvar tom");
+        } else {
+          setTrack((prev) => (prev ? { ...prev, tom: newKey } : prev));
         }
       }
     } catch (error) {
       console.error("Erro ao salvar tom:", error);
+      toast.error("Erro ao salvar tom");
     }
   };
 
@@ -380,7 +450,7 @@ const TrackDetails: React.FC = () => {
   const startPad = React.useCallback(
     async (keyValue?: string) => {
       const src =
-        getPadSourceForKey(keyValue) ?? getPadSourceForKey(currentPadKey);
+        getPadSourceForKey(keyValue) ?? getPadSourceForKey(selectedPadKey) ?? getPadSourceForKey(currentPadKey);
       if (!src) {
         console.warn("Nenhum pad disponível para esse tom.");
         setIsPadPlaying(false);
@@ -418,11 +488,11 @@ const TrackDetails: React.FC = () => {
       stopPadAudio();
       return;
     }
-    startPad(currentPadKey);
+    startPad(selectedPadKey || currentPadKey);
     return () => {
       stopPadAudio();
     };
-  }, [isPadPlaying, currentPadKey, startPad, stopPadAudio]);
+  }, [isPadPlaying, currentPadKey, selectedPadKey, startPad, stopPadAudio]);
 
   useEffect(() => {
     return () => {
@@ -465,6 +535,12 @@ const TrackDetails: React.FC = () => {
       await unlockAudioContext();
     }
     setIsPadPlaying((prev) => !prev);
+  };
+
+  const handlePadKeyChange = (key: string) => {
+    setSelectedPadKey(key);
+    // Atualizar selectedKey também para sincronizar com a cifra
+    setSelectedKey(key);
   };
 
   const handleMetronomeToggle = async () => {
@@ -636,14 +712,52 @@ const TrackDetails: React.FC = () => {
       throw new Error("Faixa inválida");
     }
 
-    const { error } = await supabase
-      .from("tracks")
-      .update({ cifra_content: newContent })
-      .eq("id", trackId);
+    // Se estamos no contexto de um evento, salva a customização em event_tracks
+    // Se não (repertório geral), salva globalmente em tracks
+    if (eventId && eventId !== "repertorio") {
+      const { error } = await supabase
+        .from("event_tracks")
+        .update({ custom_cifra_content: newContent })
+        .eq("event_id", eventId)
+        .eq("track_id", trackId);
 
-    if (error) {
-      console.error("Erro ao salvar cifra:", error);
-      throw new Error("Não foi possível salvar a cifra.");
+      if (error) {
+        console.error("Erro ao salvar cifra customizada:", error);
+        throw new Error("Não foi possível salvar a cifra.");
+      }
+
+      // Invalida e força refetch imediato da playlist
+      await queryClient.invalidateQueries({ queryKey: ["playlist", eventId] });
+      await queryClient.refetchQueries({ queryKey: ["playlist", eventId] });
+      toast.success("Cifra salva para este evento");
+
+      // Cria notificação para a equipe
+      if (profile?.churchId && track) {
+        await createNotification({
+          churchId: profile.churchId,
+          type: "track_cifra_changed",
+          title: "Cifra alterada",
+          message: `${profile.full_name || "Alguém"} alterou a cifra de "${track.titulo}"${eventInfo?.name ? ` no evento "${eventInfo.name}"` : ""}`,
+          metadata: {
+            trackId,
+            trackTitle: track.titulo,
+            eventId,
+            eventName: eventInfo?.name,
+          },
+          createdBy: profile.id,
+        });
+      }
+    } else {
+      // Repertório geral: salva globalmente
+      const { error } = await supabase
+        .from("tracks")
+        .update({ cifra_content: newContent })
+        .eq("id", trackId);
+
+      if (error) {
+        console.error("Erro ao salvar cifra:", error);
+        throw new Error("Não foi possível salvar a cifra.");
+      }
     }
 
     setTrack((prev) => (prev ? { ...prev, cifra_content: newContent } : prev));
@@ -705,7 +819,7 @@ const TrackDetails: React.FC = () => {
             </h1>
           </div>
 
-          {/* PAD e Settings - Direita */}
+          {/* PAD, Ensaio e Settings - Direita */}
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -717,6 +831,15 @@ const TrackDetails: React.FC = () => {
               }`}
             >
               {isPadPlaying ? "PAD Tocando" : "Iniciar PAD"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowStudyModeDialog(true)}
+              className="p-2 hover:bg-blue-500/20 rounded-full transition-all duration-200 border-2 border-blue-500/50 bg-blue-500/10"
+              aria-label="Modo Ensaio"
+              title="Modo Ensaio / Estudos"
+            >
+              <GraduationCap className="w-6 h-6 text-blue-400 animate-breathe drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]" />
             </button>
             <button
               onClick={() => setIsSidebarOpen(true)}
@@ -761,7 +884,7 @@ const TrackDetails: React.FC = () => {
         {/* Conteúdo principal da cifra - com scroll interno e altura fixa */}
         <div
           ref={containerRef}
-          className={`fixed left-0 right-0 overflow-y-auto ${
+          className={`fixed left-0 right-0 overflow-y-auto safari-smooth-scroll ${
             showSongMap && resolvedCifraContent
               ? 'top-[7.5rem]' // top-14 (56px) + SongMap (~64px)
               : 'top-14'
@@ -828,9 +951,9 @@ const TrackDetails: React.FC = () => {
               onTimeUpdate={handleYouTubeTimeUpdate}
               sectionTimestamps={track.section_timestamps}
               bpm={metronomeBpm}
-              onMetronomeToggle={handleMetronomeToggle}
               isMetronomePlaying={isMetronomePlaying}
-              onBpmChange={setMetronomeBpm}
+              isPadPlaying={isPadPlaying}
+              onLiveControlsClick={() => setIsLiveControlsOpen(true)}
             />
           </div>
         )}
@@ -876,6 +999,99 @@ const TrackDetails: React.FC = () => {
         }}
         trackId={trackId}
       />
+
+      {/* Modal "Ao Vivo" - PAD e Metrônomo */}
+      <LiveControlsModal
+        isOpen={isLiveControlsOpen}
+        onClose={() => setIsLiveControlsOpen(false)}
+        isPadPlaying={isPadPlaying}
+        onPadToggle={handlePadToggle}
+        currentPadKey={selectedPadKey || currentPadKey}
+        onPadKeyChange={handlePadKeyChange}
+        isMetronomePlaying={isMetronomePlaying}
+        onMetronomeToggle={handleMetronomeToggle}
+        metronomeBpm={metronomeBpm}
+        onBpmChange={setMetronomeBpm}
+      />
+
+      {/* Modal de Confirmação - Modo Ensaio */}
+      {showStudyModeDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setShowStudyModeDialog(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-[#0a0a0a] rounded-3xl shadow-2xl border border-blue-500/20 overflow-hidden animate-in fade-in zoom-in duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Thumbnail do vídeo com overlay */}
+            <div className="relative h-48 bg-gradient-to-br from-blue-900/20 to-purple-900/20 overflow-hidden">
+              {track?.referencia && (
+                <>
+                  <img
+                    src={`https://img.youtube.com/vi/${track.referencia.split('v=')[1]?.split('&')[0]}/maxresdefault.jpg`}
+                    alt={track.titulo}
+                    className="w-full h-full object-cover opacity-40"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://img.youtube.com/vi/${track.referencia.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent"></div>
+                </>
+              )}
+
+              {/* Ícone centralizado */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-blue-600/20 backdrop-blur-sm p-6 rounded-full border-2 border-blue-400/50">
+                  <GraduationCap className="w-16 h-16 text-blue-400 drop-shadow-[0_0_12px_rgba(96,165,250,0.8)] animate-breathe" />
+                </div>
+              </div>
+
+              {/* Badge Modo Ensaio */}
+              <div className="absolute top-4 left-4">
+                <div className="bg-blue-600 px-3 py-1 rounded-full text-xs font-bold text-white shadow-lg animate-breathe">
+                  MODO ENSAIO
+                </div>
+              </div>
+            </div>
+
+            {/* Informações da Música */}
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white leading-tight">
+                  {track?.titulo || "Carregando..."}
+                </h3>
+                {track?.tag && (
+                  <p className="text-sm text-blue-400 font-medium">
+                    {track.tag}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-white/60">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                <span>Ferramentas de estudo avançadas</span>
+              </div>
+
+              {/* Botões */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowStudyModeDialog(false)}
+                  className="flex-1 px-5 py-3.5 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl font-semibold transition-all duration-200 border border-white/10"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => navigate(`/study/${trackId}`)}
+                  className="flex-1 px-5 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold transition-all duration-200 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-[1.02]"
+                >
+                  Estudar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

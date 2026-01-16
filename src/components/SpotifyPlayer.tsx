@@ -14,6 +14,7 @@ import {
   GripVertical,
   Trash2,
   Search,
+  Users,
 } from "lucide-react";
 import { DEFAULT_PLAYLIST, useEventPlaylist } from "@/hooks/useEventPlaylist";
 import type { PlaylistTrack } from "@/hooks/useEventPlaylist";
@@ -39,6 +40,7 @@ import { supabase } from "@/lib/supabase";
 import { useSwipeToDelete } from "@/hooks/useSwipeToDelete";
 import { toast } from "sonner";
 import { QuickAddTrackModal } from "@/components/QuickAddTrackModal";
+import { EventTeamModal } from "@/components/EventTeamModal";
 
 const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
@@ -175,7 +177,7 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
           </div>
         </div>
 
-        {/* Botão de play */}
+        {/* Botão de música */}
         <button
           type="button"
           onClick={(e) => {
@@ -183,10 +185,10 @@ const SortableTrackItem: React.FC<SortableTrackItemProps> = ({
             onSelectTrack(track.id);
           }}
           className={cn(
-            "relative z-10 flex-shrink-0 h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50 hover:bg-[#1DB954]/20 transition",
+            "relative z-10 h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-[#1DB954]/10 flex items-center justify-center text-[#1DB954] shadow-inner shadow-black/50 hover:bg-[#1DB954]/20 transition flex-shrink-0",
             isActive && "bg-[#1DB954]/20"
           )}
-          aria-label={`Tocar ${track.title}`}
+          aria-label="Reproduzir música"
         >
           <Music className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
@@ -302,9 +304,38 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
   );
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = React.useState(false);
+  const [isTeamModalOpen, setIsTeamModalOpen] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  // Estado para membros da equipe
+  const [eventMembers, setEventMembers] = React.useState<any[]>([]);
+
+  // Busca membros da equipe
+  React.useEffect(() => {
+    const fetchEventMembers = async () => {
+      const { data, error } = await supabase
+        .from("event_members")
+        .select(`
+          id,
+          role,
+          profile:profiles (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq("event_id", eventId)
+        .limit(4);
+
+      if (!error && data) {
+        setEventMembers(data);
+      }
+    };
+
+    fetchEventMembers();
+  }, [eventId, isTeamModalOpen]);
 
   const currentTrack = React.useMemo(
     () => tracks.find((track) => track.id === currentTrackId) ?? null,
@@ -621,16 +652,52 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
             </p>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
               <button
-                onClick={() => setIsQuickAddOpen(true)}
+                onClick={() => navigate('/search')}
                 className="flex items-center gap-1.5 rounded-full bg-[#1DB954]/10 hover:bg-[#1DB954]/20 px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-[#1DB954] transition-colors whitespace-nowrap"
-                aria-label="Adicionar música à playlist"
+                aria-label="Buscar músicas"
               >
                 <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Adicionar</span>
+                <span className="hidden sm:inline">Buscar</span>
               </button>
-              <span className="rounded-full bg-[#1DB954]/10 px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-semibold text-[#1DB954] whitespace-nowrap">
-                {trackCountLabel}
-              </span>
+              {/* Avatares dos membros da equipe */}
+              <button
+                onClick={() => setIsTeamModalOpen(true)}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                aria-label="Gerenciar equipe do evento"
+              >
+                {eventMembers.length > 0 ? (
+                  <div className="flex items-center -space-x-2">
+                    {eventMembers.slice(0, 4).map((member, index) => (
+                      <div
+                        key={member.id}
+                        className="relative inline-block"
+                        style={{ zIndex: 4 - index }}
+                      >
+                        {member.profile?.avatar_url ? (
+                          <img
+                            src={member.profile.avatar_url}
+                            alt={member.profile.full_name || "Membro"}
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#121212] object-cover"
+                            title={member.profile.full_name || "Membro da equipe"}
+                          />
+                        ) : (
+                          <div
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#121212] bg-[#1DB954]/20 flex items-center justify-center text-[#1DB954] text-xs font-semibold"
+                            title={member.profile?.full_name || "Membro da equipe"}
+                          >
+                            {(member.profile?.full_name?.[0] || "?").toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 rounded-full bg-[#1DB954]/10 hover:bg-[#1DB954]/20 px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-semibold text-[#1DB954] transition-colors whitespace-nowrap">
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Equipe</span>
+                  </div>
+                )}
+              </button>
               {isSavingOrder && (
                 <span className="text-xs text-white/50 animate-pulse">
                   Salvando ordem...
@@ -762,6 +829,16 @@ const SpotifyPlayer: React.FC<SpotifyPlayerProps> = ({ filter, eventId }) => {
         onSuccess={() => {
           refetch();
           setIsQuickAddOpen(false);
+        }}
+      />
+
+      {/* Modal de gerenciar equipe */}
+      <EventTeamModal
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
+        eventId={eventId}
+        onSuccess={() => {
+          setIsTeamModalOpen(false);
         }}
       />
     </section>

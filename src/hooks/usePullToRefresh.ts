@@ -20,7 +20,12 @@ export const usePullToRefresh = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    // Desabilitar completamente no Safari iOS para evitar conflitos com scroll
+    const isSafariIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+                       /Safari/.test(navigator.userAgent) &&
+                       !/Chrome|CriOS|FxiOS/.test(navigator.userAgent);
+
+    if (!enabled || isSafariIOS) return;
 
     const container = containerRef.current;
     if (!container) return;
@@ -46,7 +51,10 @@ export const usePullToRefresh = ({
       // Só permite pull para baixo (distância positiva) e com distância mínima
       if (distance > 5) {
         // Previne o scroll padrão apenas quando está puxando para baixo
-        e.preventDefault();
+        // Verifica se pode prevenir (Safari iOS pode bloquear preventDefault)
+        if (e.cancelable) {
+          e.preventDefault();
+        }
 
         // Aplica resistência: quanto mais puxa, mais difícil fica
         const resistance = 0.5;
@@ -57,7 +65,7 @@ export const usePullToRefresh = ({
       }
     };
 
-    const handleTouchEnd = async () => {
+    const handleTouchEnd = async (e: TouchEvent) => {
       const currentPullDistance = pullDistance;
 
       // Reseta imediatamente o estado visual
@@ -65,6 +73,12 @@ export const usePullToRefresh = ({
       setIsPulling(false);
       startY.current = 0;
       isAtTop = false;
+
+      // Previne bounce do Safari apenas se não está fazendo refresh
+      if (currentPullDistance > 5 && currentPullDistance < threshold) {
+        // Se estava puxando mas não atingiu o threshold, permite scroll normal
+        return;
+      }
 
       // Executa refresh se passou do threshold
       if (currentPullDistance > threshold && !isRefreshing) {

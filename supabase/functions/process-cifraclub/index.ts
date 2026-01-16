@@ -12,6 +12,10 @@ import {
   parseVersion,
   parseYouTubeUrl,
 } from './parser.ts'
+import {
+  extractUniqueChords,
+  saveChordsToDB,
+} from './chord-extractor.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -106,6 +110,7 @@ serve(async (req) => {
           version: version || null,
           key: key || null,
           youtubeUrl: youtubeUrl || null,
+          content: extractedContent || null,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -164,6 +169,38 @@ serve(async (req) => {
       throw updateError
     }
 
+    // 🎸 NOVIDADE: Extrair e salvar acordes na biblioteca global
+    console.log('🎸 Extraindo acordes da cifra para biblioteca global...')
+
+    let chordsSaved = 0
+    let chordsErrors = 0
+
+    try {
+      // Extrai acordes únicos da cifra
+      const uniqueChords = extractUniqueChords(extractedContent)
+
+      if (uniqueChords.length > 0) {
+        // Busca church_id da track
+        const { data: trackData } = await supabaseClient
+          .from('tracks')
+          .select('church_id')
+          .eq('id', trackId)
+          .single()
+
+        const churchId = trackData?.church_id || ''
+
+        // Salva acordes no banco (apenas os que ainda não existem)
+        const result = await saveChordsToDB(supabaseClient, uniqueChords, churchId)
+        chordsSaved = result.saved
+        chordsErrors = result.errors
+
+        console.log(`🎸 Acordes salvos: ${chordsSaved}, Erros: ${chordsErrors}`)
+      }
+    } catch (chordError) {
+      console.error('Erro ao processar acordes:', chordError)
+      // Não falha a requisição se houver erro nos acordes
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -174,6 +211,10 @@ serve(async (req) => {
         key: key || null,
         version: version || null,
         title: title || null,
+        chords: {
+          saved: chordsSaved,
+          errors: chordsErrors,
+        },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

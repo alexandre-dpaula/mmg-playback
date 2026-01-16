@@ -42,7 +42,7 @@ const SECTION_COLORS: Record<string, { borderColor: string; textColor: string }>
 };
 
 const getSectionType = (sectionText: string): string | null => {
-  const cleaned = sectionText.replace(/[\[\]]/g, '').trim().toUpperCase();
+  const cleaned = sectionText.replace(/[[\]]/g, '').trim().toUpperCase();
   if (cleaned.startsWith('INTRO') || cleaned === 'I') return 'I';
   if (cleaned.startsWith('VERS') || /^V\d*$/.test(cleaned)) return 'V';
   if (cleaned.startsWith('SOLO') || /^S\d*$/.test(cleaned)) return 'S';
@@ -60,7 +60,7 @@ const getSectionType = (sectionText: string): string | null => {
 
 // Normaliza o nome da seção para criar IDs compatíveis com o SongMap
 const normalizeSectionLabel = (sectionText: string): string => {
-  let rawType = sectionText.toUpperCase().trim();
+  const rawType = sectionText.toUpperCase().trim();
 
   // Normaliza tipos por extenso PRIMEIRO (antes do regex)
   if (rawType.startsWith("VERSE")) {
@@ -315,7 +315,7 @@ const renderCifraContent = (
       if (isChordLine(chordsPart)) {
         finishSection(lineIndex);
 
-        const sectionText = sectionPart.replace(/[\[\]]/g, '');
+        const sectionText = sectionPart.replace(/[[\]]/g, '');
         const sectionType = getSectionType(sectionPart);
 
         // Aplica mesma lógica de numeração inteligente para inline sections
